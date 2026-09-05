@@ -1,0 +1,114 @@
+<!-- Backgrounder brief template. Keep the CSS as-is (tested light/dark, one-screen 3-column
+     layout). Replace {{...}} placeholders and the example body content per references/brief-rules.md.
+     Section headings adapt to the person ("Who she is" / "Who they are"). Every timeline and
+     watch-out bullet ends with one or more .ref chips linking to its source email. -->
+<title>{{PERSON_NAME}} Briefing</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700;800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#F7F9FA; --card:#FFFFFF; --ink:#1B2530; --sub:#5A6B7A;
+  --line:#DCE4E9; --accent:#0E6E68; --accent-soft:#E3EFEC;
+  --warn:#B45309; --warn-soft:#FBF1E4; --warn-line:#EAD3B5;
+  --chip:#EEF3F2;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141B22; --card:#1C2530; --ink:#E8EDF0; --sub:#94A5B3;
+    --line:#2C3946; --accent:#4FB3A9; --accent-soft:#1E3230;
+    --warn:#E0A264; --warn-soft:#2E2418; --warn-line:#4A3A24;
+    --chip:#243040;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141B22; --card:#1C2530; --ink:#E8EDF0; --sub:#94A5B3;
+  --line:#2C3946; --accent:#4FB3A9; --accent-soft:#1E3230;
+  --warn:#E0A264; --warn-soft:#2E2418; --warn-line:#4A3A24;
+  --chip:#243040;
+}
+*{box-sizing:border-box}
+body{background:var(--paper); color:var(--ink); font:15px/1.45 "Source Sans 3",system-ui,sans-serif; margin:0; padding:20px 24px;}
+.wrap{max-width:1240px; margin:0 auto; display:flex; flex-direction:column; gap:16px;}
+header{display:flex; flex-direction:column; gap:8px; border-bottom:2px solid var(--ink); padding-bottom:12px;}
+.idline{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;}
+h1{font:800 30px/1 "Schibsted Grotesk",system-ui,sans-serif; margin:0; letter-spacing:-.01em;}
+.meta{font:400 12px "IBM Plex Mono",monospace; color:var(--sub);}
+.meta a{color:var(--sub);}
+.cols{display:grid; grid-template-columns:1fr 1.05fr 1.1fr; gap:16px; align-items:start;}
+@media (max-width:900px){ .cols{grid-template-columns:1fr;} body{padding:16px;} }
+section{background:var(--card); border:1px solid var(--line); border-radius:4px; padding:14px 16px 16px;}
+h2{font:700 13px "Schibsted Grotesk",system-ui,sans-serif; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); margin:0 0 10px;}
+section.alert h2{color:var(--warn);}
+p{margin:0 0 8px;}
+p:last-child{margin-bottom:0;}
+.sub{color:var(--sub);}
+ul{margin:0; padding-left:18px;}
+li{margin-bottom:7px;}
+li:last-child{margin-bottom:0;}
+.whohead{display:flex; align-items:center; gap:12px; margin-bottom:12px;}
+.whohead img{width:64px; height:80px; object-fit:cover; object-position:top; border-radius:3px; border:1px solid var(--line); display:block;}
+.whohead a{font:500 12px "IBM Plex Mono",monospace; color:var(--accent); text-decoration:none; border-bottom:1px solid var(--accent);}
+.tl{list-style:none; padding:0; margin:0;}
+.tl li{display:grid; grid-template-columns:58px 1fr; gap:10px; margin:0; padding:5px 0; border-bottom:1px dotted var(--line);}
+.tl li:last-child{border-bottom:0;}
+.tl time{font:500 12px/1.5 "IBM Plex Mono",monospace; color:var(--accent); white-space:nowrap;}
+.tl .now time{color:var(--warn);}
+.tl .now div{font-weight:600;}
+.alert{border-color:var(--warn-line); background:var(--warn-soft);}
+.alert li::marker{color:var(--warn);}
+.ref{font:500 10px/1 "IBM Plex Mono",monospace; color:var(--accent); text-decoration:none; border:1px solid var(--line); border-radius:2px; padding:2px 4px; margin-left:5px; vertical-align:1px; white-space:nowrap;}
+.ref:hover{background:var(--accent-soft); border-color:var(--accent);}
+.openers{margin-top:12px; border-top:1px solid var(--line); padding-top:10px;}
+.openers h3{font:700 12px "Schibsted Grotesk",sans-serif; letter-spacing:.09em; text-transform:uppercase; color:var(--sub); margin:0 0 8px;}
+q{font-style:italic;}
+</style>
+<div class="wrap">
+  <header>
+    <div class="idline">
+      <h1>{{PERSON_NAME}}</h1>
+      <div class="meta">compiled {{YYYY-MM-DD}} · <a href="{{SHEET_URL}}">full backgrounder →</a></div>
+    </div>
+  </header>
+
+  <div class="cols">
+    <section>
+      <h2>Who {{he/she/they}} is</h2>
+      <div class="whohead">
+        <img src="{{PHOTO_DATA_URI}}" alt="{{PERSON_NAME}}">  <!-- omit the whole .whohead img if no photo found -->
+        <a href="{{LINKEDIN_URL}}" target="_blank" rel="noopener">{{linkedin-short}} →</a>
+      </div>
+      <!-- 3 short paragraphs: (1) what they are — credentials, specialty, what they've built;
+           (2, class="sub", muted) education/career history one-liner;
+           (3) where they sit — employer, key colleague/boss, and a quoted insider characterization in <q>. -->
+      <p>{{IDENTITY_PARAGRAPH}}</p>
+      <p class="sub">{{EDUCATION_CAREER_LINE}}</p>
+      <p>{{CONTEXT_PARAGRAPH_WITH_QUOTE}}</p>
+    </section>
+
+    <section>
+      <h2>Where things stand</h2>
+      <!-- ~6 state-change events (see brief-rules.md), chronological, each with a .ref chip.
+           Last item is class="now": current standing — the unresolved item + agreed future. -->
+      <ul class="tl">
+        <li><time>{{Mon DD}}</time><div>{{STATE_CHANGE_EVENT}}<a class="ref" href="{{GMAIL_LINK}}" title="source email">↗</a></div></li>
+        <li class="now"><time>Now</time><div>{{CURRENT_STANDING}}<a class="ref" href="{{GMAIL_LINK}}" title="source email">↗</a></div></li>
+      </ul>
+    </section>
+
+    <section class="alert">
+      <h2>Before you walk in</h2>
+      <!-- Up to 3 watch-outs, stakes order: tripwires, then the user's open loops, then blind spots.
+           Each starts with a <b>label:</b> and ends with .ref chip(s). -->
+      <ul>
+        <li><b>{{LABEL}}:</b> {{WATCHOUT}}<a class="ref" href="{{GMAIL_LINK}}" title="source email">↗</a></li>
+      </ul>
+      <div class="openers">
+        <h3>Easy openers</h3>
+        <!-- 3 items: expertise-meets-your-work, pending shared business, personal/logistical softener. -->
+        <ul>
+          <li>{{OPENER}}<a class="ref" href="{{GMAIL_LINK}}" title="source email">↗</a></li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</div>

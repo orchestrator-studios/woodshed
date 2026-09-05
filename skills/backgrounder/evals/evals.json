@@ -1,0 +1,23 @@
+{
+  "skill_name": "backgrounder",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I have a call with Knut Olson next week and it's been a while since we were in touch. Can you prep me? Pull together what we know about him and give me a pre-meeting brief. Put the outputs in this Drive folder: https://drive.google.com/drive/folders/{{FOLDER_ID}}",
+      "expected_output": "A multi-tab Google Sheet backgrounder (contact/bio, email mentions with Gmail links, context themes, meetings from Calendar, news) created in the given Drive folder, sheet link shared early; plus a one-screen HTML pre-meeting brief rendered from the sheet content, uploaded to the same folder, with source-link chips and honest handling of the sparse/older history.",
+      "files": [],
+      "assertions": [
+        "sheet-created-in-target-folder: a Google Sheet was created inside the specified Drive folder",
+        "has-required-tabs: the sheet has at least 4 tabs covering contact/bio, email mentions, meetings, and news",
+        "email-mentions-have-gmail-links: email-mention rows carry working mail.google.com message links",
+        "meetings-sourced-from-calendar: the meetings tab is built from Calendar data (or honestly states none found), not just email",
+        "html-brief-uploaded-to-folder: an HTML brief file was uploaded to the same Drive folder as the sheet",
+        "brief-has-three-sections-with-ref-chips: the brief has identity / where-things-stand / before-you-walk-in sections and per-bullet source links",
+        "brief-traceable-to-sheet: facts on the brief appear in the sheet exports (sheet-first rule held)",
+        "sheet-link-shared-early: the user got the sheet link before deep research, per the agent's user-facing messages",
+        "honest-sparse-handling: old/sparse history is acknowledged (caveat/blind-spot language); no fabricated facts",
+        "brief-supports-light-and-dark: the HTML uses the token pattern with prefers-color-scheme and data-theme overrides"
+      ]
+    }
+  ]
+}
