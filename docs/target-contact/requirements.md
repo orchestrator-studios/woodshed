@@ -202,9 +202,31 @@ Notes:
     }
   ],
   "also_considered": [ { "name": "…", "title": "…", "why_not": "…" } ],
-  "caveats": [ "…" ]
+  "caveats": [ "…" ],
+  "audit": {
+    "searches": [
+      {
+        "step": "seeker_bio | enumerate | rank | decorate",
+        "tool": "web_search | linkedin | site_fetch | hunter",
+        "query": "the literal query or URL",
+        "results": [
+          { "title": "…", "url": "…", "used": true,
+            "note": "what this result contributed (or why discarded)" }
+        ]
+      }
+    ]
+  }
 }
 ```
+
+The `audit` block is the trail behind the card (Cliff's ask, 2026-09-09):
+every supporting search and its results, grouped by workflow step, with a
+note on what each result contributed or why it was discarded. The card gets
+a collapsible **Audit trail** panel rendering it nicely. Rationale: the
+confidence chips are only as credible as the evidence behind them — the
+trail lets Carrie sanity-check a pick before betting an outreach on it, and
+gives us a debugging surface when a ranking looks wrong. Same principle as
+the backgrounder's sheet-as-auditable-record.
 
 `detail` is present only on decorated entries (top `decorate_top`). The card
 UI is a pure template over this object — configurability later means theming
