@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "target-contact result record (v0)",
+  "type": "object",
+  "required": ["query", "results", "caveats", "audit"],
+  "properties": {
+    "query": {
+      "type": "object",
+      "required": ["organization", "target", "seeker", "run_at"],
+      "properties": {
+        "organization": {
+          "type": "object",
+          "required": ["name", "kind"],
+          "properties": {
+            "name": { "type": "string" },
+            "domain": { "type": "string" },
+            "kind": { "enum": ["search_firm", "company"] }
+          }
+        },
+        "target": {
+          "type": "object",
+          "required": ["who", "function"],
+          "properties": {
+            "who": { "enum": ["recruiters", "internal_recruiting", "leadership"] },
+            "function": { "type": "string" },
+            "level": { "type": "string" },
+            "industries": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "seeker": {
+          "type": "object",
+          "required": ["profile"],
+          "properties": {
+            "profile": { "type": "string", "description": "profiles/<name>.md this run used" },
+            "linkedin": { "type": "string" }
+          }
+        },
+        "options": {
+          "type": "object",
+          "properties": {
+            "max_results": { "type": "integer", "default": 6 },
+            "decorate_top": { "type": "integer", "default": 2 }
+          }
+        },
+        "run_at": { "type": "string", "description": "ISO date of the run" }
+      }
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rank", "name", "current_title", "relevance", "confidence", "sources"],
+        "properties": {
+          "rank": { "type": "integer" },
+          "name": { "type": "string" },
+          "current_title": { "type": "string" },
+          "org_unit": { "type": "string" },
+          "location": { "type": "string" },
+          "relevance": {
+            "type": "object",
+            "required": ["score", "rationale"],
+            "properties": {
+              "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "rationale": { "type": "string", "description": "one sentence, specific to the seeker" }
+            }
+          },
+          "confidence": {
+            "type": "object",
+            "required": ["level", "basis"],
+            "properties": {
+              "level": { "enum": ["high", "medium", "low"] },
+              "basis": { "type": "string" }
+            }
+          },
+          "contact": {
+            "type": "object",
+            "properties": {
+              "linkedin": { "type": "string" },
+              "email": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "address": { "type": "string" },
+                  "status": { "enum": ["verified", "pattern_inferred", "unknown"] },
+                  "source": { "type": "string" }
+                }
+              },
+              "other": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["title", "url"],
+              "properties": { "title": { "type": "string" }, "url": { "type": "string" } }
+            }
+          },
+          "detail": {
+            "type": "object",
+            "description": "present only on decorated entries (top decorate_top)",
+            "properties": {
+              "bio": { "type": "string" },
+              "tenure": { "type": "string" },
+              "recent_signal": { "type": "string" },
+              "warm_paths": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["via"],
+                  "properties": { "via": { "type": "string" }, "note": { "type": "string" } }
+                }
+              },
+              "outreach_angle": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "also_considered": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "why_not"],
+        "properties": {
+          "name": { "type": "string" },
+          "title": { "type": "string" },
+          "why_not": { "type": "string" }
+        }
+      }
+    },
+    "caveats": { "type": "array", "items": { "type": "string" } },
+    "audit": {
+      "type": "object",
+      "required": ["searches"],
+      "properties": {
+        "searches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["step", "tool", "query", "results"],
+            "properties": {
+              "step": { "enum": ["seeker_bio", "resolve", "enumerate", "rank", "decorate", "verify"] },
+              "tool": { "type": "string", "description": "e.g. web_search, site_fetch, linkedin, hunter" },
+              "query": { "type": "string", "description": "the literal query or URL" },
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["used", "note"],
+                  "properties": {
+                    "title": { "type": "string" },
+                    "url": { "type": "string" },
+                    "used": { "type": "boolean" },
+                    "note": { "type": "string", "description": "what it contributed, or why discarded" },
+                    "snippet": { "type": "string", "description": "supporting quote from the source, for load-bearing claims" },
+                    "as_of": { "type": "string", "description": "source date if stated, else fetch date" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

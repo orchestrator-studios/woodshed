@@ -19,13 +19,15 @@ Output: <out>/corpus.json, a list of rows:
 metadata-only rows. Snippets and headers are enough for a mentions inventory;
 `fresh` is for the rows you analyze in depth.
 """
-import argparse, base64, json, os, subprocess, sys, time
+import argparse, base64, json, os, shutil, subprocess, sys, time
 from concurrent.futures import ThreadPoolExecutor
 from email.utils import parsedate_to_datetime
 
+GWS_BIN = shutil.which("gws") or "gws"  # Windows: resolve the npm .cmd shim
+
 def gws(config_dir, args):
     env = dict(os.environ, GOOGLE_WORKSPACE_CLI_CONFIG_DIR=config_dir)
-    r = subprocess.run(["gws"] + args, capture_output=True, text=True, env=env)
+    r = subprocess.run([GWS_BIN] + args, capture_output=True, text=True, env=env)
     out = "\n".join(l for l in r.stdout.splitlines() if "keyring" not in l)
     try:
         return json.loads(out)

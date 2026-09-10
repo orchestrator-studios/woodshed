@@ -1,0 +1,354 @@
+<!--
+  target-contact results card template.
+  Render strictly from the result record (references/output-schema.json).
+  {{TOKENS}} mark single values; REGION comments mark repeatable blocks —
+  duplicate the block per item, delete it when the record has none.
+  Keep the CSS untouched; it carries light/dark themes.
+  Set <title> to "Who at {{org}} — {{seeker first name}}" style, short.
+-->
+<meta charset="utf-8">
+<title>{{PAGE_TITLE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..600&family=Archivo:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --paper: #F5F5F1; --card: #FFFFFF; --ink: #16232B; --muted: #5C6B74;
+    --faint: #8B979F; --line: #E3E4DE; --accent: #0E5A63; --accent-soft: #E3EEEF;
+    --gold: #A97F2F; --gold-soft: #F4EBD8;
+    --good: #2E7D5B; --good-soft: #E4F0EA;
+    --warn: #A66A1F; --warn-soft: #F5ECDD;
+    --low: #6B7480; --low-soft: #EAECEF;
+    --code-bg: #F0F1EC;
+  }
+  /* Light is the default everywhere; dark only via the page's own toggle. */
+  :root.tc-dark {
+    --paper: #10171C; --card: #182228; --ink: #E7ECEF; --muted: #9AA8B0;
+    --faint: #74828B; --line: #263239; --accent: #6FB9C2; --accent-soft: #14333A;
+    --gold: #CFA85C; --gold-soft: #33291369;
+    --good: #6FBF9A; --good-soft: #16302637;
+    --warn: #D9A055; --warn-soft: #33270f5c;
+    --low: #97A1AC; --low-soft: #232b3170;
+    --code-bg: #131C21;
+  }
+  .btn { font: inherit; font-size: .72rem; font-weight: 600; letter-spacing: .03em; color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: .25rem .6rem; cursor: pointer; white-space: nowrap; }
+  .btn:hover { color: var(--accent); border-color: var(--accent); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .btn.ok { color: var(--good); border-color: var(--good); }
+  .toolbar { display: flex; justify-content: flex-end; gap: .5rem; }
+  .entry-tools { display: flex; gap: .5rem; justify-content: flex-end; border-top: 1px solid var(--line); padding-top: .9rem; }
+  body { background: var(--paper); color: var(--ink); font-family: "Archivo", "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.55; margin: 0; padding: 2.5rem 1.25rem 4rem; }
+  .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; }
+  .query { display: flex; flex-direction: column; gap: .35rem; padding: 0 .25rem; }
+  .query .eyebrow { font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .query h1 { font-family: "Newsreader", Georgia, serif; font-size: 1.9rem; font-weight: 500; line-height: 1.15; margin: 0; text-wrap: balance; }
+  .query .params { color: var(--muted); font-size: .88rem; }
+  .query .params strong { color: var(--ink); font-weight: 600; }
+  .query .meta { display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: center; font-size: .78rem; color: var(--faint); margin-top: .3rem; }
+  .chip { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; font-weight: 600; letter-spacing: .03em; padding: .13rem .55rem; border-radius: 99px; white-space: nowrap; }
+  .chip.high { color: var(--good); background: var(--good-soft); }
+  .chip.medium { color: var(--warn); background: var(--warn-soft); }
+  .chip.low { color: var(--low); background: var(--low-soft); }
+  .entry { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1.4rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+  .entry.top { border-top: 3px solid var(--gold); }
+  .entry.second { border-top: 3px solid var(--accent); }
+  .entry-head { display: flex; gap: 1rem; align-items: flex-start; }
+  .rank-badge { flex: none; width: 2.4rem; height: 2.4rem; border-radius: 50%; display: grid; place-items: center; font-family: "Newsreader", Georgia, serif; font-size: 1.25rem; font-weight: 600; }
+  .entry.top .rank-badge { background: var(--gold-soft); color: var(--gold); }
+  .entry.second .rank-badge { background: var(--accent-soft); color: var(--accent); }
+  .who { flex: 1; min-width: 0; }
+  .who .name { font-family: "Newsreader", Georgia, serif; font-size: 1.45rem; font-weight: 600; line-height: 1.2; margin: 0; }
+  .who .title { color: var(--muted); font-size: .92rem; margin-top: .15rem; }
+  .who .loc { color: var(--faint); font-size: .8rem; }
+  .scorebox { flex: none; text-align: right; display: flex; flex-direction: column; gap: .35rem; align-items: flex-end; }
+  .score { font-variant-numeric: tabular-nums; font-size: 1.5rem; font-weight: 700; line-height: 1; color: var(--accent); }
+  .score small { display: block; font-size: .68rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin-top: .2rem; }
+  .rationale { font-family: "Newsreader", Georgia, serif; font-size: 1.05rem; font-style: italic; color: var(--ink); border-left: 2px solid var(--line); padding-left: .9rem; margin: 0; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .9rem 1.4rem; }
+  .fact .label { font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin-bottom: .2rem; }
+  .fact .value { font-size: .9rem; }
+  .fact .value a { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+  .fact .value a:hover, .fact .value a:focus-visible { border-bottom-style: solid; border-bottom-width: 2px; outline: none; }
+  .email-status { font-size: .74rem; color: var(--warn); }
+  .email-status.verified { color: var(--good); }
+  .paths { display: flex; flex-direction: column; gap: .3rem; }
+  .path { font-size: .88rem; display: flex; gap: .5rem; align-items: baseline; }
+  .path::before { content: "↳"; color: var(--accent); flex: none; }
+  .angle { background: var(--accent-soft); border-radius: 4px; padding: .8rem 1rem; font-size: .9rem; }
+  .angle .label { font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: .25rem; }
+  .sources { font-size: .76rem; color: var(--faint); }
+  .sources a { color: var(--faint); text-decoration: underline; text-underline-offset: 2px; }
+  .sources a:hover, .sources a:focus-visible { color: var(--accent); outline: none; }
+  .rows { background: var(--card); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .row { display: flex; gap: .9rem; align-items: baseline; padding: .8rem 1.25rem; border-top: 1px solid var(--line); }
+  .row:first-child { border-top: none; }
+  .row .r { font-variant-numeric: tabular-nums; color: var(--faint); font-weight: 600; flex: none; width: 1.2rem; }
+  .row .n { font-weight: 600; flex: none; }
+  .row .t { color: var(--muted); font-size: .88rem; flex: 1; min-width: 0; }
+  .row .s { font-variant-numeric: tabular-nums; color: var(--faint); font-size: .88rem; flex: none; }
+  .section-label { font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); margin: .4rem .25rem 0; display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+  .plain { padding: 0 .25rem; font-size: .88rem; color: var(--muted); }
+  .plain ul { margin: .3rem 0 0; padding-left: 1.2rem; }
+  .plain li { margin-top: .25rem; }
+  details.record { border: 1px dashed var(--line); border-radius: 6px; padding: .7rem 1rem; }
+  details.record summary { cursor: pointer; font-size: .82rem; font-weight: 600; color: var(--muted); }
+  details.record summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details.record pre { overflow-x: auto; background: var(--code-bg); border-radius: 4px; padding: .9rem 1rem; font-size: .76rem; line-height: 1.5; margin: .7rem 0 0; }
+  details.audit { background: var(--card); border: 1px solid var(--line); border-radius: 6px; }
+  details.audit > summary { cursor: pointer; padding: .85rem 1.25rem; font-size: .82rem; font-weight: 600; color: var(--muted); list-style-position: inside; }
+  details.audit > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  details.audit[open] > summary { border-bottom: 1px solid var(--line); }
+  .audit-body { padding: 1rem 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 1.1rem; }
+  .audit-step .step-name { font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: .5rem; }
+  .search { border-left: 2px solid var(--line); padding-left: .9rem; margin-bottom: .8rem; }
+  .search:last-child { margin-bottom: 0; }
+  .search .q { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .8rem; background: var(--code-bg); border-radius: 3px; padding: .25rem .55rem; display: inline-block; margin-bottom: .35rem; }
+  .search .tool { font-size: .68rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-left: .4rem; }
+  .hits { display: flex; flex-direction: column; gap: .25rem; }
+  .hit { font-size: .82rem; display: flex; gap: .5rem; align-items: baseline; }
+  .hit .mark { flex: none; font-weight: 700; }
+  .hit.used .mark { color: var(--good); }
+  .hit.skipped .mark { color: var(--faint); }
+  .hit.skipped { color: var(--faint); }
+  .hit a { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+  .hit.skipped a { color: var(--faint); border-bottom-color: color-mix(in srgb, var(--faint) 40%, transparent); }
+  .hit a:hover, .hit a:focus-visible { border-bottom-style: solid; border-bottom-width: 2px; outline: none; }
+  .hit .why { color: var(--muted); font-size: .78rem; }
+  @media (max-width: 540px) {
+    .entry-head { flex-wrap: wrap; }
+    .scorebox { flex-direction: row; width: 100%; justify-content: space-between; align-items: center; }
+  }
+</style>
+
+<div class="wrap">
+
+  <!-- Toolbar: keep as-is. Light mode is the default; the toggle opts into dark. -->
+  <div class="toolbar">
+    <button class="btn" id="copy-page" type="button">Copy page</button>
+    <button class="btn" id="theme-toggle" type="button">Dark mode</button>
+  </div>
+
+  <!-- REGION: query header — renders query.* -->
+  <header class="query">
+    <div class="eyebrow">Target Contact</div>
+    <h1>{{QUESTION_AS_HEADLINE — e.g. "Who at Daversa Partners owns revenue-leadership searches?"}}</h1>
+    <div class="params">
+      <strong>{{organization.name}}</strong> ({{organization.kind, plain words}}) · seeking
+      <strong>{{target.who, plain words}}</strong> for <strong>{{target.function}}</strong> ·
+      {{target.level}} · {{target.industries, comma-joined}} ·
+      for <strong>{{seeker display name}}</strong>
+    </div>
+    <div class="meta">
+      <span>Run {{query.run_at}} · {{results count}} candidates, top {{options.decorate_top}} detailed</span>
+      <span class="chip high">high confidence</span>
+      <span class="chip medium">medium</span>
+      <span class="chip low">low</span>
+    </div>
+  </header>
+
+  <!-- REGION: decorated entry — one per results[] entry that has `detail`.
+       First entry gets class "entry top", second gets "entry second". -->
+  <article class="entry top">
+    <div class="entry-head">
+      <div class="rank-badge">{{rank}}</div>
+      <div class="who">
+        <h2 class="name">{{name}}</h2>
+        <div class="title">{{current_title}}{{#org_unit}} · {{org_unit}}{{/org_unit}}</div>
+        <div class="loc">{{location}} · {{detail.tenure}}</div>
+      </div>
+      <div class="scorebox">
+        <div class="score">{{relevance.score}}<small>relevance</small></div>
+        <span class="chip {{confidence.level}}">{{confidence.level}} confidence</span>
+      </div>
+    </div>
+
+    <p class="rationale">{{relevance.rationale}}</p>
+
+    <div class="facts">
+      <div class="fact">
+        <div class="label">LinkedIn</div>
+        <div class="value"><a href="{{contact.linkedin}}">{{contact.linkedin, display form}}</a></div>
+      </div>
+      <div class="fact">
+        <div class="label">Email</div>
+        <div class="value">{{contact.email.address or "not found"}}
+          <!-- email-status: add class "verified" only when status is verified;
+               pattern_inferred renders: "pattern-inferred via {{source}} — verify before sending" -->
+          <div class="email-status">{{email status line}}</div>
+        </div>
+      </div>
+      <div class="fact">
+        <div class="label">Recent signal</div>
+        <div class="value">{{detail.recent_signal}}</div>
+      </div>
+    </div>
+
+    <!-- REGION: warm paths — omit the whole block only if warm_paths is absent;
+         when the search ran and found nothing, keep one path line saying
+         "None found in {{seeker}}'s history — {{fallback channel}} recommended" -->
+    <div>
+      <div class="fact"><div class="label">Warm paths</div></div>
+      <div class="paths">
+        <div class="path">{{warm_path.via}}{{#note}} — {{note}}{{/note}}</div>
+      </div>
+    </div>
+
+    <div class="angle">
+      <div class="label">Suggested opening</div>
+      {{detail.outreach_angle}}
+    </div>
+
+    <div class="sources">Sources:
+      <!-- one link per sources[] item, separated by " · " -->
+      <a href="{{source.url}}">{{source.title}}</a>
+    </div>
+
+    <!-- keep in every decorated entry: the script wires these up -->
+    <div class="entry-tools">
+      <button class="btn" type="button" data-copy-contact>Copy contact</button>
+      <button class="btn" type="button" data-copy-card>Copy card</button>
+    </div>
+  </article>
+  <!-- END REGION: decorated entry -->
+
+  <!-- REGION: compact rows — one .row per undecorated results[] entry.
+       Section labels keep their Copy button (data-copy-next copies the element
+       that follows the label). -->
+  <div class="section-label"><span>Also ranked</span><button class="btn" type="button" data-copy-next>Copy</button></div>
+  <div class="rows">
+    <div class="row"><span class="r">{{rank}}</span><span class="n">{{name}}</span><span class="t">{{current_title}} — {{relevance.rationale, compressed}}</span><span class="s">{{relevance.score}}</span></div>
+  </div>
+  <!-- END REGION: compact rows.
+       also_considered entries with a useful why_not may be appended as rows
+       without a score, or folded into caveats — judgment call. -->
+
+  <!-- REGION: caveats — one li per caveats[] item; always present -->
+  <div class="section-label"><span>Caveats</span><button class="btn" type="button" data-copy-next>Copy</button></div>
+  <div class="plain">
+    <ul>
+      <li>{{caveat}}</li>
+    </ul>
+  </div>
+
+  <!-- REGION: audit trail — group audit.searches[] by step, in workflow order.
+       Step display names: seeker_bio → "Seeker bio", resolve → "Resolve query",
+       enumerate → "Enumerate candidates at {{org}}", rank → "Rank against seeker",
+       decorate → "Decorate". Hit class: "used" (mark ✓) or "skipped" (mark –). -->
+  <details class="audit">
+    <summary>Audit trail — {{searches count}} searches behind this card</summary>
+    <div class="audit-body">
+      <div class="audit-step">
+        <div class="step-name">Step {{n}} · {{step display name}}</div>
+        <div class="search">
+          <span class="q">{{search.query}}</span><span class="tool">{{search.tool, plain words}}</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="{{result.url}}">{{result.title}}</a> <span class="why">— {{result.note}}</span></span></div>
+            <div class="hit skipped"><span class="mark">–</span><span><a href="{{result.url}}">{{result.title}}</a> <span class="why">— {{result.note}}</span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- REGION: raw record — the full result record as pretty-printed JSON -->
+  <details class="record">
+    <summary>View the underlying record (output schema v0) <button class="btn" type="button" id="copy-json">Copy JSON</button></summary>
+    <pre>{{FULL_RECORD_JSON}}</pre>
+  </details>
+
+</div>
+
+<!-- Keep this script verbatim: theme toggle (light default) + copy buttons. -->
+<script>
+(function () {
+  var root = document.documentElement;
+  var toggle = document.getElementById('theme-toggle');
+  function setTheme(dark) {
+    root.classList.toggle('tc-dark', dark);
+    toggle.textContent = dark ? 'Light mode' : 'Dark mode';
+    try { localStorage.setItem('tc-theme', dark ? 'dark' : 'light'); } catch (e) {}
+  }
+  var saved = null;
+  try { saved = localStorage.getItem('tc-theme'); } catch (e) {}
+  setTheme(saved === 'dark'); // light is the default; dark only when chosen
+  toggle.addEventListener('click', function () {
+    setTheme(!root.classList.contains('tc-dark'));
+  });
+
+  function flash(btn) {
+    var old = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('ok');
+    setTimeout(function () { btn.textContent = old; btn.classList.remove('ok'); }, 1200);
+  }
+  function copyFallback(btn, text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+    if (ok) { flash(btn); }
+    else {
+      var old = btn.textContent;
+      btn.textContent = 'Copy failed';
+      setTimeout(function () { btn.textContent = old; }, 1500);
+    }
+  }
+  function copy(btn, text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () { flash(btn); },
+        function () { copyFallback(btn, text); }
+      );
+    } else { copyFallback(btn, text); }
+  }
+  function textOf(el) {
+    var clone = el.cloneNode(true);
+    clone.querySelectorAll('.btn, .toolbar, .entry-tools').forEach(function (x) { x.remove(); });
+    var host = document.createElement('div');
+    host.style.cssText = 'position:fixed;left:-99999px;top:0;width:720px;';
+    host.appendChild(clone);
+    document.body.appendChild(host);
+    var t = clone.innerText.replace(/\n{3,}/g, '\n\n').trim();
+    host.remove();
+    return t;
+  }
+  function contactOf(entry) {
+    function g(sel) { var n = entry.querySelector(sel); return n ? n.innerText.trim() : ''; }
+    var lines = [g('.name'), g('.title'), g('.loc')];
+    entry.querySelectorAll('.fact').forEach(function (f) {
+      var label = f.querySelector('.label'), val = f.querySelector('.value');
+      if (!label || !val) return;
+      var l = label.innerText.trim().toLowerCase(); // innerText is rendered text: CSS uppercases labels
+      if (l === 'linkedin') {
+        var a = val.querySelector('a');
+        lines.push('LinkedIn: ' + (a ? a.href : val.innerText.trim()));
+      } else if (l === 'email') {
+        lines.push('Email: ' + val.innerText.trim().replace(/\s+/g, ' '));
+      }
+    });
+    return lines.filter(Boolean).join('\n');
+  }
+  document.querySelectorAll('[data-copy-contact]').forEach(function (btn) {
+    btn.addEventListener('click', function () { copy(btn, contactOf(btn.closest('.entry'))); });
+  });
+  document.querySelectorAll('[data-copy-card]').forEach(function (btn) {
+    btn.addEventListener('click', function () { copy(btn, textOf(btn.closest('.entry'))); });
+  });
+  document.querySelectorAll('[data-copy-next]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var section = btn.closest('.section-label').nextElementSibling;
+      copy(btn, textOf(section));
+    });
+  });
+  var pageBtn = document.getElementById('copy-page');
+  pageBtn.addEventListener('click', function () { copy(pageBtn, textOf(document.querySelector('.wrap'))); });
+  var jsonBtn = document.getElementById('copy-json');
+  jsonBtn.addEventListener('click', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    copy(jsonBtn, document.querySelector('details.record pre').textContent);
+  });
+})();
+</script>

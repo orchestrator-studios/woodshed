@@ -1,0 +1,75 @@
+{
+  "query": {
+    "organization": { "name": "Daversa Partners", "domain": "daversa.com", "kind": "search_firm" },
+    "target": { "who": "recruiters", "function": "go-to-market / revenue leadership",
+                "level": "C-level / EVP", "industries": ["adtech", "martech", "media", "data & insights"] },
+    "seeker": { "profile": "carrie", "linkedin": "linkedin.com/in/carrieseifer" },
+    "options": { "max_results": 6, "decorate_top": 2 },
+    "run_at": "2026-09-09"
+  },
+  "results": [
+    { "rank": 1, "name": "Kenny Denton",
+      "current_title": "Partner", "org_unit": "Co-lead, B2B Go-to-Market Practice",
+      "location": "San Francisco",
+      "relevance": { "score": 93, "rationale": "Runs B2B sales/marketing/CS searches at VP and C-level; 200+ searches incl. Scale AI, OpenAI, Brex, Dataiku." },
+      "confidence": { "level": "high", "basis": "Stated practice co-lead on firm bio page + June 2025 partner announcement with placement history." },
+      "contact": { "linkedin": "https://www.linkedin.com/in/kennethdenton/",
+                   "email": { "address": "kenny.denton@daversa.com", "status": "pattern_inferred", "source": "LeadIQ/RocketReach first.last ~57%" } },
+      "sources": [
+        { "title": "daversa.com/leadership/kenny-denton", "url": "https://daversa.com/leadership/kenny-denton" },
+        { "title": "Businesswire June 2025", "url": "https://www.businesswire.com/news/home/20250604758118/en/" },
+        { "title": "daversa.com/team", "url": "https://daversa.com/team" } ],
+      "detail": { "tenure": "10+ years at firm; MD June 2024, Partner June 2025",
+                  "recent_signal": "Partner elevation June 2025; AI/data-company placements",
+                  "warm_paths": [], "outreach_angle": "Lead with IAS EVP Global Revenue + GWI CCO; LinkedIn first, email after verification." } },
+    { "rank": 2, "name": "Joe Patalano",
+      "current_title": "Partner", "org_unit": "Go-to-Market Practice, enterprise software",
+      "location": "Office unstated (Bronx native)",
+      "relevance": { "score": 88, "rationale": "Built GTM practice for enterprise software incl. Customer Success; UiPath, Zuora, Apollo.io placements." },
+      "confidence": { "level": "high", "basis": "Hunt Scanlon partnership announcement stating mandate + current team page listing." },
+      "contact": { "email": { "address": "joe.patalano@daversa.com", "status": "pattern_inferred", "source": "LeadIQ/RocketReach first.last ~57%" } },
+      "sources": [
+        { "title": "Hunt Scanlon Nov 2022", "url": "https://huntscanlon.com/daversa-partners-welcomes-joe-patalano-to-firms-partnership/" },
+        { "title": "daversa.com/team", "url": "https://daversa.com/team" } ],
+      "detail": { "tenure": "~13 years at firm; Partner Nov 2022",
+                  "recent_signal": "Stated GTM-practice builder for enterprise software",
+                  "warm_paths": [], "outreach_angle": "Lead with the CCO/customer-success side of her record." } },
+    { "rank": 3, "name": "Emma Mango", "current_title": "Managing Director", "org_unit": "Manhattan â€” GTM, operations, product",
+      "relevance": { "score": 72, "rationale": "NYC GTM coverage at MD level; fallback contact." },
+      "confidence": { "level": "medium", "basis": "Team page title only, fetched 2026-09-09." },
+      "sources": [ { "title": "daversa.com/team", "url": "https://daversa.com/team" } ] },
+    { "rank": 4, "name": "Maryanne Martire", "current_title": "Partner", "org_unit": "Marketing practice",
+      "relevance": { "score": 58, "rationale": "Adjacent lane: CMO searches, not CRO." },
+      "confidence": { "level": "medium", "basis": "Team page title only, fetched 2026-09-09." },
+      "sources": [ { "title": "daversa.com/team", "url": "https://daversa.com/team" } ] }
+  ],
+  "also_considered": [
+    { "name": "Paul Daversa", "title": "CEO & Founder", "why_not": "No public evidence he runs GTM searches; founder tier is CEO/board mandates." },
+    { "name": "Laura Kinder", "title": "President", "why_not": "Firm leadership role; no practice mandate in public record." },
+    { "name": "Isabella St Croix", "title": "Director, East Coast GTM/AI/Data", "why_not": "Right lane, too junior to be first contact." }
+  ],
+  "caveats": [
+    "No adtech/martech-specific placements found for either GTM partner; practice is function-first across B2B tech.",
+    "Emails pattern-inferred from aggregator-reported format; verify before sending.",
+    "Warm-path search used public sources only; seeker's LinkedIn network not accessible this run.",
+    "Ranks 3-4 rest on team-page titles alone.",
+    "LinkedIn profiles not fetched (login-walled); tenure from press."
+  ],
+  "audit": { "searches": [
+    { "step": "seeker_bio", "tool": "cache", "query": "profiles/carrie.md",
+      "results": [ { "title": "Stored profile (2026-09-09)", "used": true, "note": "practice area, tier, network surface", "as_of": "2026-09-09" } ] },
+    { "step": "enumerate", "tool": "site_fetch", "query": "https://daversa.com/team",
+      "results": [ { "title": "Team page", "url": "https://daversa.com/team", "used": true, "note": "59 people; 6 GTM-adjacent", "as_of": "2026-09-09" } ] },
+    { "step": "enumerate", "tool": "web_search", "query": "site:huntscanlon.com Daversa Partners",
+      "results": [ { "title": "Patalano partnership announcement", "url": "https://huntscanlon.com/daversa-partners-welcomes-joe-patalano-to-firms-partnership/", "used": true, "note": "mandate + placements", "as_of": "2022-11-18" } ] },
+    { "step": "rank", "tool": "web_search", "query": "\"Kenny Denton\" Daversa Partners go-to-market",
+      "results": [ { "title": "Businesswire: Denton to Partner", "url": "https://www.businesswire.com/news/home/20250604758118/en/", "used": true, "note": "200+ searches; client names", "as_of": "2025-06-04" } ] },
+    { "step": "verify", "tool": "site_fetch", "query": "https://daversa.com/leadership/kenny-denton",
+      "results": [ { "title": "Firm bio page", "url": "https://daversa.com/leadership/kenny-denton", "used": true,
+                     "note": "identity + currency confirmed; SF office",
+                     "snippet": "Kenny specializes in B2B GTM projects (sales, marketing, and customer success) at the VP and C-level.",
+                     "as_of": "2026-09-09" } ] },
+    { "step": "decorate", "tool": "web_search", "query": "daversa.com email format pattern",
+      "results": [ { "title": "LeadIQ / RocketReach", "url": "https://leadiq.com/c/daversa-partners/5a1d92025400005a0076f645/email-format", "used": true, "note": "first.last ~57%; marked pattern_inferred", "as_of": "2026-09-09" } ] }
+  ] }
+}

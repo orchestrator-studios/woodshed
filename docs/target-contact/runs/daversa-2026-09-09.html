@@ -1,0 +1,534 @@
+<meta charset="utf-8">
+<title>Who at Daversa?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..600&family=Archivo:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --paper: #F5F5F1; --card: #FFFFFF; --ink: #16232B; --muted: #5C6B74;
+    --faint: #8B979F; --line: #E3E4DE; --accent: #0E5A63; --accent-soft: #E3EEEF;
+    --gold: #A97F2F; --gold-soft: #F4EBD8;
+    --good: #2E7D5B; --good-soft: #E4F0EA;
+    --warn: #A66A1F; --warn-soft: #F5ECDD;
+    --low: #6B7480; --low-soft: #EAECEF;
+    --code-bg: #F0F1EC;
+  }
+  /* Light is the default everywhere; dark only via the page's own toggle. */
+  :root.tc-dark {
+    --paper: #10171C; --card: #182228; --ink: #E7ECEF; --muted: #9AA8B0;
+    --faint: #74828B; --line: #263239; --accent: #6FB9C2; --accent-soft: #14333A;
+    --gold: #CFA85C; --gold-soft: #33291369;
+    --good: #6FBF9A; --good-soft: #16302637;
+    --warn: #D9A055; --warn-soft: #33270f5c;
+    --low: #97A1AC; --low-soft: #232b3170;
+    --code-bg: #131C21;
+  }
+  body { background: var(--paper); color: var(--ink); font-family: "Archivo", "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.55; margin: 0; padding: 2.5rem 1.25rem 4rem; }
+  .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; }
+  .btn { font: inherit; font-size: .72rem; font-weight: 600; letter-spacing: .03em; color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: .25rem .6rem; cursor: pointer; white-space: nowrap; }
+  .btn:hover { color: var(--accent); border-color: var(--accent); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .btn.ok { color: var(--good); border-color: var(--good); }
+  .toolbar { display: flex; justify-content: flex-end; gap: .5rem; }
+  .entry-tools { display: flex; gap: .5rem; justify-content: flex-end; border-top: 1px solid var(--line); padding-top: .9rem; }
+  .run-note { font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); padding: .45rem .8rem; border-radius: 3px; text-align: center; }
+  .query { display: flex; flex-direction: column; gap: .35rem; padding: 0 .25rem; }
+  .query .eyebrow { font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .query h1 { font-family: "Newsreader", Georgia, serif; font-size: 1.9rem; font-weight: 500; line-height: 1.15; margin: 0; text-wrap: balance; }
+  .query .params { color: var(--muted); font-size: .88rem; }
+  .query .params strong { color: var(--ink); font-weight: 600; }
+  .query .meta { display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: center; font-size: .78rem; color: var(--faint); margin-top: .3rem; }
+  .chip { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; font-weight: 600; letter-spacing: .03em; padding: .13rem .55rem; border-radius: 99px; white-space: nowrap; }
+  .chip.high { color: var(--good); background: var(--good-soft); }
+  .chip.medium { color: var(--warn); background: var(--warn-soft); }
+  .chip.low { color: var(--low); background: var(--low-soft); }
+  .entry { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1.4rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+  .entry.top { border-top: 3px solid var(--gold); }
+  .entry.second { border-top: 3px solid var(--accent); }
+  .entry-head { display: flex; gap: 1rem; align-items: flex-start; }
+  .rank-badge { flex: none; width: 2.4rem; height: 2.4rem; border-radius: 50%; display: grid; place-items: center; font-family: "Newsreader", Georgia, serif; font-size: 1.25rem; font-weight: 600; }
+  .entry.top .rank-badge { background: var(--gold-soft); color: var(--gold); }
+  .entry.second .rank-badge { background: var(--accent-soft); color: var(--accent); }
+  .who { flex: 1; min-width: 0; }
+  .who .name { font-family: "Newsreader", Georgia, serif; font-size: 1.45rem; font-weight: 600; line-height: 1.2; margin: 0; }
+  .who .title { color: var(--muted); font-size: .92rem; margin-top: .15rem; }
+  .who .loc { color: var(--faint); font-size: .8rem; }
+  .scorebox { flex: none; text-align: right; display: flex; flex-direction: column; gap: .35rem; align-items: flex-end; }
+  .score { font-variant-numeric: tabular-nums; font-size: 1.5rem; font-weight: 700; line-height: 1; color: var(--accent); }
+  .score small { display: block; font-size: .68rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin-top: .2rem; }
+  .rationale { font-family: "Newsreader", Georgia, serif; font-size: 1.05rem; font-style: italic; color: var(--ink); border-left: 2px solid var(--line); padding-left: .9rem; margin: 0; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .9rem 1.4rem; }
+  .fact .label { font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin-bottom: .2rem; }
+  .fact .value { font-size: .9rem; }
+  .fact .value a { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+  .fact .value a:hover, .fact .value a:focus-visible { border-bottom-style: solid; border-bottom-width: 2px; outline: none; }
+  .email-status { font-size: .74rem; color: var(--warn); }
+  .paths { display: flex; flex-direction: column; gap: .3rem; }
+  .path { font-size: .88rem; display: flex; gap: .5rem; align-items: baseline; }
+  .path::before { content: "↳"; color: var(--accent); flex: none; }
+  .angle { background: var(--accent-soft); border-radius: 4px; padding: .8rem 1rem; font-size: .9rem; }
+  .angle .label { font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: .25rem; }
+  .sources { font-size: .76rem; color: var(--faint); }
+  .sources a { color: var(--faint); text-decoration: underline; text-underline-offset: 2px; }
+  .sources a:hover, .sources a:focus-visible { color: var(--accent); outline: none; }
+  .rows { background: var(--card); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .row { display: flex; gap: .9rem; align-items: baseline; padding: .8rem 1.25rem; border-top: 1px solid var(--line); }
+  .row:first-child { border-top: none; }
+  .row .r { font-variant-numeric: tabular-nums; color: var(--faint); font-weight: 600; flex: none; width: 1.2rem; }
+  .row .n { font-weight: 600; flex: none; }
+  .row .t { color: var(--muted); font-size: .88rem; flex: 1; min-width: 0; }
+  .row .s { font-variant-numeric: tabular-nums; color: var(--faint); font-size: .88rem; flex: none; }
+  .section-label { font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); margin: .4rem .25rem 0; display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+  .plain { padding: 0 .25rem; font-size: .88rem; color: var(--muted); }
+  .plain ul { margin: .3rem 0 0; padding-left: 1.2rem; }
+  .plain li { margin-top: .25rem; }
+  details.record { border: 1px dashed var(--line); border-radius: 6px; padding: .7rem 1rem; }
+  details.record summary { cursor: pointer; font-size: .82rem; font-weight: 600; color: var(--muted); }
+  details.record summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details.record pre { overflow-x: auto; background: var(--code-bg); border-radius: 4px; padding: .9rem 1rem; font-size: .76rem; line-height: 1.5; margin: .7rem 0 0; }
+  details.audit { background: var(--card); border: 1px solid var(--line); border-radius: 6px; }
+  details.audit > summary { cursor: pointer; padding: .85rem 1.25rem; font-size: .82rem; font-weight: 600; color: var(--muted); list-style-position: inside; }
+  details.audit > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  details.audit[open] > summary { border-bottom: 1px solid var(--line); }
+  .audit-body { padding: 1rem 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 1.1rem; }
+  .audit-step .step-name { font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: .5rem; }
+  .search { border-left: 2px solid var(--line); padding-left: .9rem; margin-bottom: .8rem; }
+  .search:last-child { margin-bottom: 0; }
+  .search .q { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .8rem; background: var(--code-bg); border-radius: 3px; padding: .25rem .55rem; display: inline-block; margin-bottom: .35rem; }
+  .search .tool { font-size: .68rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-left: .4rem; }
+  .hits { display: flex; flex-direction: column; gap: .25rem; }
+  .hit { font-size: .82rem; display: flex; gap: .5rem; align-items: baseline; }
+  .hit .mark { flex: none; font-weight: 700; }
+  .hit.used .mark { color: var(--good); }
+  .hit.skipped .mark { color: var(--faint); }
+  .hit.skipped { color: var(--faint); }
+  .hit a { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+  .hit.skipped a { color: var(--faint); border-bottom-color: color-mix(in srgb, var(--faint) 40%, transparent); }
+  .hit a:hover, .hit a:focus-visible { border-bottom-style: solid; border-bottom-width: 2px; outline: none; }
+  .hit .why { color: var(--muted); font-size: .78rem; }
+  .snip { display: block; font-family: "Newsreader", Georgia, serif; font-style: italic; font-size: .8rem; color: var(--muted); margin-top: .1rem; }
+  @media (max-width: 540px) {
+    .entry-head { flex-wrap: wrap; }
+    .scorebox { flex-direction: row; width: 100%; justify-content: space-between; align-items: center; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="toolbar">
+    <button class="btn" id="copy-page" type="button">Copy page</button>
+    <button class="btn" id="theme-toggle" type="button">Dark mode</button>
+  </div>
+  <div class="run-note">Live run · 2026-09-09 · public sources only</div>
+
+  <header class="query">
+    <div class="eyebrow">Target Contact</div>
+    <h1>Who at Daversa Partners owns revenue-leadership searches?</h1>
+    <div class="params">
+      <strong>Daversa Partners</strong> (executive search firm) · seeking
+      <strong>recruiters</strong> for <strong>GTM / revenue leadership</strong> ·
+      C-level / EVP · adtech, martech, media, data &amp; insights ·
+      for <strong>Carrie Seifer</strong>
+    </div>
+    <div class="meta">
+      <span>Run 2026-09-09 · 4 ranked of 59 people reviewed, top 2 detailed</span>
+      <span class="chip high">high confidence</span>
+      <span class="chip medium">medium</span>
+      <span class="chip low">low</span>
+    </div>
+  </header>
+
+  <article class="entry top">
+    <div class="entry-head">
+      <div class="rank-badge">1</div>
+      <div class="who">
+        <h2 class="name">Kenny Denton</h2>
+        <div class="title">Partner · Co-lead, B2B Go-to-Market Practice</div>
+        <div class="loc">San Francisco · 10+ years at firm; MD June 2024, Partner June 2025</div>
+      </div>
+      <div class="scorebox">
+        <div class="score">93<small>relevance</small></div>
+        <span class="chip high">high confidence</span>
+      </div>
+    </div>
+
+    <p class="rationale">Co-leads the firm's B2B GTM practice and runs sales,
+    marketing, and customer-success searches at the VP and C-level, which is
+    exactly Carrie's CRO/CCO tier; 200+ searches including Scale AI, OpenAI,
+    Brex, and Dataiku.</p>
+
+    <div class="facts">
+      <div class="fact">
+        <div class="label">LinkedIn</div>
+        <div class="value"><a href="https://www.linkedin.com/in/kennethdenton/">linkedin.com/in/kennethdenton</a></div>
+      </div>
+      <div class="fact">
+        <div class="label">Email</div>
+        <div class="value">kenny.denton@daversa.com
+          <div class="email-status">pattern-inferred (first.last, ~57% of daversa.com per LeadIQ/RocketReach) — verify before sending</div>
+        </div>
+      </div>
+      <div class="fact">
+        <div class="label">Recent signal</div>
+        <div class="value">Elevated to Partner June 2025; placements at AI/data companies (Scale AI, Dataiku, Decagon) — her data-and-measurement background is on-thesis</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="fact"><div class="label">Warm paths</div></div>
+      <div class="paths">
+        <div class="path">None found in public record. Carrie's LinkedIn network was not accessible this run; her 25 years in NYC media/adtech make 2nd-degree paths plausible — worth checking from her account before cold outreach.</div>
+      </div>
+    </div>
+
+    <div class="angle">
+      <div class="label">Suggested opening</div>
+      Lead with EVP Global Revenue at IAS and the CCO/GM chapter at GWI: his
+      practice covers exactly that sales-plus-customer-success C-level lane,
+      and his client list skews AI/data companies where her measurement and
+      insights background reads as domain fit, not adjacency. He is
+      SF-based, so start on LinkedIn (his profile is public) unless her
+      network turns up an intro; treat the email as a fallback until
+      verified.
+    </div>
+
+    <div class="sources">Sources:
+      <a href="https://daversa.com/leadership/kenny-denton">daversa.com/leadership/kenny-denton</a> ·
+      <a href="https://www.businesswire.com/news/home/20250604758118/en/Kenny-Denton-Joins-Daversas-Leadership-Bench-as-Newest-Partner">Businesswire, June 2025</a> ·
+      <a href="https://www.businesswire.com/news/home/20240606914971/en/Daversa-Partners-Appoints-Kenny-Denton-Sean-Hall-and-Brian-Warager-to-Managing-Director">Businesswire, June 2024</a> ·
+      <a href="https://daversa.com/team">daversa.com/team</a>
+    </div>
+    <div class="entry-tools">
+      <button class="btn" type="button" data-copy-contact>Copy contact</button>
+      <button class="btn" type="button" data-copy-card>Copy card</button>
+    </div>
+  </article>
+
+  <article class="entry second">
+    <div class="entry-head">
+      <div class="rank-badge">2</div>
+      <div class="who">
+        <h2 class="name">Joe Patalano</h2>
+        <div class="title">Partner · Go-to-Market Practice, enterprise software</div>
+        <div class="loc">Office unstated (Bronx native) · ~13 years at firm; Partner Nov 2022</div>
+      </div>
+      <div class="scorebox">
+        <div class="score">88<small>relevance</small></div>
+        <span class="chip high">high confidence</span>
+      </div>
+    </div>
+
+    <p class="rationale">Built the firm's GTM practice for enterprise software
+    across sales, marketing, customer success, and people functions;
+    placements include UiPath, Zuora, Apollo.io, and EnterpriseDB — SaaS
+    revenue leadership, one step from Carrie's adtech/data lane.</p>
+
+    <div class="facts">
+      <div class="fact">
+        <div class="label">LinkedIn</div>
+        <div class="value">Not fetched this run (login-walled); findable by name + firm</div>
+      </div>
+      <div class="fact">
+        <div class="label">Email</div>
+        <div class="value">joe.patalano@daversa.com
+          <div class="email-status">pattern-inferred (first.last, ~57% of daversa.com per LeadIQ/RocketReach) — verify before sending</div>
+        </div>
+      </div>
+      <div class="fact">
+        <div class="label">Recent signal</div>
+        <div class="value">Hunt Scanlon: "instrumental in building out the firm's go-to-market practices for top enterprise software businesses"</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="fact"><div class="label">Warm paths</div></div>
+      <div class="paths">
+        <div class="path">None found in public record. NYC roots (Bronx native) raise the odds of shared orbit with Carrie's NYC network — check from her account.</div>
+      </div>
+    </div>
+
+    <div class="angle">
+      <div class="label">Suggested opening</div>
+      Lead with the customer-success side of her record (CCO at GWI, global
+      CS at IAS): his mandate explicitly spans Sales and Customer Success for
+      enterprise software, and CCO-capable CRO candidates are rarer than
+      pure sellers. Likely the better first call if she prefers an East
+      Coast relationship; contact via LinkedIn or the pattern email above
+      once verified.
+    </div>
+
+    <div class="sources">Sources:
+      <a href="https://huntscanlon.com/daversa-partners-welcomes-joe-patalano-to-firms-partnership/">Hunt Scanlon, Nov 2022</a> ·
+      <a href="https://daversa.com/team">daversa.com/team</a>
+    </div>
+    <div class="entry-tools">
+      <button class="btn" type="button" data-copy-contact>Copy contact</button>
+      <button class="btn" type="button" data-copy-card>Copy card</button>
+    </div>
+  </article>
+
+  <div class="section-label"><span>Also ranked</span><button class="btn" type="button" data-copy-next>Copy</button></div>
+  <div class="rows">
+    <div class="row"><span class="r">3</span><span class="n">Emma Mango</span><span class="t">Managing Director, Manhattan — go-to-market, operations, product; the NYC GTM contact if partners are unresponsive</span><span class="s">72</span></div>
+    <div class="row"><span class="r">4</span><span class="n">Maryanne Martire</span><span class="t">Partner, Marketing practice — adjacent lane (CMO searches, not CRO)</span><span class="s">58</span></div>
+  </div>
+
+  <div class="section-label"><span>Also considered</span><button class="btn" type="button" data-copy-next>Copy</button></div>
+  <div class="rows">
+    <div class="row"><span class="r">–</span><span class="n">Paul Daversa</span><span class="t">CEO &amp; Founder — no public evidence he runs GTM searches; founder tier is CEO/board mandates</span><span class="s"></span></div>
+    <div class="row"><span class="r">–</span><span class="n">Laura Kinder</span><span class="t">President — firm leadership role; no practice mandate in public record</span><span class="s"></span></div>
+    <div class="row"><span class="r">–</span><span class="n">Isabella St Croix</span><span class="t">Director, East Coast GTM/AI/Data — right lane, too junior to be first contact</span><span class="s"></span></div>
+  </div>
+
+  <div class="section-label"><span>Caveats</span><button class="btn" type="button" data-copy-next>Copy</button></div>
+  <div class="plain">
+    <ul>
+      <li>Neither GTM partner shows adtech/martech-specific placements in the public record; the practice is function-first across B2B tech. Carrie's data/measurement background (IAS, GWI) fits their AI/data client base, but no direct adtech evidence was found.</li>
+      <li>Emails are pattern-inferred from aggregator-reported format, never verified here — confirm before sending.</li>
+      <li>Warm-path search used public sources only; Carrie's own LinkedIn network was not accessible this run, so "none found" is weaker than it would be with her account.</li>
+      <li>Ranks 3–4 rest on team-page titles alone, fetched today; press coverage was not sought for them.</li>
+      <li>LinkedIn profiles were not fetched (login-walled); tenure details come from press announcements.</li>
+    </ul>
+  </div>
+
+  <details class="audit">
+    <summary>Audit trail — 6 searches and 1 cached profile behind this card</summary>
+    <div class="audit-body">
+      <div class="audit-step">
+        <div class="step-name">Step 1 · Seeker bio</div>
+        <div class="search">
+          <span class="q">profiles/carrie.md</span><span class="tool">cache</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span>Stored profile, built 2026-09-09 (fresh) <span class="why">— practice area, seniority tier, network surface</span></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="audit-step">
+        <div class="step-name">Step 3 · Enumerate candidates at Daversa</div>
+        <div class="search">
+          <span class="q">daversa.com/team</span><span class="tool">site fetch</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://daversa.com/team">Team page (fetched 2026-09-09)</a> <span class="why">— 59 people listed with titles and practices; 6 GTM-adjacent identified</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">site:huntscanlon.com Daversa Partners</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://huntscanlon.com/daversa-partners-welcomes-joe-patalano-to-firms-partnership/">Patalano partnership announcement (Nov 2022)</a> <span class="why">— practice mandate and placements</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span>Promotion timeline items (2021–2025) <span class="why">— corroborates seniority dates</span></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="audit-step">
+        <div class="step-name">Step 4 · Rank against seeker</div>
+        <div class="search">
+          <span class="q">"Kenny Denton" Daversa Partners go-to-market</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.businesswire.com/news/home/20250604758118/en/Kenny-Denton-Joins-Daversas-Leadership-Bench-as-Newest-Partner">Businesswire: Denton to Partner (June 2025)</a> <span class="why">— 200+ searches; Scale AI, OpenAI, Brex, Dataiku, Poolside</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.linkedin.com/in/kennethdenton/">LinkedIn URL (not fetched, login-walled)</a> <span class="why">— contact channel only</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">huntscanlon.com/daversa-partners-welcomes-joe-patalano…</span><span class="tool">site fetch</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://huntscanlon.com/daversa-partners-welcomes-joe-patalano-to-firms-partnership/">Full article</a> <span class="why">— mandate quote and placement list</span>
+              <span class="snip">"…instrumental in building out the firm's go-to-market practices for top enterprise software businesses"</span></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="audit-step">
+        <div class="step-name">Step 4.5 · Verify</div>
+        <div class="search">
+          <span class="q">daversa.com/leadership/kenny-denton</span><span class="tool">site fetch</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://daversa.com/leadership/kenny-denton">Firm bio page</a> <span class="why">— stated mandate verbatim; SF office; identity confirmed (name + firm + practice)</span>
+              <span class="snip">"Kenny specializes in B2B GTM projects (sales, marketing, and customer success) at the VP and C-level."</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span>Currency check <span class="why">— both decorated partners appear on the team page fetched today; no departure news found</span></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="audit-step">
+        <div class="step-name">Step 5 · Decorate</div>
+        <div class="search">
+          <span class="q">daversa.com email format pattern</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://leadiq.com/c/daversa-partners/5a1d92025400005a0076f645/email-format">LeadIQ</a> / <a href="https://rocketreach.co/daversa-email-format_b692f7b6c9323deb">RocketReach</a> <span class="why">— first.last@daversa.com ~57%; marked pattern-inferred</span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <details class="record">
+    <summary>View the underlying record (output schema v0) <button class="btn" type="button" id="copy-json">Copy JSON</button></summary>
+    <pre>{
+  "query": {
+    "organization": { "name": "Daversa Partners", "domain": "daversa.com", "kind": "search_firm" },
+    "target": { "who": "recruiters", "function": "go-to-market / revenue leadership",
+                "level": "C-level / EVP", "industries": ["adtech", "martech", "media", "data & insights"] },
+    "seeker": { "profile": "carrie", "linkedin": "linkedin.com/in/carrieseifer" },
+    "options": { "max_results": 6, "decorate_top": 2 },
+    "run_at": "2026-09-09"
+  },
+  "results": [
+    { "rank": 1, "name": "Kenny Denton",
+      "current_title": "Partner", "org_unit": "Co-lead, B2B Go-to-Market Practice",
+      "location": "San Francisco",
+      "relevance": { "score": 93, "rationale": "Runs B2B sales/marketing/CS searches at VP and C-level; 200+ searches incl. Scale AI, OpenAI, Brex, Dataiku." },
+      "confidence": { "level": "high", "basis": "Stated practice co-lead on firm bio page + June 2025 partner announcement with placement history." },
+      "contact": { "linkedin": "https://www.linkedin.com/in/kennethdenton/",
+                   "email": { "address": "kenny.denton@daversa.com", "status": "pattern_inferred", "source": "LeadIQ/RocketReach first.last ~57%" } },
+      "sources": [
+        { "title": "daversa.com/leadership/kenny-denton", "url": "https://daversa.com/leadership/kenny-denton" },
+        { "title": "Businesswire June 2025", "url": "https://www.businesswire.com/news/home/20250604758118/en/" },
+        { "title": "daversa.com/team", "url": "https://daversa.com/team" } ],
+      "detail": { "tenure": "10+ years at firm; MD June 2024, Partner June 2025",
+                  "recent_signal": "Partner elevation June 2025; AI/data-company placements",
+                  "warm_paths": [], "outreach_angle": "Lead with IAS EVP Global Revenue + GWI CCO; LinkedIn first, email after verification." } },
+    { "rank": 2, "name": "Joe Patalano",
+      "current_title": "Partner", "org_unit": "Go-to-Market Practice, enterprise software",
+      "location": "Office unstated (Bronx native)",
+      "relevance": { "score": 88, "rationale": "Built GTM practice for enterprise software incl. Customer Success; UiPath, Zuora, Apollo.io placements." },
+      "confidence": { "level": "high", "basis": "Hunt Scanlon partnership announcement stating mandate + current team page listing." },
+      "contact": { "email": { "address": "joe.patalano@daversa.com", "status": "pattern_inferred", "source": "LeadIQ/RocketReach first.last ~57%" } },
+      "sources": [
+        { "title": "Hunt Scanlon Nov 2022", "url": "https://huntscanlon.com/daversa-partners-welcomes-joe-patalano-to-firms-partnership/" },
+        { "title": "daversa.com/team", "url": "https://daversa.com/team" } ],
+      "detail": { "tenure": "~13 years at firm; Partner Nov 2022",
+                  "recent_signal": "Stated GTM-practice builder for enterprise software",
+                  "warm_paths": [], "outreach_angle": "Lead with the CCO/customer-success side of her record." } },
+    { "rank": 3, "name": "Emma Mango", "current_title": "Managing Director", "org_unit": "Manhattan — GTM, operations, product",
+      "relevance": { "score": 72, "rationale": "NYC GTM coverage at MD level; fallback contact." },
+      "confidence": { "level": "medium", "basis": "Team page title only, fetched 2026-09-09." },
+      "sources": [ { "title": "daversa.com/team", "url": "https://daversa.com/team" } ] },
+    { "rank": 4, "name": "Maryanne Martire", "current_title": "Partner", "org_unit": "Marketing practice",
+      "relevance": { "score": 58, "rationale": "Adjacent lane: CMO searches, not CRO." },
+      "confidence": { "level": "medium", "basis": "Team page title only, fetched 2026-09-09." },
+      "sources": [ { "title": "daversa.com/team", "url": "https://daversa.com/team" } ] }
+  ],
+  "also_considered": [
+    { "name": "Paul Daversa", "title": "CEO & Founder", "why_not": "No public evidence he runs GTM searches; founder tier is CEO/board mandates." },
+    { "name": "Laura Kinder", "title": "President", "why_not": "Firm leadership role; no practice mandate in public record." },
+    { "name": "Isabella St Croix", "title": "Director, East Coast GTM/AI/Data", "why_not": "Right lane, too junior to be first contact." }
+  ],
+  "caveats": [
+    "No adtech/martech-specific placements found for either GTM partner; practice is function-first across B2B tech.",
+    "Emails pattern-inferred from aggregator-reported format; verify before sending.",
+    "Warm-path search used public sources only; seeker's LinkedIn network not accessible this run.",
+    "Ranks 3-4 rest on team-page titles alone.",
+    "LinkedIn profiles not fetched (login-walled); tenure from press."
+  ],
+  "audit": { "searches": [
+    { "step": "seeker_bio", "tool": "cache", "query": "profiles/carrie.md",
+      "results": [ { "title": "Stored profile (2026-09-09)", "used": true, "note": "practice area, tier, network surface", "as_of": "2026-09-09" } ] },
+    { "step": "enumerate", "tool": "site_fetch", "query": "https://daversa.com/team",
+      "results": [ { "title": "Team page", "url": "https://daversa.com/team", "used": true, "note": "59 people; 6 GTM-adjacent", "as_of": "2026-09-09" } ] },
+    { "step": "enumerate", "tool": "web_search", "query": "site:huntscanlon.com Daversa Partners",
+      "results": [ { "title": "Patalano partnership announcement", "url": "https://huntscanlon.com/daversa-partners-welcomes-joe-patalano-to-firms-partnership/", "used": true, "note": "mandate + placements", "as_of": "2022-11-18" } ] },
+    { "step": "rank", "tool": "web_search", "query": "\"Kenny Denton\" Daversa Partners go-to-market",
+      "results": [ { "title": "Businesswire: Denton to Partner", "url": "https://www.businesswire.com/news/home/20250604758118/en/", "used": true, "note": "200+ searches; client names", "as_of": "2025-06-04" } ] },
+    { "step": "verify", "tool": "site_fetch", "query": "https://daversa.com/leadership/kenny-denton",
+      "results": [ { "title": "Firm bio page", "url": "https://daversa.com/leadership/kenny-denton", "used": true,
+                     "note": "identity + currency confirmed; SF office",
+                     "snippet": "Kenny specializes in B2B GTM projects (sales, marketing, and customer success) at the VP and C-level.",
+                     "as_of": "2026-09-09" } ] },
+    { "step": "decorate", "tool": "web_search", "query": "daversa.com email format pattern",
+      "results": [ { "title": "LeadIQ / RocketReach", "url": "https://leadiq.com/c/daversa-partners/5a1d92025400005a0076f645/email-format", "used": true, "note": "first.last ~57%; marked pattern_inferred", "as_of": "2026-09-09" } ] }
+  ] }
+}</pre>
+  </details>
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var toggle = document.getElementById('theme-toggle');
+  function setTheme(dark) {
+    root.classList.toggle('tc-dark', dark);
+    toggle.textContent = dark ? 'Light mode' : 'Dark mode';
+    try { localStorage.setItem('tc-theme', dark ? 'dark' : 'light'); } catch (e) {}
+  }
+  var saved = null;
+  try { saved = localStorage.getItem('tc-theme'); } catch (e) {}
+  setTheme(saved === 'dark'); // light is the default; dark only when chosen
+  toggle.addEventListener('click', function () {
+    setTheme(!root.classList.contains('tc-dark'));
+  });
+
+  function flash(btn) {
+    var old = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('ok');
+    setTimeout(function () { btn.textContent = old; btn.classList.remove('ok'); }, 1200);
+  }
+  function copyFallback(btn, text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+    if (ok) { flash(btn); }
+    else {
+      var old = btn.textContent;
+      btn.textContent = 'Copy failed';
+      setTimeout(function () { btn.textContent = old; }, 1500);
+    }
+  }
+  function copy(btn, text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () { flash(btn); },
+        function () { copyFallback(btn, text); }
+      );
+    } else { copyFallback(btn, text); }
+  }
+  // Rendered plain text of an element, with buttons/toolbars stripped.
+  function textOf(el) {
+    var clone = el.cloneNode(true);
+    clone.querySelectorAll('.btn, .toolbar, .entry-tools').forEach(function (x) { x.remove(); });
+    var host = document.createElement('div');
+    host.style.cssText = 'position:fixed;left:-99999px;top:0;width:720px;';
+    host.appendChild(clone);
+    document.body.appendChild(host);
+    var t = clone.innerText.replace(/\n{3,}/g, '\n\n').trim();
+    host.remove();
+    return t;
+  }
+  function contactOf(entry) {
+    function g(sel) { var n = entry.querySelector(sel); return n ? n.innerText.trim() : ''; }
+    var lines = [g('.name'), g('.title'), g('.loc')];
+    entry.querySelectorAll('.fact').forEach(function (f) {
+      var label = f.querySelector('.label'), val = f.querySelector('.value');
+      if (!label || !val) return;
+      var l = label.innerText.trim().toLowerCase(); // innerText is rendered text: CSS uppercases labels
+      if (l === 'linkedin') {
+        var a = val.querySelector('a');
+        lines.push('LinkedIn: ' + (a ? a.href : val.innerText.trim()));
+      } else if (l === 'email') {
+        lines.push('Email: ' + val.innerText.trim().replace(/\s+/g, ' '));
+      }
+    });
+    return lines.filter(Boolean).join('\n');
+  }
+  document.querySelectorAll('[data-copy-contact]').forEach(function (btn) {
+    btn.addEventListener('click', function () { copy(btn, contactOf(btn.closest('.entry'))); });
+  });
+  document.querySelectorAll('[data-copy-card]').forEach(function (btn) {
+    btn.addEventListener('click', function () { copy(btn, textOf(btn.closest('.entry'))); });
+  });
+  document.querySelectorAll('[data-copy-next]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var section = btn.closest('.section-label').nextElementSibling;
+      copy(btn, textOf(section));
+    });
+  });
+  var pageBtn = document.getElementById('copy-page');
+  pageBtn.addEventListener('click', function () { copy(pageBtn, textOf(document.querySelector('.wrap'))); });
+  var jsonBtn = document.getElementById('copy-json');
+  jsonBtn.addEventListener('click', function (e) {
+    e.preventDefault(); e.stopPropagation(); // don't toggle the details
+    copy(jsonBtn, document.querySelector('details.record pre').textContent);
+  });
+})();
+</script>

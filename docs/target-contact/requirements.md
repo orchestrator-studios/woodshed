@@ -265,3 +265,9 @@ caveats; collapsible raw JSON to make the schema contract visible.
   formulation ("who at X owns Y, given Z") and the workflow requirement that
   step 1 is building the seeker's bio, since Z conditions the answer — the
   same X and Y can resolve to different people for different Z's.
+- 2026-09-09 — First live run of the skill draft: Daversa × Carrie, output in
+  `runs/daversa-2026-09-09.html` + `.json`. New requirements from Cliff:
+  light mode is the default with an opt-in dark toggle; copy buttons at every
+  level (page, card, contact record, sections, raw JSON); and every run
+  writes local copies (card HTML + record JSON) to a designated output
+  folder — `runs/` here — before anything is published to the cloud.
