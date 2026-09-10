@@ -38,10 +38,11 @@
       "relevance": { "score": 72, "rationale": "NYC GTM coverage at MD level; fallback contact." },
       "confidence": { "level": "medium", "basis": "Team page title only, fetched 2026-09-09." },
       "sources": [ { "title": "daversa.com/team", "url": "https://daversa.com/team" } ] },
-    { "rank": 4, "name": "Maryanne Martire", "current_title": "Partner", "org_unit": "Marketing practice",
-      "relevance": { "score": 58, "rationale": "Adjacent lane: CMO searches, not CRO." },
-      "confidence": { "level": "medium", "basis": "Team page title only, fetched 2026-09-09." },
-      "sources": [ { "title": "daversa.com/team", "url": "https://daversa.com/team" } ] }
+    { "rank": 4, "name": "Maryanne Martire", "current_title": "Partner", "org_unit": "Marketing practice (founder)",
+      "relevance": { "score": 62, "rationale": "Founded the marketing practice; scope spans sales and customer success but centers on marketing leaders - adjacent to the CRO lane." },
+      "confidence": { "level": "medium", "basis": "Firm bio page fetched 2026-09-09." },
+      "sources": [ { "title": "daversa.com/team", "url": "https://daversa.com/team" },
+                   { "title": "daversa.com/leadership/maryanne-martire", "url": "https://daversa.com/leadership/maryanne-martire" } ] }
   ],
   "also_considered": [
     { "name": "Paul Daversa", "title": "CEO & Founder", "why_not": "No public evidence he runs GTM searches; founder tier is CEO/board mandates." },
@@ -50,9 +51,10 @@
   ],
   "caveats": [
     "No adtech/martech-specific placements found for either GTM partner; practice is function-first across B2B tech.",
-    "Emails pattern-inferred from aggregator-reported format; verify before sending.",
+    "Emails pattern-inferred from aggregator-reported format; verify before sending. Aggregators disagree on the mail domain itself (daversa.com vs daversapartners.com).",
     "Warm-path search used public sources only; seeker's LinkedIn network not accessible this run.",
-    "Ranks 3-4 rest on team-page titles alone.",
+    "Rank 3 rests on a team-page title alone; rank 4 corroborated by firm bio page.",
+    "Denton's bio says 'co-leads' the B2B GTM practice but no public source names the other co-lead; Patalano ('key role in shaping' the practice) is the closest fit, unconfirmed. If the unnamed co-lead is NYC-based they could outrank Patalano for this seeker.",
     "LinkedIn profiles not fetched (login-walled); tenure from press."
   ],
   "audit": { "searches": [
@@ -69,6 +71,16 @@
                      "note": "identity + currency confirmed; SF office",
                      "snippet": "Kenny specializes in B2B GTM projects (sales, marketing, and customer success) at the VP and C-level.",
                      "as_of": "2026-09-09" } ] },
+    { "step": "verify", "tool": "site_fetch", "query": "https://daversa.com/leadership/maryanne-martire",
+      "results": [ { "title": "Firm bio page", "url": "https://daversa.com/leadership/maryanne-martire", "used": true,
+                     "note": "marketing practice founder; scope spans sales/CS; rank-4 rationale refined, 58 -> 62", "as_of": "2026-09-09" } ] },
+    { "step": "verify", "tool": "site_fetch", "query": "https://daversa.com/leadership/joe-patalano",
+      "results": [ { "title": "Firm bio page", "url": "https://daversa.com/leadership/joe-patalano", "used": true,
+                     "note": "supports rank 2; closest fit for the unnamed GTM co-lead but not stated",
+                     "snippet": "has played a key role in shaping Daversa's go-to-market practice", "as_of": "2026-09-09" } ] },
+    { "step": "verify", "tool": "web_search", "query": "Daversa 'co-lead' B2B go-to-market practice",
+      "results": [ { "title": "No public naming of the other GTM co-lead", "used": true, "note": "recorded as caveat", "as_of": "2026-09-09" },
+                   { "title": "Christen Morelli Seiler profiles", "url": "https://theorg.com/org/daversa-partners/org-chart/christen-morelli", "used": false, "note": "finance-concentrated; correctly unranked", "as_of": "2026-09-09" } ] },
     { "step": "decorate", "tool": "web_search", "query": "daversa.com email format pattern",
       "results": [ { "title": "LeadIQ / RocketReach", "url": "https://leadiq.com/c/daversa-partners/5a1d92025400005a0076f645/email-format", "used": true, "note": "first.last ~57%; marked pattern_inferred", "as_of": "2026-09-09" } ] }
   ] }

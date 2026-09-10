@@ -105,6 +105,10 @@ renders:
   quarters. A title only as fresh as a stale page gets a staleness caveat.
 - **Claims.** Re-check that each cited source actually says what the
   rationale claims (the stored snippets make this fast).
+- **Dangling evidence.** Language that implies an unnamed person ("co-leads",
+  "together with", "the team she built") means someone the enumeration may
+  have missed. Chase it; if the person can't be identified from public
+  sources, record the gap as a caveat rather than dropping the thread.
 
 When practical, run this as a fresh-eyes subagent that sees only the claims
 and sources, not the reasoning that produced them. Findings downgrade
@@ -131,6 +135,10 @@ on first run and remember it. Then publish the card as an artifact and give
 the user both the link and the local path. When re-running a query for the
 same X, republish to the same artifact URL rather than minting a new one,
 and write a new dated file rather than overwriting the old run.
+
+After publishing, open the artifact in the browser and confirm the toggle,
+copy buttons, and both themes actually work before handing over the link —
+a wiring bug survives a code read but not a click.
 
 ## Voice
 

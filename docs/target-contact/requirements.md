@@ -1,7 +1,8 @@
 # target-contact — backgrounder & requirements survey
 
 Project folder: `docs/target-contact/` gathers everything for this effort —
-this requirements doc and the card mock (`card-mock.html`).
+this requirements doc, `veracity.md`, and run outputs in `runs/`. The skill
+itself lives at `skills/target-contact/`.
 
 Working doc for a future skill. **We are not building the skill yet** — this doc
 exists to gather insight first, so the skill is shaped by real requirements
@@ -234,10 +235,12 @@ and field selection, not schema changes.
 
 ## Results card (UI first pass)
 
-Mock lives at `card-mock.html` in this folder — a static render of the schema
-with **illustrative sample people** (real firm, fictional partners, clearly
-bannered) so we're not fabricating contact details for real people in a mock.
-Published as an artifact for Adam/Carrie to react to.
+The original mock (`card-mock.html`, fictional sample people) was retired
+2026-09-09 once the first live run existed: with a real card in `runs/`, the
+mock was the one thing in the repo that looked like a result but wasn't. The
+design reference is the skill's template
+(`skills/target-contact/assets/card-template.html`); the demonstration is the
+live run.
 
 Design intent: dossier-grade, scannable. Query echo up top; top 1–2 as
 expanded entries (rationale, confidence, contact block with explicit email
@@ -271,3 +274,10 @@ caveats; collapsible raw JSON to make the schema contract visible.
   level (page, card, contact record, sections, raw JSON); and every run
   writes local copies (card HTML + record JSON) to a designated output
   folder — `runs/` here — before anything is published to the cloud.
+- 2026-09-09 — First cut complete. Skill scaffolded at
+  `skills/target-contact/` (SKILL.md, schema, playbook, card template, Carrie
+  profile), live run verified in the browser (theme toggle, copy buttons,
+  clipboard), verify pass extended with a "dangling evidence" check after the
+  co-lead question, mock retired. Next: confirm LinkedIn access model and
+  contact preferences with Carrie; prove the internal_recruiting mode on a
+  target company.

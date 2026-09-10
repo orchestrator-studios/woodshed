@@ -20,6 +20,11 @@ Shared workspace for Cliff and Adam.
   public web; builds a multi-tab Google Sheet as the auditable record, then renders
   a one-screen HTML brief strictly from the sheet. From Adam, Sept 2026; current
   work is wall-clock optimization — see its `HANDOFF.md` for the backlog.
+- **skills/target-contact** — answers "who at X owns Y, given person Z": finds
+  the most senior person at a firm or company who owns the seeker's practice
+  area, ranked with confidence, contact paths, and a full audit trail, rendered
+  as a schema-backed results card. For Carrie, Sept 2026; requirements and run
+  outputs in `docs/target-contact/`.
 
 ## Conventions
 

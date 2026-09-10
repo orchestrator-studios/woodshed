@@ -81,6 +81,10 @@ record's `audit` block as it happens, not reconstructed afterward.
   observed addresses). Always renders with "verify before sending".
 - `unknown`: don't guess. LinkedIn or a warm path is the channel instead.
 - Never invent an address; never upgrade a pattern to verified.
+- Verify the domain, not just the format: firms often use a mail domain that
+  differs from their website (daversa.com vs daversapartners.com), and
+  aggregators disagree with each other. If sources conflict on the domain,
+  say so in the caveats.
 
 ## Warm paths
 
