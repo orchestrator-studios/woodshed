@@ -1,0 +1,368 @@
+<title>Target Contact</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..600&family=Archivo:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --paper: #F5F5F1;
+    --card: #FFFFFF;
+    --ink: #16232B;
+    --muted: #5C6B74;
+    --faint: #8B979F;
+    --line: #E3E4DE;
+    --accent: #0E5A63;
+    --accent-soft: #E3EEEF;
+    --gold: #A97F2F;
+    --gold-soft: #F4EBD8;
+    --good: #2E7D5B;
+    --good-soft: #E4F0EA;
+    --warn: #A66A1F;
+    --warn-soft: #F5ECDD;
+    --low: #6B7480;
+    --low-soft: #EAECEF;
+    --code-bg: #F0F1EC;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #10171C;
+      --card: #182228;
+      --ink: #E7ECEF;
+      --muted: #9AA8B0;
+      --faint: #74828B;
+      --line: #263239;
+      --accent: #6FB9C2;
+      --accent-soft: #14333A;
+      --gold: #CFA85C;
+      --gold-soft: #33291369;
+      --good: #6FBF9A;
+      --good-soft: #16302637;
+      --warn: #D9A055;
+      --warn-soft: #33270f5c;
+      --low: #97A1AC;
+      --low-soft: #232b3170;
+      --code-bg: #131C21;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #10171C;
+    --card: #182228;
+    --ink: #E7ECEF;
+    --muted: #9AA8B0;
+    --faint: #74828B;
+    --line: #263239;
+    --accent: #6FB9C2;
+    --accent-soft: #14333A;
+    --gold: #CFA85C;
+    --gold-soft: #33291369;
+    --good: #6FBF9A;
+    --good-soft: #16302637;
+    --warn: #D9A055;
+    --warn-soft: #33270f5c;
+    --low: #97A1AC;
+    --low-soft: #232b3170;
+    --code-bg: #131C21;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0;
+    padding: 2.5rem 1.25rem 4rem;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; }
+
+  .sample-note {
+    font-size: .78rem; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--warn); background: var(--warn-soft);
+    border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+    padding: .45rem .8rem; border-radius: 3px; text-align: center;
+  }
+
+  /* ── Query header ── */
+  .query { display: flex; flex-direction: column; gap: .35rem; padding: 0 .25rem; }
+  .query .eyebrow {
+    font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .query h1 {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.9rem; font-weight: 500; line-height: 1.15; margin: 0;
+    text-wrap: balance;
+  }
+  .query .params { color: var(--muted); font-size: .88rem; }
+  .query .params strong { color: var(--ink); font-weight: 600; }
+  .query .meta {
+    display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: center;
+    font-size: .78rem; color: var(--faint); margin-top: .3rem;
+  }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .72rem; font-weight: 600; letter-spacing: .03em;
+    padding: .13rem .55rem; border-radius: 99px; white-space: nowrap;
+  }
+  .chip.high { color: var(--good); background: var(--good-soft); }
+  .chip.medium { color: var(--warn); background: var(--warn-soft); }
+  .chip.low { color: var(--low); background: var(--low-soft); }
+
+  /* ── Decorated entries ── */
+  .entry {
+    background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+    padding: 1.4rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 1rem;
+  }
+  .entry.top { border-top: 3px solid var(--gold); }
+  .entry.second { border-top: 3px solid var(--accent); }
+
+  .entry-head { display: flex; gap: 1rem; align-items: flex-start; }
+  .rank-badge {
+    flex: none; width: 2.4rem; height: 2.4rem; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: "Newsreader", Georgia, serif; font-size: 1.25rem; font-weight: 600;
+  }
+  .entry.top .rank-badge { background: var(--gold-soft); color: var(--gold); }
+  .entry.second .rank-badge { background: var(--accent-soft); color: var(--accent); }
+
+  .who { flex: 1; min-width: 0; }
+  .who .name {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 1.45rem; font-weight: 600; line-height: 1.2; margin: 0;
+  }
+  .who .title { color: var(--muted); font-size: .92rem; margin-top: .15rem; }
+  .who .loc { color: var(--faint); font-size: .8rem; }
+
+  .scorebox { flex: none; text-align: right; display: flex; flex-direction: column; gap: .35rem; align-items: flex-end; }
+  .score {
+    font-variant-numeric: tabular-nums;
+    font-size: 1.5rem; font-weight: 700; line-height: 1; color: var(--accent);
+  }
+  .score small { display: block; font-size: .68rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin-top: .2rem; }
+
+  .rationale {
+    font-family: "Newsreader", Georgia, serif; font-size: 1.05rem; font-style: italic;
+    color: var(--ink); border-left: 2px solid var(--line); padding-left: .9rem; margin: 0;
+  }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .9rem 1.4rem; }
+  .fact .label {
+    font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--faint); margin-bottom: .2rem;
+  }
+  .fact .value { font-size: .9rem; }
+  .fact .value a { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+  .fact .value a:hover, .fact .value a:focus-visible { border-bottom-style: solid; border-bottom-width: 2px; outline: none; }
+  .email-status { font-size: .74rem; color: var(--warn); }
+  .email-status.verified { color: var(--good); }
+
+  .paths { display: flex; flex-direction: column; gap: .3rem; }
+  .path { font-size: .88rem; display: flex; gap: .5rem; align-items: baseline; }
+  .path::before { content: "↳"; color: var(--accent); flex: none; }
+
+  .angle {
+    background: var(--accent-soft); border-radius: 4px; padding: .8rem 1rem;
+    font-size: .9rem;
+  }
+  .angle .label { font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: .25rem; }
+
+  .sources { font-size: .76rem; color: var(--faint); }
+  .sources a { color: var(--faint); text-decoration: underline; text-underline-offset: 2px; }
+  .sources a:hover, .sources a:focus-visible { color: var(--accent); outline: none; }
+
+  /* ── Compact rows ── */
+  .rows { background: var(--card); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .row { display: flex; gap: .9rem; align-items: baseline; padding: .8rem 1.25rem; border-top: 1px solid var(--line); }
+  .row:first-child { border-top: none; }
+  .row .r { font-variant-numeric: tabular-nums; color: var(--faint); font-weight: 600; flex: none; width: 1.2rem; }
+  .row .n { font-weight: 600; flex: none; }
+  .row .t { color: var(--muted); font-size: .88rem; flex: 1; min-width: 0; }
+  .row .s { font-variant-numeric: tabular-nums; color: var(--faint); font-size: .88rem; flex: none; }
+
+  /* ── Footer sections ── */
+  .section-label {
+    font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--faint); margin: .4rem .25rem 0;
+  }
+  .plain { padding: 0 .25rem; font-size: .88rem; color: var(--muted); }
+  .plain ul { margin: .3rem 0 0; padding-left: 1.2rem; }
+  .plain li { margin-top: .25rem; }
+
+  details.record { border: 1px dashed var(--line); border-radius: 6px; padding: .7rem 1rem; }
+  details.record summary { cursor: pointer; font-size: .82rem; font-weight: 600; color: var(--muted); }
+  details.record summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details.record pre {
+    overflow-x: auto; background: var(--code-bg); border-radius: 4px;
+    padding: .9rem 1rem; font-size: .76rem; line-height: 1.5; margin: .7rem 0 0;
+  }
+
+  @media (max-width: 540px) {
+    .entry-head { flex-wrap: wrap; }
+    .scorebox { flex-direction: row; width: 100%; justify-content: space-between; align-items: center; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="sample-note">Sample render · illustrative people, not live research</div>
+
+  <header class="query">
+    <div class="eyebrow">Target Contact</div>
+    <h1>Who at Daversa Partners owns revenue-leadership searches?</h1>
+    <div class="params">
+      <strong>Daversa Partners</strong> (search firm) · seeking
+      <strong>recruiters</strong> for <strong>GTM / revenue leadership</strong> ·
+      C-level / EVP · adtech, martech, media, data &amp; insights ·
+      for <strong>Carrie Seifer</strong>
+    </div>
+    <div class="meta">
+      <span>Run 2026-09-09 · 6 candidates, top 2 detailed</span>
+      <span class="chip high">high confidence</span>
+      <span class="chip medium">medium</span>
+      <span class="chip low">low</span>
+    </div>
+  </header>
+
+  <article class="entry top">
+    <div class="entry-head">
+      <div class="rank-badge">1</div>
+      <div class="who">
+        <h2 class="name">Meredith Vance</h2>
+        <div class="title">Partner · Co-lead, B2B Go-to-Market Practice</div>
+        <div class="loc">New York, NY · Partner since 2019</div>
+      </div>
+      <div class="scorebox">
+        <div class="score">94<small>relevance</small></div>
+        <span class="chip high">high confidence</span>
+      </div>
+    </div>
+
+    <p class="rationale">Runs the firm's CRO and revenue-leadership searches for
+    growth-stage B2B software and data companies — Carrie's exact lane, at the
+    right seniority to open doors rather than screen resumes.</p>
+
+    <div class="facts">
+      <div class="fact">
+        <div class="label">LinkedIn</div>
+        <div class="value"><a href="https://www.linkedin.com/">linkedin.com/in/meredith-vance</a></div>
+      </div>
+      <div class="fact">
+        <div class="label">Email</div>
+        <div class="value">m•••@daversa.com
+          <div class="email-status">pattern-inferred via hunter.io — verify before sending</div>
+        </div>
+      </div>
+      <div class="fact">
+        <div class="label">Recent signal</div>
+        <div class="value">Placed two CROs at measurement/analytics companies this year (trade press)</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="fact"><div class="label">Warm paths</div></div>
+      <div class="paths">
+        <div class="path">Shared employer: Publicis Groupe — overlapped 2014–2017 with Carrie's Spark Foundry chapter</div>
+        <div class="path">2nd-degree via a former MediaVest colleague now at a Daversa client</div>
+      </div>
+    </div>
+
+    <div class="angle">
+      <div class="label">Suggested opening</div>
+      Lead with the IAS global-revenue role and the GWI CCO chapter — she has
+      placed in measurement and analytics twice this year, so Carrie's profile
+      is on-thesis, not a cold pitch. Warm intro via the Publicis connection
+      beats the inferred email.
+    </div>
+
+    <div class="sources">Sources:
+      <a href="https://daversa.com/team">daversa.com/team</a> ·
+      <a href="https://huntscanlon.com/">Hunt Scanlon coverage</a> ·
+      <a href="https://www.linkedin.com/">LinkedIn profile</a>
+    </div>
+  </article>
+
+  <article class="entry second">
+    <div class="entry-head">
+      <div class="rank-badge">2</div>
+      <div class="who">
+        <h2 class="name">Daniel Okafor</h2>
+        <div class="title">Partner · Go-to-Market, adtech &amp; media</div>
+        <div class="loc">New York, NY · Partner since 2021</div>
+      </div>
+      <div class="scorebox">
+        <div class="score">88<small>relevance</small></div>
+        <span class="chip medium">medium confidence</span>
+      </div>
+    </div>
+
+    <p class="rationale">Covers GTM searches with a visible adtech/media
+    placement history; practice focus inferred from placements rather than a
+    stated mandate, hence medium confidence.</p>
+
+    <div class="facts">
+      <div class="fact">
+        <div class="label">LinkedIn</div>
+        <div class="value"><a href="https://www.linkedin.com/">linkedin.com/in/daniel-okafor</a></div>
+      </div>
+      <div class="fact">
+        <div class="label">Email</div>
+        <div class="value">d•••@daversa.com
+          <div class="email-status">pattern-inferred via hunter.io — verify before sending</div>
+        </div>
+      </div>
+      <div class="fact">
+        <div class="label">Warm paths</div>
+        <div class="value">None found in Carrie's history — LinkedIn outreach recommended</div>
+      </div>
+    </div>
+
+    <div class="sources">Sources:
+      <a href="https://daversa.com/team">daversa.com/team</a> ·
+      <a href="https://www.linkedin.com/">LinkedIn profile</a>
+    </div>
+  </article>
+
+  <div class="section-label">Also ranked</div>
+  <div class="rows">
+    <div class="row"><span class="r">3</span><span class="n">Priya Raghavan</span><span class="t">Principal, GTM Practice — runs searches under Vance; useful if partners are unresponsive</span><span class="s">74</span></div>
+    <div class="row"><span class="r">4</span><span class="n">Tom Callahan</span><span class="t">Partner, Consumer &amp; Media — adjacent lane, consumer-side focus</span><span class="s">61</span></div>
+    <div class="row"><span class="r">5</span><span class="n">Alexis Duran</span><span class="t">VP, GTM Practice — too junior to be first contact</span><span class="s">55</span></div>
+    <div class="row"><span class="r">6</span><span class="n">R. Calloway</span><span class="t">Founding Partner — operates at CEO/board searches, not GTM</span><span class="s">40</span></div>
+  </div>
+
+  <div class="section-label">Caveats</div>
+  <div class="plain">
+    <ul>
+      <li>Practice-area attribution for ranks 3–5 is inferred from LinkedIn titles only, not corroborated by a second source.</li>
+      <li>Emails are pattern-inferred, never verified here — confirm before sending.</li>
+      <li>Firm team pages lag reality; partner moves within the last quarter may not be reflected.</li>
+    </ul>
+  </div>
+
+  <details class="record">
+    <summary>View the underlying record (output schema v0)</summary>
+    <pre>{
+  "query": {
+    "organization": { "name": "Daversa Partners", "domain": "daversa.com", "kind": "search_firm" },
+    "target": { "who": "recruiters", "function": "go-to-market / revenue leadership",
+                "level": "C-level / EVP", "industries": ["adtech", "martech", "media", "data & insights"] },
+    "seeker": { "profile": "carrie" },
+    "options": { "max_results": 6, "decorate_top": 2 },
+    "run_at": "2026-09-09"
+  },
+  "results": [
+    { "rank": 1, "name": "Meredith Vance",
+      "current_title": "Partner · Co-lead, B2B Go-to-Market Practice",
+      "location": "New York, NY",
+      "relevance": { "score": 94, "rationale": "Runs the firm's CRO searches for growth-stage B2B…" },
+      "confidence": { "level": "high", "basis": "named practice co-lead on firm site; placements in trade press" },
+      "contact": { "linkedin": "…", "email": { "address": "…", "status": "pattern_inferred", "source": "hunter.io" } },
+      "sources": [ { "title": "daversa.com/team", "url": "…" } ],
+      "detail": { "tenure": "Partner since 2019", "recent_signal": "…",
+                  "warm_paths": [ { "via": "shared employer: Publicis Groupe", "note": "…" } ],
+                  "outreach_angle": "…" } },
+    { "rank": 2, "name": "Daniel Okafor", "…": "…" }
+  ],
+  "also_considered": [],
+  "caveats": [ "…" ]
+}</pre>
+  </details>
+</div>
