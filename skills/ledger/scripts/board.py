@@ -16,9 +16,11 @@ not archived; only relevant sessions appear on the board.
 """
 import json
 import os
+import platform
 import re
 import subprocess
 import sys
+import urllib.request
 from datetime import datetime, timedelta
 
 ROOT = os.path.join(os.path.expanduser("~"), "claude-memory")
@@ -26,6 +28,8 @@ SESS_DIR = os.path.join(ROOT, "sessions")
 CONFIG = os.path.join(ROOT, "config", "board.json")
 STREAM_PATHS = os.path.join(ROOT, "config", "stream-paths.json")
 LASTBEAM = os.path.join(ROOT, "views", ".last-beam.json")
+BB_CACHE = os.path.join(ROOT, "config", "botbeam-cache.json")  # lockbox name -> id
+MACHINE = platform.node().lower()
 
 DEFAULTS = {
     "botbeam_script": "C:/code/orchestra/plugins/orchestra/skills/botbeam/scripts/botbeam.py",
@@ -109,6 +113,102 @@ def config():
     return cfg
 
 
+# ---------- BotBeam lockbox store (system of record, phase 1: sessions) ----------
+
+def bb_creds():
+    c = load_json(os.path.join(os.path.expanduser("~"), ".config", "orchestra",
+                               "botbeam.json"), {})
+    base = os.environ.get("BOTBEAM_BASE_URL", c.get("base_url"))
+    tok = os.environ.get("BOTBEAM_TOKEN", c.get("token"))
+    return (base.rstrip("/"), tok) if base and tok else None
+
+
+def bb_api(method, path, body=None):
+    creds = bb_creds()
+    if not creds:
+        return None
+    base, tok = creds
+    req = urllib.request.Request(
+        base + path, method=method,
+        headers={"Authorization": "Bearer " + tok, "Content-Type": "application/json"},
+        data=json.dumps(body).encode() if body is not None else None)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = r.read()
+            return json.loads(data) if data else {}
+    except Exception:
+        return None
+
+
+def bb_session_name(sid):
+    return "ledger:session:" + sid[:8]
+
+
+def push_session(s):
+    """Write-through: mirror a session record to its BotBeam lockbox."""
+    if bb_creds() is None:
+        return
+    name = bb_session_name(s["session_id"])
+    content = {"type": "json", "body": json.dumps(s)}
+    cache = load_json(BB_CACHE, {})
+    dev_id = cache.get(name)
+    if dev_id and bb_api("PUT", f"/api/devices/{dev_id}/content", content) is not None:
+        return
+    made = bb_api("POST", "/api/devices", {
+        "name": name, "kind": "lockbox",
+        "description": f"ledger session record ({s['label']})", "content": content})
+    if made and made.get("id"):
+        cache[name] = made["id"]
+        save_json(BB_CACHE, cache)
+        return
+    # create failed (likely name exists from another day/cache loss): re-list
+    lst = bb_api("GET", "/api/devices?kind=lockbox&view=summary") or []
+    for d in lst:
+        if d.get("name", "").startswith("ledger:session:"):
+            cache[d["name"]] = d["id"]
+    save_json(BB_CACHE, cache)
+    dev_id = cache.get(name)
+    if dev_id:
+        bb_api("PUT", f"/api/devices/{dev_id}/content", content)
+
+
+def fetch_remote_sessions():
+    """All machines' session records from BotBeam lockboxes, keyed by session_id."""
+    if bb_creds() is None:
+        return {}
+    out = {}
+    cache = load_json(BB_CACHE, {})
+    dirty = False
+    for d in bb_api("GET", "/api/devices?kind=lockbox&view=summary") or []:
+        if not d.get("name", "").startswith("ledger:session:"):
+            continue
+        if cache.get(d["name"]) != d["id"]:
+            cache[d["name"]] = d["id"]
+            dirty = True
+        full = bb_api("GET", f"/api/devices/{d['id']}")
+        try:
+            rec = json.loads((full or {}).get("content", {}).get("body", ""))
+            if rec.get("session_id"):
+                out[rec["session_id"]] = rec
+        except (ValueError, AttributeError):
+            continue
+    if dirty:
+        save_json(BB_CACHE, cache)
+    return out
+
+
+def merged_sessions():
+    """Local records merged with all machines' lockbox records; newest wins."""
+    combined = {}
+    for s in load_sessions():
+        combined[s["session_id"]] = s
+    for sid, rec in fetch_remote_sessions().items():
+        cur = combined.get(sid)
+        if cur is None or (rec.get("last_active") or "") > (cur.get("last_active") or ""):
+            combined[sid] = rec
+    return list(combined.values())
+
+
 # ---------- presence store ----------
 
 def session_path(sid):
@@ -154,11 +254,13 @@ def handle_event(evt):
         "cwd": cwd,
         "stream": None,
         "state": "idle",
+        "machine": MACHINE,
         "first_seen": iso(now()),
         "last_active": None,
         "last_run": None,
         "archived": False,
     }
+    s.setdefault("machine", MACHINE)
     t = iso(now())
     s["open"] = True  # any hook event means Claude is open on this session
     if event == "SessionStart":
@@ -191,6 +293,7 @@ def handle_event(evt):
     # which un-archives it (resume reopens; see data model rev 11)
     s["archived"] = False
     save_json(session_path(sid), s)
+    push_session(s)
 
 
 # ---------- board ----------
@@ -202,7 +305,9 @@ def board_state(cfg):
     run_ttl = timedelta(minutes=cfg["run_ttl_min"])
     attach_ttl = timedelta(hours=cfg.get("attach_ttl_hours", 12))
     cards = []
-    for s in sorted(load_sessions(), key=lambda x: x.get("last_active") or "", reverse=True):
+    sessions = merged_sessions()
+    labels = {s["session_id"][:6].lower(): s["label"] for s in sessions}
+    for s in sorted(sessions, key=lambda x: x.get("last_active") or "", reverse=True):
         if s.get("archived") or s.get("expired"):
             continue
         la, lr = parse_iso(s.get("last_active")), parse_iso(s.get("last_run"))
@@ -213,12 +318,14 @@ def board_state(cfg):
         cards.append({
             "label": s["label"],
             "stream": s.get("stream"),
+            "machine": s.get("machine", "?"),
             "open": is_open,
             "active": active,
             "run": run,
             "last_active": s.get("last_active"),
         })
-    return {"cards": cards, "events": recent_events(cfg["events_shown"]),
+    return {"cards": cards, "labels": labels,
+            "events": recent_events(cfg["events_shown"]),
             "products": recent_products()}
 
 
@@ -289,7 +396,7 @@ def render_html(state):
     dot_on = "background:#2ecc55;box-shadow:0 0 8px rgba(46,204,85,.7);"
     dot_ring = "background:transparent;border:2px solid #2ecc55;width:6px;height:6px;"
     dot_off = "background:#4a4d47;"
-    labels = session_label_map()
+    labels = state.get("labels") or session_label_map()
     cards = []
     for c in state["cards"]:
         bolt = ("<span style='font-size:15px' title='run in progress'>&#9889;</span>"
@@ -297,7 +404,7 @@ def render_html(state):
         stream = (f"<div style='font-size:11px;color:#8ecfb3;margin-top:2px'>stream: {c['stream']}</div>"
                   if c["stream"] else
                   f"<div style='font-size:11px;color:{muted};margin-top:2px'>no stream</div>")
-        seen = c.get("last_active") or "never"
+        seen = (c.get("last_active") or "never") + " · " + c.get("machine", "?")
         cards.append(
             f"<div style='border:1px solid {hairline};border-radius:8px;padding:10px 14px;"
             f"min-width:210px;background:{card_bg}'>"
@@ -353,7 +460,7 @@ def render_html(state):
 def semantic_key(state):
     """State that matters for diffing — excludes clocks so we don't beam every minute."""
     return json.dumps({
-        "cards": [{k: c[k] for k in ("label", "stream", "open", "active", "run")} for c in state["cards"]],
+        "cards": [{k: c[k] for k in ("label", "stream", "machine", "open", "active", "run")} for c in state["cards"]],
         "events": state["events"],
         "products": state["products"],
     }, sort_keys=True)
@@ -411,17 +518,20 @@ def seed(candidates):
     """Create idle, relevant presence records for the given survey rows."""
     for c in candidates:
         base = os.path.basename(c["cwd"].rstrip("\\/")) or "home"
-        save_json(session_path(c["session_id"]), {
+        rec = {
             "session_id": c["session_id"],
             "label": base + " · " + c["session_id"][:6],
             "cwd": c["cwd"],
             "stream": match_stream([c["cwd"]]),
             "state": "idle",
+            "machine": MACHINE,
             "first_seen": c["last_seen"],
             "last_active": c["last_seen"],
             "last_run": None,
             "archived": False,
-        })
+        }
+        save_json(session_path(c["session_id"]), rec)
+        push_session(rec)
 
 
 def main():
@@ -462,6 +572,7 @@ def main():
             if everything or any(sid.startswith(p) for p in prefixes):
                 s["archived"] = cmd == "archive"
                 save_json(session_path(sid), s)
+                push_session(s)
                 print(f"{cmd}d {s['label']}")
         beam(cfg, force=True)
     elif cmd == "beam":
