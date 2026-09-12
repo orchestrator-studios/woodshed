@@ -1,0 +1,190 @@
+<title>Ledger Phase 1</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --ground: #0d0f0e; --surface: #161a18; --surface-2: #1e2420;
+    --ink: #eef0ec; --ink-2: #a9aea7; --muted: #71766f;
+    --hairline: rgba(255,255,255,0.09); --hairline-2: rgba(255,255,255,0.16);
+    --svc: #e0a552; --svc-ink: #eabd7d; --svc-wash: rgba(224,165,82,0.08);
+    --client: #6fbf9e; --client-ink: #8ecfb3; --client-wash: rgba(111,191,158,0.08);
+    --data: #6fa8e6; --data-ink: #93c0f0; --data-wash: rgba(111,168,230,0.08);
+    --warn: #e06666;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--ground); color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px; line-height: 1.6; margin: 0; padding: 0 0 64px; }
+  code { font-family: "IBM Plex Mono", monospace; font-size: 0.86em; color: var(--ink);
+    background: var(--surface-2); padding: 1px 5px; border-radius: 4px; word-break: break-word; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  header.hero { padding: 40px 0 10px; }
+  h1 { font-family: "IBM Plex Serif", Georgia, serif; font-weight: 600; font-size: 32px;
+    letter-spacing: -0.015em; margin: 0; text-wrap: balance; }
+  .lede { color: var(--ink-2); font-size: 15.5px; max-width: 76ch; margin: 12px 0 0; }
+  .stamp { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--muted); margin: 14px 0 0; }
+  .stamp .target { color: var(--svc-ink); }
+  h5.lbl { margin: 26px 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--ink-2); font-weight: 600; }
+  h5.lbl span { text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 400; font-size: 11.5px; }
+  .rule { background: var(--surface); border: 1px solid var(--hairline); border-left: 3px solid var(--svc);
+    border-radius: 8px; padding: 14px 18px; margin: 18px 0 0; color: var(--ink-2); font-size: 13.5px; max-width: 90ch; }
+  .rule.client { border-left-color: var(--client); }
+  .rule.warn { border-left-color: var(--warn); }
+  .rule b { color: var(--ink); font-weight: 600; }
+  .tabs { display: flex; gap: 8px; margin: 26px 0 0; border-bottom: 1px solid var(--hairline-2); }
+  .tabs button { appearance: none; background: none; border: none; border-bottom: 2px solid transparent;
+    color: var(--ink-2); font: 600 14px "IBM Plex Sans", sans-serif; padding: 10px 14px; cursor: pointer; }
+  .tabs button:hover { color: var(--ink); }
+  .tabs button.on { color: var(--svc-ink); border-bottom-color: var(--svc); }
+  .tabs button:focus-visible { outline: 2px solid var(--svc); outline-offset: -2px; }
+  .pane[hidden] { display: none; }
+  .pane { padding-top: 6px; }
+  .tablescroll { overflow-x: auto; border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface); }
+  table.grid { border-collapse: collapse; width: 100%; min-width: 640px; }
+  table.grid th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--ink-2); font-weight: 600; padding: 11px 16px; border-bottom: 1px solid var(--hairline-2);
+    white-space: nowrap; background: var(--surface-2); }
+  table.grid td { padding: 11px 16px; border-bottom: 1px solid var(--hairline); font-size: 13px; vertical-align: top; }
+  table.grid tbody tr:last-child td { border-bottom: none; }
+  td.mono, .mono { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; }
+  td.id { color: var(--svc-ink); font-family: "IBM Plex Mono", monospace; white-space: nowrap; }
+  td.done { color: var(--muted); }
+  .check { color: var(--client-ink); }
+  footer { max-width: 1080px; margin: 34px auto 0; padding: 18px 24px 0;
+    border-top: 1px solid var(--hairline); color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <h1>Ledger Phase 1 — Sessions on the Board</h1>
+  <p class="lede">Make BotBeam the system of record for <b>sessions</b>, and make its board view obey
+    the Ledger Book's cheat sheet: the sessions listed are exactly the ones Cliff wants listed
+    (Rule 1), the glyphs are right (Rule 2), and archiving is one click. Events and work products
+    ship as empty columns this phase — the record plane comes later.</p>
+  <p class="stamp">phase 1 · 2026-09-12 · governs: <span class="target">The Ledger Book rev 14</span> · repos: botbeam + woodshed</p>
+</header>
+
+<div class="rule warn"><b>Prime directive: don't break BotBeam.</b> Every change is additive — new
+  tables, a new <code>/ledger</code> router, a new frontend view. Devices, beams, lockboxes, and
+  memories are untouched. The old pushed board (board.py → "Ledger" display) keeps working until the
+  cutover step, so there is never a moment without a board.</div>
+
+<div class="tabs" role="tablist">
+  <button class="on" data-pane="botbeam" role="tab">1 · BotBeam changes</button>
+  <button data-pane="woodshed" role="tab">2 · Woodshed changes</button>
+</div>
+
+<!-- ============ TAB 1: BOTBEAM ============ -->
+<div class="pane" id="botbeam" role="tabpanel">
+  <h5 class="lbl">Work items <span>— in dependency order; all additive</span></h5>
+  <div class="tablescroll">
+    <table class="grid">
+      <thead><tr><th>#</th><th>Change</th><th>Where</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="id">B1</td>
+          <td><b>Session store.</b> One new table, <code>ledger_sessions</code>, holding exactly the Book's stored facts: <code>id</code> (CC uuid, PK) · <code>user_id</code> · <code>workspace_id</code> · <code>machine</code> · <code>label</code> · <code>first_seen</code> · <code>last_event_at</code> · <code>last_prompt_at</code> · <code>last_run_at</code> · <code>ended_at</code> · <code>ever_prompted</code> · <code>archived_at</code> · <code>transcript_missing_since</code>. <b>No status columns</b> — statuses are never stored.</td>
+          <td class="mono">models.py</td>
+          <td>tables auto-create on startup, so deploy is a restart; no migration tooling needed</td></tr>
+        <tr><td class="id">B2</td>
+          <td><b>Derivation service.</b> A pure function facts → <code>{status, activity, relevant}</code>, implementing the cheat sheet's rules verbatim. Two windows in settings: <code>LEDGER_SILENCE_WINDOW</code> (default 15 min) and <code>LEDGER_RUN_WINDOW</code> (default 2 min); expiry at 3 consecutive sweep misses. The mutating-tool list (<code>Write · Edit · NotebookEdit · Bash · PowerShell</code>) lives here — service policy, per the Book.</td>
+          <td class="mono">services/ledger_service.py</td>
+          <td>unit-test the cascade directly: 9 transition rows = 9 test cases</td></tr>
+        <tr><td class="id">B3</td>
+          <td><b>The <code>/ledger</code> router.</b> Five endpoints from the Book, sessions plane only:
+            <code>POST /ledger/sessions/{id}/events</code> (upsert facts from a hook signal, return the full Session representation) ·
+            <code>POST …/archive</code> · <code>…/unarchive</code> (409 if active; batch form with <code>prefixes</code> / <code>all</code>+<code>keep</code>) ·
+            <code>POST /ledger/sessions/sweep-report</code> ·
+            <code>GET /ledger/sessions</code> (filters: status, machine, relevant) ·
+            <code>GET /ledger/board</code> → <code>{sessions, events: [], products: [], as_of}</code>, relevant sessions only, active first.</td>
+          <td class="mono">routers/ledger.py</td>
+          <td>existing JWT bearer + <code>get_current_user</code>; all rows scoped to <code>user_id</code>; server stamps every timestamp</td></tr>
+        <tr><td class="id">B4</td>
+          <td><b>Board view in the frontend.</b> A "Sessions" view rendering <code>GET /ledger/board</code>: card per session (label, workspace, machine, relative last-activity) with the Rule 2 glyphs — solid green / +⚡ / hollow ring / gray — an <b>Archive</b> button on dormant cards, and batch clear ("archive all dormant"). Events and products columns render, empty. Refresh: WS <code>ledger</code> message broadcast on every session write → view refetches (poll fallback 10 s).</td>
+          <td class="mono">frontend/src/components/</td>
+          <td>this replaces the <em>content</em> of the old Ledger display; the Device machinery is not touched</td></tr>
+        <tr><td class="id">B5</td>
+          <td><b>Test reset.</b> <code>POST /ledger/admin/reset</code> — truncates <code>ledger_sessions</code> (and later ledger tables), current user only, enabled by a settings flag. This is the "clear everything" button for the test protocol.</td>
+          <td class="mono">routers/ledger.py</td>
+          <td>dev convenience; keep behind <code>LEDGER_ADMIN_RESET=true</code></td></tr>
+        <tr><td class="id">B6</td>
+          <td><b>Deploy without breaking anything.</b> Restart backend with the new code (new table auto-creates). Smoke before/after: login, beam to default display, lockbox stash/retrieve, memory upsert — all unchanged.</td>
+          <td class="mono">uvicorn :4888</td>
+          <td>BotBeam has no cloud deploy yet; "deployment" = the running instance restarted on the new build</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="rule"><b>Explicitly out of scope this phase:</b> <code>POST /ledger/log</code>, streams,
+    events, products, search, orientation/index, attribution, and any change to beams, lockboxes, or
+    memories. The board's events/products columns stay empty until phase 2.</div>
+</div>
+
+<!-- ============ TAB 2: WOODSHED ============ -->
+<div class="pane" id="woodshed" role="tabpanel" hidden>
+  <h5 class="lbl">Work items <span>— hooks become transmitters; board.py retires from session duty</span></h5>
+  <div class="tablescroll">
+    <table class="grid">
+      <thead><tr><th>#</th><th>Change</th><th>Where</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="id">W1</td>
+          <td><b>Hook transmitter.</b> One small script, <code>session_event.py</code>: reads the hook payload from stdin, POSTs it to <code>/ledger/sessions/{id}/events</code> with the bearer token, exits 0 <em>always</em> — a hook must never block a session; on service failure it drops the signal (the derivation model absorbs gaps). <b>PostToolUse debounce:</b> skip the post if one was sent within run-window/2 (tiny per-session stamp file in temp) — lossless, since facts are max-timestamps; turns a 50-tool burst into ~2 posts.</td>
+          <td class="mono">skills/ledger/scripts/</td>
+          <td>token + base URL from <code>~/.config/orchestra/botbeam.json</code></td></tr>
+        <tr><td class="id">W2</td>
+          <td><b>Rewire the five hooks.</b> SessionStart · UserPromptSubmit · Stop · SessionEnd · PostToolUse (matcher: all tools) → <code>session_event.py</code>, async. They stop calling <code>board.py</code>.</td>
+          <td class="mono">~/.claude/settings.json</td>
+          <td>per machine: cmr-nuc and the laptop</td></tr>
+        <tr><td class="id">W3</td>
+          <td><b>Sweep reporter.</b> <code>sweep_report.py</code>: list this machine's known sessions (<code>GET /ledger/sessions?machine=…</code>), check each transcript's presence under <code>~/.claude/projects/</code>, <code>POST …/sweep-report</code>. Scheduled task replaces <code>LedgerBoardSweep</code>'s command, same 5-minute cadence.</td>
+          <td class="mono">skills/ledger/scripts/ + schtasks</td>
+          <td>observes transcripts, never writes them</td></tr>
+        <tr><td class="id">W4</td>
+          <td><b>Retire board.py from sessions.</b> No hook calls it, no sweep runs it, it no longer renders or beams the board; <code>sessions/*.json</code> in the ledger root is frozen (no import — the test starts from a clean store). Keep the file until the phase closes, then delete.</td>
+          <td class="mono">skills/ledger/scripts/board.py</td>
+          <td>the "Ledger" display device can be retired or repurposed after cutover</td></tr>
+        <tr><td class="id">W5</td>
+          <td><b>Skill update — sessions verb only.</b> <code>/ledger sessions</code> (list · archive · unarchive) becomes API calls to <code>/ledger/sessions</code>; <code>log</code> / <code>recall</code> / <code>review</code> / <code>stream</code> stay on the v1 files this phase. Drop the board-beaming instructions.</td>
+          <td class="mono">skills/ledger/SKILL.md</td>
+          <td>judgment stays; file mechanics for sessions go</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="rule client"><b>Order:</b> B1–B3 land and deploy first (BotBeam accepting signals while
+    the old board still runs) → W1–W2 flip the hooks → B4 gives the view → W3 sweeps → cutover: W4
+    retires the old board. At every step there is a working board somewhere.</div>
+</div>
+
+<!-- ============ TEST PROTOCOL ============ -->
+<h5 class="lbl">Test protocol <span>— after cutover; the cheat sheet's transition table is the acceptance checklist</span></h5>
+<div class="tablescroll">
+  <table class="grid">
+    <thead><tr><th>Step</th><th>Do</th><th>Expect on the board</th></tr></thead>
+    <tbody>
+      <tr><td class="id">T0</td><td>smoke the untouched surface: beam to default display, stash + retrieve a lockbox</td><td>works exactly as before the deploy</td></tr>
+      <tr><td class="id">T1</td><td><b>clear everything</b> — <code>POST /ledger/admin/reset</code></td><td>sessions, recent events, recent work products all empty</td></tr>
+      <tr><td class="id">T2</td><td>launch a session, <em>don't</em> prompt (also open the resume picker)</td><td>no card — the ghost gate holds</td></tr>
+      <tr><td class="id">T3</td><td>submit the first prompt</td><td>card appears, solid green</td></tr>
+      <tr><td class="id">T4</td><td>let the turn run file edits, then finish</td><td>⚡ during the burst · ⚡ out after the run window · ring when the turn ends</td></tr>
+      <tr><td class="id">T5</td><td>exit one session cleanly; kill another's terminal; leave a third idle</td><td>gray immediately · gray after the silence window · gray after the silence window — indistinguishable, by design</td></tr>
+      <tr><td class="id">T6</td><td>archive a gray card; archive-all-dormant with a keep</td><td>cards disappear; kept card stays</td></tr>
+      <tr><td class="id">T7</td><td>try archiving an active session</td><td>refused — 409 "session is active"</td></tr>
+      <tr><td class="id">T8</td><td>resume an archived session and prompt it</td><td>its card returns, green — no unarchive call needed</td></tr>
+      <tr><td class="id">T9</td><td>delete a dormant session's transcript, wait 3 sweeps</td><td>card expires off the board</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="rule client"><b>Exit criteria.</b> Rule 1 holds in practice — the board lists exactly the
+  sessions Cliff wants, archiving is one click — and all nine transition rows behaved. Then tune the
+  two windows if the feel is wrong, and phase 1 closes.</div>
+
+<footer>Ledger Phase 1 work plan · 2026-09-12 · governed by The Ledger Book rev 14 (docs/ledger/ledger-reference.html)</footer>
+</div>
+
+<script>
+  const tabs = [...document.querySelectorAll('.tabs button')];
+  const panes = [...document.querySelectorAll('.pane')];
+  tabs.forEach(t => t.addEventListener('click', () => {
+    tabs.forEach(x => x.classList.toggle('on', x === t));
+    panes.forEach(p => { p.hidden = p.id !== t.dataset.pane; });
+  }));
+</script>

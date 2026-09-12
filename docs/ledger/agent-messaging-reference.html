@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Code · Agent messaging reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1720; --panel:#16202b; --panel-2:#1c2835; --line:#2a3949;
+    --ink:#e4ebf2; --muted:#93a4b8; --dim:#6b7d92;
+    --amber:#f2b656; --amber-ink:#2a1d05; --blue:#7fb8ea; --blue-ink:#0b2236;
+    --teal:#6fd3c1; --rose:#ef8f9f;
+    --radius:6px;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  [data-theme="light"]{
+    --bg:#f5f7fa; --panel:#ffffff; --panel-2:#eef2f6; --line:#d5dde6;
+    --ink:#182230; --muted:#4e5f73; --dim:#7a8a9c;
+    --amber:#b7771a; --amber-ink:#fff4dd; --blue:#1e6fb8; --blue-ink:#e3f0fb;
+    --teal:#178a75; --rose:#c0475f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,kbd{font-family:var(--mono);font-size:.88em;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--ink)}
+  pre{font-family:var(--mono);font-size:.85em;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;overflow:auto;line-height:1.5;margin:10px 0 0}
+  pre code{background:none;border:0;padding:0}
+  h1,h2,h3{font-weight:600;line-height:1.25;margin:0}
+  h2{font-size:1.35rem;margin-bottom:6px}
+  h3{font-size:1.05rem;margin:0 0 4px}
+  p{margin:6px 0 0;max-width:70ch}
+  ul{margin:6px 0 0;padding-left:20px;max-width:72ch}
+  li{margin:3px 0}
+  .muted{color:var(--muted)}
+  .dim{color:var(--dim)}
+
+  /* header */
+  header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+  .hdr{display:flex;align-items:center;gap:18px;padding:14px 24px 0;flex-wrap:wrap}
+  .hdr h1{font-size:1.1rem;font-weight:600;letter-spacing:-.01em}
+  .hdr h1 span{color:var(--muted);font-weight:400}
+  .spacer{flex:1}
+  .toggle{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:20px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+  .toggle:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .tabs{display:flex;gap:2px;padding:10px 24px 0;overflow-x:auto}
+  .tab{appearance:none;border:0;background:none;color:var(--muted);font:inherit;font-size:.92rem;padding:8px 14px 12px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+  .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--amber)}
+  .tab:hover{color:var(--ink)}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:-2px;border-radius:4px}
+
+  /* panels */
+  .panel{display:none;padding:26px 24px 60px;max-width:1240px;margin:0 auto}
+  .panel.active{display:block}
+  .panel.active.with-rail{display:grid;grid-template-columns:210px minmax(0,1fr);gap:32px;align-items:start}
+  .rail{position:sticky;top:104px;font-size:.88rem}
+  .rail .group{color:var(--dim);font-size:.78rem;margin:14px 0 4px}
+  .rail a{display:block;color:var(--muted);padding:3px 0 3px 10px;border-left:2px solid var(--line)}
+  .rail a:hover,.rail a.on{color:var(--ink);border-left-color:var(--amber);text-decoration:none}
+  section.block{padding:18px 0 22px;border-bottom:1px solid var(--line);scroll-margin-top:110px}
+  section.block:last-child{border-bottom:0}
+  .kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;margin-top:8px;font-size:.92rem}
+  .kv dt{color:var(--muted)}
+  .kv dd{margin:0}
+  .badge{display:inline-block;font-size:.72rem;font-family:var(--mono);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--muted);vertical-align:middle;margin-left:6px}
+  .badge.verify{color:var(--amber);border-color:var(--amber)}
+  .badge.exp{color:var(--rose);border-color:var(--rose)}
+  .lead{font-size:1.02rem;color:var(--muted);max-width:66ch}
+
+  /* hero */
+  .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:36px;align-items:center;margin-bottom:30px}
+  .hero .big{font-size:1.9rem;font-weight:600;letter-spacing:-.02em;line-height:1.2;max-width:22ch}
+  .hero .big em{font-style:normal;color:var(--amber)}
+  .doors{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+  .door{border:1px solid var(--line);border-left:3px solid var(--amber);background:var(--panel);border-radius:var(--radius);padding:14px 16px}
+  .door.b{border-left-color:var(--blue)} .door.t{border-left-color:var(--teal)}
+  .door h3{font-size:1rem}
+  .door p{font-size:.9rem}
+
+  /* tables */
+  table{border-collapse:collapse;width:100%;font-size:.9rem;margin-top:10px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:500}
+  td:first-child{white-space:nowrap;font-weight:500}
+  .yes{color:var(--teal)} .no{color:var(--rose)} .part{color:var(--amber)}
+
+  /* diagrams */
+  figure{margin:14px 0 0;border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);padding:12px;overflow:auto}
+  figcaption{font-size:.85rem;color:var(--muted);padding:4px 4px 0}
+  svg{display:block;font-family:var(--sans)}
+  svg text{fill:var(--ink)}
+  svg .m{font-family:var(--mono);font-size:11px}
+  svg .lbl{font-size:12px}
+  svg .sm{font-size:11px;fill:var(--muted)}
+  svg .actor{fill:var(--panel-2);stroke:var(--line)}
+  svg .actor.session{stroke:var(--blue)}
+  svg .actor.ext{stroke:var(--dim);stroke-dasharray:4 3}
+  svg .life{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
+  svg .msg{stroke:var(--amber);stroke-width:1.6;fill:none}
+  svg .msg.ret{stroke:var(--muted);stroke-dasharray:5 4}
+  svg .note{fill:var(--panel-2);stroke:var(--line)}
+  svg .note text,svg text.note-t{font-size:11px;fill:var(--muted)}
+  svg .ent{fill:var(--panel-2);stroke:var(--line);stroke-width:1.2}
+  svg .ent.session{stroke:var(--blue)} svg .ent.amber{stroke:var(--amber)} svg .ent.teal{stroke:var(--teal)}
+  svg .ent-title{font-weight:600;font-size:13px}
+  svg .rel{stroke:var(--muted);stroke-width:1.2;fill:none}
+  svg .rel.strong{stroke:var(--amber)}
+  svg .state{fill:var(--panel-2);stroke:var(--blue);stroke-width:1.4}
+  svg .state.idle{stroke:var(--amber)}
+  .legend{display:flex;gap:18px;font-size:.82rem;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:22px;height:0;border-top:2px solid var(--amber);vertical-align:middle;margin-right:6px}
+  .legend i.ret{border-top:2px dashed var(--muted)}
+  .legend i.sess{width:14px;height:10px;border:1.5px solid var(--blue);border-radius:2px}
+  .legend i.ext{width:14px;height:10px;border:1.5px dashed var(--dim);border-radius:2px}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .callout{border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);padding:12px 14px;margin-top:12px;font-size:.92rem}
+  .callout.warn{border-color:var(--amber)}
+  .check{list-style:none;padding:0}
+  .check li{padding-left:24px;position:relative}
+  .check li::before{content:"";position:absolute;left:2px;top:9px;width:11px;height:11px;border:1.5px solid var(--muted);border-radius:3px}
+
+  @media (max-width:900px){
+    .with-rail{grid-template-columns:1fr}
+    .rail{position:static;display:flex;flex-wrap:wrap;gap:4px 12px;border-bottom:1px solid var(--line);padding-bottom:10px}
+    .rail .group{width:100%}
+    .rail a{border-left:0;padding:2px 0}
+    .hero,.two{grid-template-columns:1fr}
+    .doors{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .pulse{animation:pulse 2.4s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="hdr">
+    <h1>Claude Code <span>· inter-agent messaging</span></h1>
+    <div class="spacer"></div>
+    <span class="dim" style="font-size:.8rem">rev 3 · fact-checked against official docs 2026-09-12 · items marked <span class="badge verify">verify</span> aren't confirmed in the official docs</span>
+    <button class="toggle" id="theme" aria-label="Toggle light and dark">Light mode</button>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" aria-selected="true" data-tab="model">Mental model</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="objects">Object model</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="seq">Sequences</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="ref">Reference</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="choose">Choose a door</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="build">Build a queue bridge</button>
+  </nav>
+</header>
+
+<!-- ============ TAB 1: MENTAL MODEL ============ -->
+<div class="panel active" id="model" role="tabpanel">
+  <div class="hero">
+    <div>
+      <div class="big">An idle session <em>is</em> the listener.</div>
+      <p class="lead" style="margin-top:14px">Every Claude Code session runs one turn loop. Anything that lands in its inbox is read between tool calls while a turn is running, or starts a brand-new turn when the session is idle. Subagent results, teammate messages, cross-session messages, channel events and raw socket posts all enter through the same door. You never put a session "into a listening state" — you just stop it, and leave the inbox bound.</p>
+    </div>
+    <figure>
+      <svg viewBox="0 0 520 300" width="520" height="300" aria-label="Session turn loop state machine">
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--amber)"/></marker>
+        <marker id="ahm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+        <!-- states -->
+        <rect class="state idle" x="30" y="120" width="120" height="56" rx="28"/>
+        <text x="90" y="144" text-anchor="middle" class="lbl" style="font-weight:600">Idle</text>
+        <text x="90" y="160" text-anchor="middle" class="sm">inbox bound, no turn</text>
+        <circle class="pulse" cx="150" cy="120" r="5" fill="var(--amber)"/>
+        <rect class="state" x="230" y="30" width="130" height="50" rx="8"/>
+        <text x="295" y="52" text-anchor="middle" class="lbl" style="font-weight:600">Turn running</text>
+        <text x="295" y="68" text-anchor="middle" class="sm">model thinking</text>
+        <rect class="state" x="380" y="120" width="120" height="50" rx="8"/>
+        <text x="440" y="142" text-anchor="middle" class="lbl" style="font-weight:600">Tool call</text>
+        <text x="440" y="158" text-anchor="middle" class="sm">never interrupted</text>
+        <rect class="state" x="230" y="210" width="130" height="50" rx="8"/>
+        <text x="295" y="232" text-anchor="middle" class="lbl" style="font-weight:600">Between tools</text>
+        <text x="295" y="248" text-anchor="middle" class="sm">inbox drained here</text>
+        <!-- edges -->
+        <path class="msg" marker-end="url(#ah)" d="M150 132 C190 110 200 60 228 55"/>
+        <text x="150" y="88" class="lbl" fill="var(--amber)">inbox event → new turn</text>
+        <path class="rel" marker-end="url(#ahm)" d="M360 55 C400 60 430 90 438 118"/>
+        <path class="rel" marker-end="url(#ahm)" d="M420 170 C400 200 380 225 362 233"/>
+        <path class="rel" marker-end="url(#ahm)" d="M260 210 C240 170 240 110 258 82"/>
+        <text x="180" y="150" class="sm">next step</text>
+        <path class="rel" marker-end="url(#ahm)" d="M230 245 C160 250 110 220 100 178"/>
+        <text x="112" y="215" class="sm">turn ends → Stop hook</text>
+        <path class="msg" marker-end="url(#ah)" d="M470 170 C470 240 400 270 362 260" />
+        <text x="372" y="285" class="lbl" fill="var(--amber)">events arrive mid-turn</text>
+      </svg>
+      <figcaption>The two amber edges are the only places outside input reaches the model.</figcaption>
+    </figure>
+  </div>
+
+  <h2>Three doors into the inbox</h2>
+  <p class="muted">Same loop, different producers. Pick by who is sending.</p>
+  <div class="doors">
+    <div class="door">
+      <h3>1 · Raw inbox socket</h3>
+      <p>Per-session Unix domain socket (named pipe on Windows). Any process running as your OS user can connect and post a line. Path is in <code>$CLAUDE_CODE_MESSAGING_SOCKET</code> and <code>/status</code>. Best fit for a queue-bridge daemon.</p>
+    </div>
+    <div class="door b">
+      <h3>2 · SendMessage / ListAgents</h3>
+      <p>Claude-to-Claude. One session's model addresses another by name; same tool reaches subagents and teammates. <code>notify_when_idle</code> gives a one-shot "tell me when it's done" without spending tokens in the watched session.</p>
+    </div>
+    <div class="door t">
+      <h3>3 · Channels (MCP)</h3>
+      <p>An MCP server that declares <code>claude/channel</code> and emits <code>notifications/claude/channel</code>. Event lands in context as a <code>&lt;channel&gt;</code> tag; two-way via a reply tool. The sanctioned path for CI, webhooks, chat. Research preview.</p>
+    </div>
+  </div>
+
+  <div class="two" style="margin-top:26px">
+    <div>
+      <h3>What "waiting for an agent" really is</h3>
+      <p class="muted">A background subagent doesn't block its parent. When it finishes, its result is enqueued on the parent's inbox and <code>SubagentStop</code> fires. The parent reads it at the next between-tools checkpoint, or wakes if idle. Teammates do the same with an idle notification that carries their final answer.</p>
+    </div>
+    <div>
+      <h3>Outbound is hooks</h3>
+      <p class="muted">The inbox is how events get in. To get "I'm done" out to something else, use lifecycle hooks: <code>Stop</code>, <code>SubagentStop</code>, <code>TeammateIdle</code>, <code>TaskCompleted</code>. Hooks inherit the session's socket path and token, so a hook can publish to your queue and even post back into its own session.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB 2: OBJECT MODEL ============ -->
+<div class="panel" id="objects" role="tabpanel">
+  <h2>Object model</h2>
+  <p class="lead">The entities Claude Code exposes, and how they relate. Blue outline = a full session with its own context window and inbox. Amber = the message path.</p>
+  <figure>
+    <svg viewBox="0 0 1160 620" width="1160" height="620" aria-label="Entity relationship diagram">
+      <defs><marker id="dia" viewBox="0 0 12 8" refX="11" refY="4" markerWidth="12" markerHeight="8" orient="auto"><path d="M0 4L6 0L12 4L6 8z" fill="var(--panel)" stroke="var(--muted)"/></marker>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker>
+      <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--amber)"/></marker></defs>
+
+      <!-- Session -->
+      <g id="e-session">
+        <rect class="ent session" x="420" y="40" width="300" height="176" rx="6"/>
+        <text x="435" y="62" class="ent-title">Session</text>
+        <text x="710" y="62" text-anchor="end" class="sm">one turn loop</text>
+        <line x1="420" y1="70" x2="720" y2="70" stroke="var(--line)"/>
+        <text x="435" y="90" class="m">name        ← --name | /rename | auto</text>
+        <text x="435" y="107" class="m">sessionId   → team-name = session-&lt;8&gt;</text>
+        <text x="435" y="124" class="m">kind        interactive | -p | bare | cloud</text>
+        <text x="435" y="141" class="m">permissionMode</text>
+        <text x="435" y="158" class="m">crossSessionInbound  accept|hold|refuse|∅</text>
+        <line x1="420" y1="168" x2="720" y2="168" stroke="var(--line)"/>
+        <text x="435" y="186" class="m">tools: SendMessage, ListAgents, Agent</text>
+        <text x="435" y="203" class="m">hooks: SessionStart, Stop, SubagentStop…</text>
+      </g>
+
+      <!-- InboxSocket -->
+      <g id="e-socket">
+        <rect class="ent amber" x="800" y="60" width="300" height="118" rx="6"/>
+        <text x="815" y="82" class="ent-title">InboxSocket</text>
+        <text x="1090" y="82" text-anchor="end" class="sm">1 per session, not in bare mode</text>
+        <line x1="800" y1="90" x2="1100" y2="90" stroke="var(--line)"/>
+        <text x="815" y="110" class="m">path   $CLAUDE_CODE_MESSAGING_SOCKET</text>
+        <text x="815" y="127" class="m">token  $CLAUDE_CODE_MESSAGING_TOKEN</text>
+        <text x="815" y="144" class="m">dir    /tmp/cc-socks-&lt;uid&gt; (fallback)</text>
+        <text x="815" y="161" class="m">acl    OS user only</text>
+      </g>
+      <path class="rel strong" d="M720 128 L800 128" marker-start="url(#dia)"/>
+      <text x="740" y="120" class="sm">binds 1</text>
+
+      <!-- Message -->
+      <g id="e-message">
+        <rect class="ent amber" x="800" y="230" width="300" height="130" rx="6"/>
+        <text x="815" y="252" class="ent-title">Message</text>
+        <text x="1090" y="252" text-anchor="end" class="sm">plain text only</text>
+        <line x1="800" y1="260" x2="1100" y2="260" stroke="var(--line)"/>
+        <text x="815" y="280" class="m">text          ≤ ~1M chars serialized</text>
+        <text x="815" y="297" class="m">sender        session | subagent | ext</text>
+        <text x="815" y="314" class="m">replyAddress  absent if one-way x-machine</text>
+        <text x="815" y="331" class="m">outcome       Delivered | Held | Refused</text>
+        <text x="815" y="348" class="m">notify_when_idle?  one-shot, 12h TTL</text>
+      </g>
+      <path class="rel strong" d="M950 178 L950 230" marker-end="url(#arrA)"/>
+      <text x="958" y="208" class="sm">receives *</text>
+
+      <!-- InboundControls -->
+      <g id="e-controls">
+        <rect class="ent" x="800" y="410" width="300" height="110" rx="6"/>
+        <text x="815" y="432" class="ent-title">InboundControls</text>
+        <line x1="800" y1="440" x2="1100" y2="440" stroke="var(--line)"/>
+        <text x="815" y="460" class="m">setting  crossSessionInbound</text>
+        <text x="815" y="477" class="m">default  by permission class (bypass vs prompt)</text>
+        <text x="815" y="494" class="m">held     ≤100, dialogExpiry (5m | never)</text>
+        <text x="815" y="511" class="m">exception  own-child (hook/Bash) delivered</text>
+      </g>
+      <path class="rel" d="M950 360 L950 410" marker-end="url(#arr)"/>
+      <text x="958" y="390" class="sm">checked by</text>
+
+      <!-- Subagent -->
+      <g id="e-subagent">
+        <rect class="ent" x="40" y="40" width="300" height="118" rx="6"/>
+        <text x="55" y="62" class="ent-title">Subagent</text>
+        <text x="330" y="62" text-anchor="end" class="sm">inside a session</text>
+        <line x1="40" y1="70" x2="340" y2="70" stroke="var(--line)"/>
+        <text x="55" y="90" class="m">agent_id, agent_type, name?</text>
+        <text x="55" y="107" class="m">run_in_background → result enqueued</text>
+        <text x="55" y="124" class="m">own context; result returns to parent</text>
+        <text x="55" y="141" class="m">named ⇒ SendMessage-addressable</text>
+      </g>
+      <path class="rel" d="M420 100 L340 100" marker-start="url(#dia)"/>
+      <text x="350" y="92" class="sm">spawns *</text>
+
+      <!-- Teammate -->
+      <g id="e-teammate">
+        <rect class="ent session" x="40" y="210" width="300" height="118" rx="6"/>
+        <text x="55" y="232" class="ent-title">Teammate</text>
+        <text x="330" y="232" text-anchor="end" class="sm">is-a Session · experimental</text>
+        <line x1="40" y1="240" x2="340" y2="240" stroke="var(--line)"/>
+        <text x="55" y="260" class="m">CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</text>
+        <text x="55" y="277" class="m">inbox file ~/.claude/teams/{t}/inboxes/{n}.json</text>
+        <text x="55" y="294" class="m">idle → notifies lead with final answer</text>
+        <text x="55" y="311" class="m">no nesting · one team per session</text>
+      </g>
+      <path class="rel" d="M420 150 C380 190 370 220 340 250" marker-start="url(#dia)"/>
+      <text x="345" y="205" class="sm">lead of *</text>
+
+      <!-- TaskList -->
+      <g id="e-tasks">
+        <rect class="ent" x="40" y="380" width="300" height="96" rx="6"/>
+        <text x="55" y="402" class="ent-title">TaskList</text>
+        <text x="330" y="402" text-anchor="end" class="sm">shared, file-locked</text>
+        <line x1="40" y1="410" x2="340" y2="410" stroke="var(--line)"/>
+        <text x="55" y="430" class="m">~/.claude/tasks/{team}/  persists</text>
+        <text x="55" y="447" class="m">pending → in progress → completed</text>
+        <text x="55" y="464" class="m">deps auto-unblock · TaskCreated/Completed hooks</text>
+      </g>
+      <path class="rel" d="M190 328 L190 380" marker-end="url(#arr)"/>
+      <text x="198" y="358" class="sm">claims from</text>
+
+      <!-- Channel -->
+      <g id="e-channel">
+        <rect class="ent teal" x="420" y="300" width="300" height="118" rx="6"/>
+        <text x="435" y="322" class="ent-title">Channel</text>
+        <text x="710" y="322" text-anchor="end" class="sm">MCP server, research preview</text>
+        <line x1="420" y1="330" x2="720" y2="330" stroke="var(--line)"/>
+        <text x="435" y="350" class="m">capability   claude/channel</text>
+        <text x="435" y="367" class="m">emits  notifications/claude/channel</text>
+        <text x="435" y="384" class="m">params {content, meta} → &lt;channel …&gt;</text>
+        <text x="435" y="401" class="m">reply tool (optional, two-way)</text>
+      </g>
+      <path class="rel" d="M570 216 L570 300" marker-start="url(#dia)"/>
+      <text x="578" y="262" class="sm">enables --channels *</text>
+      <path class="rel strong" d="M720 340 C760 340 780 300 800 292" marker-end="url(#arrA)"/>
+
+      <!-- Hook -->
+      <g id="e-hook">
+        <rect class="ent" x="420" y="470" width="300" height="118" rx="6"/>
+        <text x="435" y="492" class="ent-title">Hook</text>
+        <text x="710" y="492" text-anchor="end" class="sm">shell / prompt / agent</text>
+        <line x1="420" y1="500" x2="720" y2="500" stroke="var(--line)"/>
+        <text x="435" y="520" class="m">event  Stop | SubagentStop | TeammateIdle | …</text>
+        <text x="435" y="537" class="m">stdin  JSON payload (session_id, agent_id…)</text>
+        <text x="435" y="554" class="m">env    inherits socket path + token</text>
+        <text x="435" y="571" class="m">exit 2 ⇒ block / keep working (Stop-class)</text>
+      </g>
+      <path class="rel" d="M600 418 L600 470" stroke-dasharray="4 3"/>
+      <text x="608" y="447" class="sm">fired by session</text>
+      <path class="rel strong" d="M720 560 C780 560 790 540 800 520" marker-end="url(#arrA)"/>
+      <text x="735" y="578" class="sm">may post back (own-child)</text>
+
+      <!-- External -->
+      <g id="e-ext">
+        <rect class="ent" x="40" y="520" width="300" height="70" rx="6" stroke-dasharray="4 3"/>
+        <text x="55" y="542" class="ent-title">ExternalProcess / QueueBridge</text>
+        <line x1="40" y1="550" x2="340" y2="550" stroke="var(--line)"/>
+        <text x="55" y="570" class="m">your code · same OS user · posts a line</text>
+      </g>
+      <path class="rel strong" d="M340 555 C380 555 400 600 600 605 C900 605 950 560 950 520" marker-end="url(#arrA)"/>
+      <text x="390" y="618" class="sm" fill="var(--amber)">connect → [auth line] → message line → close</text>
+    </svg>
+    <figcaption>Diamonds mark composition (the owner is at the diamond). Amber arrows are message flow. Everything on the left is optional machinery; the Session–InboxSocket pair is the minimum.</figcaption>
+  </figure>
+
+  <div class="two" style="margin-top:22px">
+    <div class="callout">
+      <h3>Session kinds and their inboxes</h3>
+      <table>
+        <tr><th>Kind</th><th>Binds socket</th><th>Can show hold dialog</th><th>Notes</th></tr>
+        <tr><td>Interactive</td><td class="yes">yes</td><td class="yes">yes</td><td>appears in <code>/list-agents</code></td></tr>
+        <tr><td><code>claude -p</code></td><td class="yes">yes</td><td class="no">no</td><td>held messages expire after <code>dialogExpiry</code>; start with <code>crossSessionInbound: accept</code></td></tr>
+        <tr><td>Bare mode</td><td class="no">no</td><td class="no">no</td><td>can't receive; not listed</td></tr>
+        <tr><td>Cloud / Remote Control</td><td class="part">via servers</td><td>—</td><td>reachable only while sender is connected to Remote Control</td></tr>
+      </table>
+    </div>
+    <div class="callout">
+      <h3>Message outcome rules (no explicit setting)</h3>
+      <ul>
+        <li>Receiver <strong>prompts</strong> for permissions → deliver, unless sender claims bypass → hold.</li>
+        <li>Receiver <strong>bypasses</strong> permissions → hold, unless sender also bypasses → deliver.</li>
+        <li>Own-child (hook or Bash from this session) → deliver, when verifiable by process evidence or token.</li>
+        <li>Unverifiable socket post → treated as "no class asserted" → a bypassing receiver holds it.</li>
+      </ul>
+      <p class="dim" style="font-size:.85rem">Set <code>crossSessionInbound</code> explicitly on workers and this table stops mattering.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB 3: SEQUENCES ============ -->
+<div class="panel with-rail" id="seq" role="tabpanel">
+  <aside class="rail" aria-label="Sequence diagrams">
+    <div class="group">Built-in loops</div>
+    <a href="#s-subagent">Background subagent</a>
+    <a href="#s-notify">notify_when_idle</a>
+    <div class="group">External producers</div>
+    <a href="#s-socket">Post to the inbox socket</a>
+    <a href="#s-channel">Channel event</a>
+    <div class="group">Composed</div>
+    <a href="#s-roundtrip">Queue round trip</a>
+  </aside>
+  <div>
+    <div class="legend"><span><i class="sess"></i>session</span><span><i class="ext"></i>your code / external</span><span><i></i>message / event</span><span><i class="ret"></i>result / notice</span></div>
+
+    <section class="block" id="s-subagent">
+      <h2>Background subagent completes, parent resumes</h2>
+      <p class="muted">The thing you see in the terminal as "waiting for agent… notified".</p>
+      <figure><div data-seq="subagent"></div><figcaption>The parent never blocks. The result is just another inbox event.</figcaption></figure>
+    </section>
+
+    <section class="block" id="s-notify">
+      <h2>One-shot idle notice between your own sessions</h2>
+      <p class="muted">Requires v2.1.236+ on both sides. Only the main conversation can subscribe, and only to sessions on this machine.</p>
+      <figure><div data-seq="notify"></div><figcaption>Subscribing alone starts no turn and spends no tokens in the watched session.</figcaption></figure>
+    </section>
+
+    <section class="block" id="s-socket">
+      <h2>External process posts to a session's inbox socket</h2>
+      <p class="muted">The lowest-level door. Everything else on this page ultimately does this.</p>
+      <figure><div data-seq="socket"></div><figcaption>Prepare the payload first: an open connection that hasn't sent a complete line within 30 s is closed.</figcaption></figure>
+    </section>
+
+    <section class="block" id="s-channel">
+      <h2>Channel pushes an external event</h2>
+      <p class="muted">Channel = MCP server spawned by Claude Code over stdio. Custom ones need <code>--dangerously-load-development-channels</code> in the preview.</p>
+      <figure><div data-seq="channel"></div><figcaption>Meta entries become attributes on the <code>&lt;channel&gt;</code> tag, useful for routing (sender, topic, correlation id).</figcaption></figure>
+    </section>
+
+    <section class="block" id="s-roundtrip">
+      <h2>Two agents hand off through a queue</h2>
+      <p class="muted">Hooks are the outbound half; a per-agent bridge is the inbound half. Neither model has to remember to send anything.</p>
+      <figure><div data-seq="roundtrip"></div><figcaption>Swap "post to socket" for "emit channel notification" if you want the sanctioned path.</figcaption></figure>
+    </section>
+  </div>
+</div>
+
+<!-- ============ TAB 4: REFERENCE ============ -->
+<div class="panel with-rail" id="ref" role="tabpanel">
+  <aside class="rail" aria-label="Reference index">
+    <div class="group">Tools (model-invoked)</div>
+    <a href="#r-sendmessage">SendMessage</a>
+    <a href="#r-listagents">ListAgents</a>
+    <a href="#r-agent">Agent</a>
+    <div class="group">Environment</div>
+    <a href="#r-env-socket">CLAUDE_CODE_MESSAGING_SOCKET</a>
+    <a href="#r-env-token">CLAUDE_CODE_MESSAGING_TOKEN</a>
+    <a href="#r-env-teams">…EXPERIMENTAL_AGENT_TEAMS</a>
+    <div class="group">Settings</div>
+    <a href="#r-inbound">crossSessionInbound</a>
+    <a href="#r-expiry">dialogExpiry</a>
+    <a href="#r-isolate">isolatePeerMachines</a>
+    <a href="#r-deny">permissions.deny</a>
+    <div class="group">Hooks</div>
+    <a href="#r-h-sessionstart">SessionStart</a>
+    <a href="#r-h-stop">Stop</a>
+    <a href="#r-h-subagentstop">SubagentStop</a>
+    <a href="#r-h-teammateidle">TeammateIdle</a>
+    <a href="#r-h-tasks">TaskCreated / TaskCompleted</a>
+    <a href="#r-h-notification">Notification</a>
+    <div class="group">CLI &amp; commands</div>
+    <a href="#r-cli-name">--name / /rename</a>
+    <a href="#r-cli-list">/list-agents · /status</a>
+    <a href="#r-cli-p">-p · --settings · bare</a>
+    <a href="#r-cli-channels">--channels</a>
+    <div class="group">Wire &amp; files</div>
+    <a href="#r-wire">Socket wire format</a>
+    <a href="#r-chanproto">Channel protocol</a>
+    <a href="#r-files">Paths on disk</a>
+  </aside>
+  <div>
+    <section class="block" id="r-sendmessage">
+      <h3>SendMessage</h3>
+      <p>Deliver plain text to an agent by name: a subagent in this session, a teammate, another local session, or a cloud / Remote Control session.</p>
+      <dl class="kv">
+        <dt>Inputs</dt><dd><code>to</code> (a name from ListAgents — a bare name that uniquely matches delivers; append its <code>[ref]</code> only when a listing or an error shows one), <code>message</code> (plain text), <code>summary</code> (5–10 word one-line UI preview), <code>notify_when_idle</code> (bool)</dd>
+        <dt>Refused when</dt><dd>addressed to self · over ~1M chars · burst limit hit · reply target fails safety check</dd>
+        <dt>Receiver sees</dt><dd>the text wrapped as <code>&lt;cross-session-message from="…"&gt;</code>; told it came from another Claude, not the human. Replying = copying the <code>from</code> attribute as the new <code>to</code>.</dd>
+        <dt>Can't do</dt><dd>approve permissions, change config, run slash commands (they arrive as text)</dd>
+        <dt>Never</dt><dd>ask a peer session to do something your own session's permissions blocked — that's cross-session permission laundering; route blocked work back to the human</dd>
+      </dl>
+    </section>
+    <section class="block" id="r-listagents">
+      <h3>ListAgents</h3>
+      <p>Enumerates reachable agents: subagents, teammates, local sessions with a bound socket, and (while on Remote Control) cloud and other-machine sessions. Same info as <code>/list-agents</code>.</p>
+    </section>
+    <section class="block" id="r-agent">
+      <h3>Agent</h3>
+      <p>Spawns a subagent. With agent teams enabled, a call that passes a <code>name</code> launches a teammate instead (unless it's a fork or passes <code>isolation</code>). <code>run_in_background: true</code> makes the result arrive as an inbox event.</p>
+    </section>
+
+    <section class="block" id="r-env-socket">
+      <h3>CLAUDE_CODE_MESSAGING_SOCKET</h3>
+      <p>This session's inbox path (<code>uds:</code>-prefixed in <code>/status</code>). Exported to hooks and Bash before <code>SessionStart</code> runs. Each session exports its own; never inherited from a parent.</p>
+    </section>
+    <section class="block" id="r-env-token">
+      <h3>CLAUDE_CODE_MESSAGING_TOKEN</h3>
+      <p>Per-session secret. Send as the first line <code>{"type":"auth","token":"…"}</code>. Optional on macOS/Linux/WSL 2, required on native Windows. On macOS after the poster exits, and in PID-1 containers, the token is the only way an own-child post is verified.</p>
+    </section>
+    <section class="block" id="r-env-teams">
+      <h3>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS <span class="badge exp">experimental</span></h3>
+      <p><code>1</code> enables teams (interactive sessions only; <code>-p</code> never spawns teammates). <code>0</code> in user settings makes named subagents plain subagents again. Re-read on every spawn, no restart needed.</p>
+    </section>
+
+    <section class="block" id="r-inbound">
+      <h3>crossSessionInbound</h3>
+      <dl class="kv">
+        <dt><code>accept</code></dt><dd>deliver every message</dd>
+        <dt><code>hold</code></dt><dd>show a notice, don't deliver; released if <code>accept</code> later applies</dd>
+        <dt><code>refuse</code></dt><dd>drop silently; sender told not to retry</dd>
+        <dt>unset</dt><dd>per-message decision by permission class (see Object model tab)</dd>
+        <dt>Scope</dt><dd>project/local <code>refuse</code> beats everything; <code>--settings</code> value is the right place for a worker</dd>
+      </dl>
+    </section>
+    <section class="block" id="r-expiry">
+      <h3>dialogExpiry</h3>
+      <p>How long a default-held message waits for approval. 5 minutes by default; <code>"never"</code> keeps it until the session ends. In <code>-p</code> sessions this is the drop deadline, since no dialog can be shown.</p>
+    </section>
+    <section class="block" id="r-isolate">
+      <h3>isolatePeerMachines</h3>
+      <p><code>true</code> requires your approval before any message leaves the machine, even in bypass mode. Any scope can turn it on; none can turn it off.</p>
+    </section>
+    <section class="block" id="r-deny">
+      <h3>permissions.deny: ["SendMessage","ListAgents"]</h3>
+      <p>Removes the tools entirely, including messaging to subagents and teammates. Combine with <code>crossSessionInbound: refuse</code> to fully silence a session or org.</p>
+    </section>
+
+    <section class="block" id="r-h-sessionstart">
+      <h3>SessionStart</h3>
+      <p>Fires on start and resume. Socket path and token are already in its environment. Ideal place to register <code>{name, socket, cwd}</code> in your own service registry.</p>
+    </section>
+    <section class="block" id="r-h-stop">
+      <h3>Stop</h3>
+      <p>Fires when the main turn is about to end. Exit 2 with a reason keeps Claude working (check <code>stop_hook_active</code> to avoid loops). Exit 0 and publish "done" to your queue — this is the outbound edge of the loop.</p>
+    </section>
+    <section class="block" id="r-h-subagentstop">
+      <h3>SubagentStop</h3>
+      <p>Fires when a subagent completes. Payload includes the agent id, agent type (matcher key), and the subagent's transcript path. Stop hooks declared inside an agent definition are converted to SubagentStop automatically.</p>
+    </section>
+    <section class="block" id="r-h-teammateidle">
+      <h3>TeammateIdle <span class="badge exp">experimental</span></h3>
+      <p>Fires when a teammate is about to go idle. Exit 2 sends feedback and keeps it working. <code>team_name</code> in the payload is deprecated.</p>
+    </section>
+    <section class="block" id="r-h-tasks">
+      <h3>TaskCreated / TaskCompleted <span class="badge exp">experimental</span></h3>
+      <p>Gate the shared task list: exit 2 blocks creation or completion and feeds the reason back. Useful for publishing task-state changes to an external tracker.</p>
+    </section>
+    <section class="block" id="r-h-notification">
+      <h3>Notification</h3>
+      <p>Fires when Claude Code surfaces a notification (permission prompt, idle prompt). Purely informational, no blocking. Good for "agent needs a human" alerts.</p>
+    </section>
+
+    <section class="block" id="r-cli-name">
+      <h3>--name / /rename</h3>
+      <p>Gives a session a stable address. Collisions with a live session get renamed to a variant. Use predictable names so bridges and prompts (<code>@api-worker</code>) can target them. The <code>@</code> typeahead needs v2.1.232+.</p>
+    </section>
+    <section class="block" id="r-cli-list">
+      <h3>/list-agents (alias /peers) · /status</h3>
+      <p><code>/list-agents</code> first line is this session's own name; rows are reachable agents with working directories. If the command isn't recognized, the session lacks messaging (check <code>claude --version</code>, need ≥ 2.1.224). <code>/status</code> shows the <code>Peer address</code> row.</p>
+    </section>
+    <section class="block" id="r-cli-p">
+      <h3>-p · --settings · bare mode</h3>
+      <p><code>-p</code> binds a socket and is listed. Pass <code>--settings '{"crossSessionInbound":"accept"}'</code> so it takes messages unattended. Bare mode binds nothing. A <code>-p</code> run ends when its turn ends, so a long-lived listener is usually an interactive session in tmux or a background session.<span class="badge verify">verify</span></p>
+    </section>
+    <section class="block" id="r-cli-channels">
+      <h3>--channels <span class="badge exp">research preview</span></h3>
+      <p>Enables a channel plugin for the session (<code>--channels plugin:discord@claude-plugins-official</code>). Custom servers need <code>--dangerously-load-development-channels server:&lt;name&gt;</code> <span class="badge verify">verify</span> (flag confirmed; the <code>server:</code> syntax isn't spelled out in the docs). Requires claude.ai or Console auth; not on Bedrock / Vertex / Foundry. Team &amp; Enterprise orgs must enable. The v2.1.80+ floor appears nowhere in the docs.<span class="badge verify">verify</span></p>
+    </section>
+
+    <section class="block" id="r-wire">
+      <h3>Socket wire format</h3>
+      <pre><code>connect(uds path)                      # or named pipe on Windows
+→ {"type":"auth","token":"$CLAUDE_CODE_MESSAGING_TOKEN"}\n   # optional (required on Windows)
+→ &lt;one complete line: the message&gt;\n                       # schema not spelled out in docs
+close()                                # within 30 s of connect</code></pre>
+      <p class="muted" style="margin-top:8px">The docs describe the auth line and the one-line-within-30-seconds rule but don't publish the message line's JSON shape.<span class="badge verify">verify</span> Cheapest way to learn it: a <code>Stop</code> hook that posts back to <code>$CLAUDE_CODE_MESSAGING_SOCKET</code>, then inspect with <code>--debug</code>.</p>
+    </section>
+    <section class="block" id="r-chanproto">
+      <h3>Channel protocol (MCP)</h3>
+      <pre><code>// server capability
+capabilities: { "claude/channel": {} }
+
+// push an event
+server.notification({
+  method: "notifications/claude/channel",
+  params: { content: "CI failed on main: 3 tests", meta: { source: "ci", run: "8812" } }
+})
+// → &lt;channel source="ci" run="8812"&gt;CI failed on main: 3 tests&lt;/channel&gt;
+
+// two-way: expose a tool Claude calls to reply</code></pre>
+      <p class="muted" style="margin-top:8px">The capability string <code>claude/channel</code> and method name <code>notifications/claude/channel</code> weren't found in the main channels doc — confirm against the channels reference before building on them.<span class="badge verify">verify</span></p>
+    </section>
+    <section class="block" id="r-files">
+      <h3>Paths on disk</h3>
+      <dl class="kv">
+        <dt><code>/tmp/cc-socks-&lt;uid&gt;/</code></dt><dd>fallback socket directory (private per user)</dd>
+        <dt><code>~/.claude/teams/{team}/config.json</code></dt><dd>live team state; members, agent ids, pane ids — never hand-edit</dd>
+        <dt><code>~/.claude/teams/{team}/inboxes/{agent}.json</code></dt><dd>teammate mailbox; malformed entries are dropped, valid ones delivered</dd>
+        <dt><code>~/.claude/tasks/{team}/</code></dt><dd>shared task list; persists across resume</dd>
+        <dt><code>{team}</code></dt><dd><code>session-</code> + first 8 chars of session id</dd>
+      </dl>
+    </section>
+  </div>
+</div>
+
+<!-- ============ TAB 5: CHOOSE ============ -->
+<div class="panel" id="choose" role="tabpanel">
+  <h2>Choose a door</h2>
+  <p class="lead">Five ways to get an event into a running agent. Pick by sender, transport, and how much you're willing to build.</p>
+  <table>
+    <tr><th></th><th>Inbox socket</th><th>SendMessage</th><th>Channel</th><th>Agent teams</th><th>Own harness (Agent SDK)</th></tr>
+    <tr><td>Sender</td><td>any process, your OS user</td><td>a Claude session</td><td>MCP server you write</td><td>lead / teammates</td><td>your code</td></tr>
+    <tr><td>Transport</td><td>UDS / named pipe</td><td>UDS locally; Anthropic servers cross-machine</td><td>stdio to a subprocess</td><td>JSON inbox files</td><td>in-process</td></tr>
+    <tr><td>Headless worker</td><td class="yes">yes (<code>-p</code>)</td><td class="yes">yes</td><td class="part">yes, but needs claude.ai / Console auth</td><td class="no">no (interactive only)</td><td class="yes">yes</td></tr>
+    <tr><td>Cross-machine</td><td class="no">no</td><td class="part">via Remote Control</td><td class="yes">your server decides</td><td class="no">no</td><td class="yes">your call</td></tr>
+    <tr><td>Wake idle session</td><td class="yes">new turn</td><td class="yes">new turn</td><td class="yes">new turn</td><td class="yes">idle → message</td><td class="yes">you own the loop</td></tr>
+    <tr><td>Reply path</td><td class="part">only if a reply address is present</td><td class="yes">built in</td><td class="yes">reply tool</td><td class="yes">built in</td><td class="yes">built in</td></tr>
+    <tr><td>Structured payload</td><td class="no">text line</td><td class="no">text</td><td class="part">text + meta attrs</td><td class="no">text</td><td class="yes">whatever you want</td></tr>
+    <tr><td>Maturity</td><td>GA, wire schema undocumented</td><td>GA (≥2.1.224)</td><td>research preview</td><td>experimental</td><td>GA</td></tr>
+    <tr><td>Best for</td><td>queue bridge daemons, hooks posting back</td><td>agents coordinating on one box</td><td>CI, webhooks, chat bridges</td><td>parallel review / debate in one terminal</td><td>production pipelines you fully control</td></tr>
+  </table>
+
+  <div class="two" style="margin-top:24px">
+    <div class="callout">
+      <h3>Decision path</h3>
+      <ul>
+        <li>Sender is another Claude session on the same box → <strong>SendMessage</strong>, add <code>notify_when_idle</code> for completion.</li>
+        <li>Sender is a hook, script or daemon you control on the same box → <strong>inbox socket</strong>.</li>
+        <li>Sender is out on the network (CI, webhook, Slack) → <strong>channel</strong>, or a channel fronted by a webhook gateway.</li>
+        <li>You want peers debating inside one terminal, no infra → <strong>agent teams</strong>.</li>
+        <li>You need durable queues, retries, structured payloads, and no dependence on preview flags → <strong>your own harness</strong> around the Agent SDK, with Claude Code sessions as optional workers.</li>
+      </ul>
+    </div>
+    <div class="callout warn">
+      <h3>Gotchas that bite first</h3>
+      <ul>
+        <li>Bypass-permissions workers <em>hold</em> unverified messages by default. Set <code>crossSessionInbound: accept</code> explicitly.</li>
+        <li>Containers: sessions inside and outside can't see each other's sockets. WSL 2 and native Windows are separate worlds too.</li>
+        <li>Bursts are refused at the sender; identical repeats are dropped; queue caps at 50. Batch into one message.</li>
+        <li>Messages are text. Put a correlation id and a topic in the first line so the receiving model can route.</li>
+        <li>Permission boundaries are per-session: a session must never ask a peer to do what its own permissions blocked (permission laundering). The receiving model is told this; don't design flows that depend on it.</li>
+        <li>Teammates don't restore after <code>/resume</code> and team config is removed at session end — but the shared task list persists. Teammates can't run background subagents.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB 6: BUILD ============ -->
+<div class="panel with-rail" id="build" role="tabpanel">
+  <aside class="rail" aria-label="Build guide">
+    <a href="#b-arch">Architecture</a>
+    <a href="#b-register">1 · Register sessions</a>
+    <a href="#b-outbound">2 · Publish on completion</a>
+    <a href="#b-inbound">3 · Bridge inbound</a>
+    <a href="#b-launch">4 · Launch workers</a>
+    <a href="#b-checklist">Checklist</a>
+    <a href="#b-verify">Verify before trusting</a>
+  </aside>
+  <div>
+    <section class="block" id="b-arch">
+      <h2>A queue bridge, one per agent</h2>
+      <p class="muted">Keep Claude Code stock. All the queue logic lives in tiny sidecars; the session only ever sees "a line arrived on my inbox".</p>
+      <div class="callout">
+        <h3>How this maps to the ledger</h3>
+        <p class="muted" style="font-size:.9rem">This chapter and the ledger's BotBeam architecture are complementary, not competing. The ledger's <code>/ledger</code> API is the system of record for session <em>state</em> (Phase 1's W1 hook transmitter is exactly the "outbound is hooks" pattern below — Stop/SessionStart hooks posting to a service). What this chapter adds is agent-to-agent <em>tasking</em>: waking a session with work. If we build that, the registry topic below is redundant — BotBeam's session store already knows every session; a bridge would look up sockets there instead of Redis.</p>
+      </div>
+      <figure>
+        <svg viewBox="0 0 980 300" width="980" height="300" aria-label="Bridge architecture">
+          <defs><marker id="ba" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--amber)"/></marker>
+          <marker id="bm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+          <!-- queue -->
+          <rect class="ent amber" x="400" y="30" width="180" height="240" rx="8"/>
+          <text x="490" y="55" text-anchor="middle" class="ent-title">Queue</text>
+          <text x="490" y="72" text-anchor="middle" class="sm">Redis · NATS · SQS · pg</text>
+          <rect x="420" y="95" width="140" height="26" rx="4" fill="var(--panel)" stroke="var(--line)"/><text x="490" y="112" text-anchor="middle" class="m">agent.a.inbox</text>
+          <rect x="420" y="130" width="140" height="26" rx="4" fill="var(--panel)" stroke="var(--line)"/><text x="490" y="147" text-anchor="middle" class="m">agent.b.inbox</text>
+          <rect x="420" y="165" width="140" height="26" rx="4" fill="var(--panel)" stroke="var(--line)"/><text x="490" y="182" text-anchor="middle" class="m">agent.*.done</text>
+          <rect x="420" y="215" width="140" height="26" rx="4" fill="var(--panel)" stroke="var(--line)"/><text x="490" y="232" text-anchor="middle" class="m">registry (name→socket)</text>
+          <!-- agent A -->
+          <rect class="ent session" x="30" y="60" width="200" height="90" rx="6"/>
+          <text x="45" y="82" class="ent-title">Session "worker-a"</text>
+          <text x="45" y="102" class="m">Stop hook → publish done</text>
+          <text x="45" y="119" class="m">SessionStart → register</text>
+          <text x="45" y="136" class="m">inbox socket ◂</text>
+          <rect class="ent" x="30" y="180" width="200" height="60" rx="6" stroke-dasharray="4 3"/>
+          <text x="45" y="202" class="ent-title">bridge-a</text>
+          <text x="45" y="222" class="m">sub agent.a.inbox → post socket</text>
+          <path class="msg" marker-end="url(#ba)" d="M230 95 C300 95 340 180 420 178"/>
+          <text x="262" y="88" class="sm" fill="var(--amber)">done{corr, summary}</text>
+          <path class="rel" marker-end="url(#bm)" d="M420 108 C340 108 300 200 232 205"/>
+          <path class="msg" marker-end="url(#ba)" d="M130 180 L130 152"/>
+          <!-- agent B -->
+          <rect class="ent session" x="750" y="60" width="200" height="90" rx="6"/>
+          <text x="765" y="82" class="ent-title">Session "worker-b"</text>
+          <text x="765" y="102" class="m">Stop hook → publish done</text>
+          <text x="765" y="119" class="m">SessionStart → register</text>
+          <text x="765" y="136" class="m">▸ inbox socket</text>
+          <rect class="ent" x="750" y="180" width="200" height="60" rx="6" stroke-dasharray="4 3"/>
+          <text x="765" y="202" class="ent-title">bridge-b</text>
+          <text x="765" y="222" class="m">sub agent.b.inbox → post socket</text>
+          <path class="msg" marker-end="url(#ba)" d="M750 95 C680 95 640 180 562 178"/>
+          <path class="rel" marker-end="url(#bm)" d="M560 143 C640 143 680 200 748 205"/>
+          <path class="msg" marker-end="url(#ba)" d="M850 180 L850 152"/>
+          <!-- router -->
+          <text x="490" y="292" text-anchor="middle" class="sm">router (optional): done → next agent's inbox topic, fan-out, retries, dead-letter</text>
+        </svg>
+        <figcaption>Sessions publish through hooks and receive through their socket. The queue and router are ordinary infrastructure you already know how to run.</figcaption>
+      </figure>
+    </section>
+
+    <section class="block" id="b-register">
+      <h3>1 · Register sessions on start</h3>
+      <p class="muted">A <code>SessionStart</code> hook writes the address your bridges need. Fires on resume too, so the record self-heals.</p>
+      <pre><code>// .claude/settings.json (project)
+{ "hooks": { "SessionStart": [{ "hooks": [{ "type": "command",
+    "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/register.sh" }] }] } }
+
+# register.sh — stdin is the hook JSON; env has the socket
+name=$(jq -r '.session_name // empty' | sed 's/^$/unnamed/')   # field name: verify
+redis-cli HSET cc:registry "$name" "$CLAUDE_CODE_MESSAGING_SOCKET"</code></pre>
+      <p class="dim" style="font-size:.85rem;margin-top:6px">Exact payload field names for the session name aren't confirmed here.<span class="badge verify">verify</span> The socket path in <code>$CLAUDE_CODE_MESSAGING_SOCKET</code> is documented.</p>
+    </section>
+
+    <section class="block" id="b-outbound">
+      <h3>2 · Publish "done" from a Stop hook</h3>
+      <pre><code>{ "hooks": { "Stop": [{ "hooks": [{ "type": "command", "async": true,
+    "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/publish-done.sh" }] }] } }
+
+# publish-done.sh
+payload=$(cat)                                  # hook JSON: session_id, transcript_path, stop_hook_active…
+[ "$(echo "$payload" | jq -r .stop_hook_active)" = "true" ] && exit 0
+summary=$(tail -c 4000 "$(echo "$payload" | jq -r .transcript_path)" | your-summarizer)
+redis-cli XADD agent.done '*' from "$NAME" corr "$CORR" summary "$summary"
+exit 0                                          # never exit 2 here, or the turn won't end</code></pre>
+      <p class="muted" style="margin-top:8px">Use <code>SubagentStop</code> the same way if the unit of work is a subagent, and <code>TaskCompleted</code> if you're using the shared task list. Keep the summary short: the next agent gets it as plain text.</p>
+    </section>
+
+    <section class="block" id="b-inbound">
+      <h3>3 · Bridge inbound: queue → socket</h3>
+      <pre><code>// bridge.ts (one process per agent, runs as your user)
+const sock = await registry.lookup(AGENT_NAME);
+for await (const ev of queue.subscribe(`agent.${AGENT_NAME}.inbox`)) {
+  const line = renderOneLine(ev);           // topic + corr id first, then the body
+  const c = net.connect(sock);              // connect only when the line is ready
+  if (process.env.CLAUDE_CODE_MESSAGING_TOKEN)
+    c.write(JSON.stringify({type:"auth", token:process.env.CLAUDE_CODE_MESSAGING_TOKEN})+"\n");
+  c.write(line + "\n");                     // message-line schema: verify
+  c.end();
+  await queue.ack(ev);
+}</code></pre>
+      <p class="muted" style="margin-top:8px">If you'd rather stay on the sanctioned path, make the bridge a channel MCP server instead: same loop, but emit <code>notifications/claude/channel</code> and start the session with <code>--dangerously-load-development-channels server:bridge</code>.</p>
+    </section>
+
+    <section class="block" id="b-launch">
+      <h3>4 · Launch workers that accept unattended</h3>
+      <pre><code># interactive worker in tmux (survives idle, shows dialogs, listed in /list-agents)
+tmux new -d -s worker-b "claude --name worker-b"
+
+# headless worker for a bounded job
+claude -p --name worker-b \
+  --settings '{"crossSessionInbound":"accept","dialogExpiry":"never"}' \
+  "Wait for instructions from the queue bridge and act on them."</code></pre>
+      <p class="muted" style="margin-top:8px">Naming matters twice: it's the <code>SendMessage</code> address for other agents, and the registry key for your bridges.</p>
+    </section>
+
+    <section class="block" id="b-checklist">
+      <h3>Checklist</h3>
+      <ul class="check">
+        <li><code>claude --version</code> ≥ 2.1.224 (2.1.234 on native Windows); <code>/list-agents</code> is recognized</li>
+        <li>Every worker launched with <code>--name</code></li>
+        <li><code>crossSessionInbound</code> set explicitly on every worker (accept), or deliberately left to default and understood</li>
+        <li>All posters run as the same OS user; no container boundary between poster and session</li>
+        <li>Stop hooks exit 0 and never re-trigger when <code>stop_hook_active</code> is true</li>
+        <li>Bridge batches bursts into one line; carries a correlation id in the first line</li>
+        <li>Sandbox: <code>sandbox.network.allowUnixSockets</code> (list) includes the socket dir — or <code>allowAllUnixSockets</code> — if Bash posts from inside the sandbox</li>
+        <li>A dead-letter path for messages a session held and expired (5 min default)</li>
+      </ul>
+    </section>
+
+    <section class="block" id="b-verify">
+      <h3>Verify before trusting</h3>
+      <p class="muted">This sheet was fact-checked against the official docs on 2026-09-12 (all major claims on sockets, SendMessage, <code>crossSessionInbound</code>, limits, teams, and hooks confirmed). What remains open:</p>
+      <table>
+        <tr><th>Claim</th><th>Source</th></tr>
+        <tr><td>Socket path + token env vars, auth line, 30 s rule, limits, settings</td><td class="yes">official docs, confirmed 2026-09-12</td></tr>
+        <tr><td>Message-line JSON schema on the socket</td><td class="part">not published — test with a hook, read <code>--debug</code></td></tr>
+        <tr><td>Hook payload field names beyond <code>session_id</code>, <code>transcript_path</code>, <code>stop_hook_active</code>, <code>agent_id</code>, <code>agent_type</code></td><td class="part">check the hooks reference for your version</td></tr>
+        <tr><td><code>-p</code> exits after its turn, so it's a poor long-lived listener</td><td class="part">inference from headless behavior</td></tr>
+        <tr><td>Channel capability/notification names, <code>server:</code> flag syntax, v2.1.80+ floor</td><td class="part">not found in the main channels doc — check the channels reference</td></tr>
+        <tr><td>Agent-team file layout and limits</td><td class="yes">official docs, confirmed 2026-09-12</td></tr>
+        <tr><td>SendMessage inputs, <code>&lt;cross-session-message&gt;</code> wrapper, permission-laundering rule</td><td class="yes">live tool schema, observed 2026-09-12</td></tr>
+      </table>
+    </section>
+  </div>
+</div>
+
+<script>
+/* ---------- tabs ---------- */
+const tabs=[...document.querySelectorAll('.tab')], panels=[...document.querySelectorAll('.panel')];
+function show(id){
+  tabs.forEach(t=>t.setAttribute('aria-selected',t.dataset.tab===id));
+  panels.forEach(p=>p.classList.toggle('active',p.id===id));
+  window.scrollTo({top:0});
+}
+tabs.forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+/* cross-tab anchors */
+document.querySelectorAll('.rail a').forEach(a=>a.addEventListener('click',e=>{
+  e.preventDefault();
+  const el=document.querySelector(a.getAttribute('href')); if(!el) return;
+  show(el.closest('.panel').id);
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  document.querySelectorAll('.rail a').forEach(x=>x.classList.remove('on')); a.classList.add('on');
+}));
+
+/* ---------- theme ---------- */
+const root=document.documentElement, tb=document.getElementById('theme');
+tb.addEventListener('click',()=>{
+  const dark=root.dataset.theme==='dark';
+  root.dataset.theme=dark?'light':'dark';
+  tb.textContent=dark?'Dark mode':'Light mode';
+});
+
+/* ---------- sequence diagram renderer ---------- */
+function seq(actors, steps, opts={}){
+  const colW=opts.colW||190, left=20, top=16, boxH=44, rowH=36;
+  const n=actors.length, width=left*2+colW*(n-1)+180;
+  const xs=actors.map((a,i)=>left+90+i*colW);
+  let y=top+boxH+26, body='';
+  const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  for(const s of steps){
+    if(s.note!==undefined){
+      const x0=xs[s.at[0]]-80, x1=xs[s.at[1]]+80;
+      body+=`<rect class="note" x="${x0}" y="${y-12}" width="${x1-x0}" height="24" rx="3"/><text class="note-t" x="${(x0+x1)/2}" y="${y+4}" text-anchor="middle">${esc(s.note)}</text>`;
+      y+=rowH; continue;
+    }
+    if(s.self!==undefined){
+      const x=xs[s.self];
+      body+=`<path class="msg${s.ret?' ret':''}" d="M${x} ${y-8} h34 v18 h-34" marker-end="url(#sq-${s.ret?'m':'a'})"/><text class="lbl" x="${x+42}" y="${y+5}">${esc(s.l)}</text>`;
+      y+=rowH; continue;
+    }
+    const x0=xs[s.f], x1=xs[s.t], dir=x1>x0?1:-1;
+    body+=`<line class="msg${s.ret?' ret':''}" x1="${x0}" y1="${y}" x2="${x1-dir*4}" y2="${y}" marker-end="url(#sq-${s.ret?'m':'a'})"/>`;
+    body+=`<text class="lbl" x="${(x0+x1)/2}" y="${y-6}" text-anchor="middle">${esc(s.l)}</text>`;
+    y+=rowH;
+  }
+  const height=y+10;
+  let head='';
+  actors.forEach((a,i)=>{
+    const x=xs[i];
+    head+=`<line class="life" x1="${x}" y1="${top+boxH}" x2="${x}" y2="${height-6}"/>`;
+    head+=`<rect class="actor ${a.k||''}" x="${x-82}" y="${top}" width="164" height="${boxH}" rx="6"/>`;
+    head+=`<text class="lbl" x="${x}" y="${top+19}" text-anchor="middle" style="font-weight:600">${esc(a.n)}</text>`;
+    if(a.s) head+=`<text class="sm" x="${x}" y="${top+34}" text-anchor="middle">${esc(a.s)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+    <defs><marker id="sq-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--amber)"/></marker>
+    <marker id="sq-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>${head}${body}</svg>`;
+}
+const S={
+  subagent:{
+    actors:[{n:'You',k:'ext'},{n:'Lead session',s:'main turn loop',k:'session'},{n:'Subagent',s:'own context',k:'session'},{n:'Hooks',k:'ext'}],
+    steps:[
+      {f:0,t:1,l:'prompt'},
+      {f:1,t:2,l:'Agent(run_in_background)'},
+      {self:1,l:'keeps going: other tool calls'},
+      {self:2,l:'works…'},
+      {f:2,t:3,l:'SubagentStop {agent_id, agent_type}'},
+      {f:3,t:2,l:'exit 0 (or exit 2: keep working)',ret:true},
+      {f:2,t:1,l:'result enqueued on lead inbox',ret:true},
+      {note:'read between tool calls if a turn is running; otherwise starts a new turn',at:[1,2]},
+      {f:1,t:0,l:'"agent finished" → continues',ret:true},
+    ]},
+  notify:{
+    actors:[{n:'Session A',s:'asking',k:'session'},{n:'Session B',s:'watched, same machine',k:'session'}],
+    steps:[
+      {f:0,t:1,l:'SendMessage(notify_when_idle) [+ optional text]'},
+      {note:'B shows "another process asked to be told when idle" — no turn, no tokens',at:[1,1]},
+      {self:1,l:'finishes its turn, nothing queued'},
+      {f:1,t:0,l:'one-shot idle notice {time, one-line status}',ret:true},
+      {note:'if A is idle → new turn with the notice; subscription dropped after 12 h',at:[0,0]},
+    ]},
+  socket:{
+    actors:[{n:'External process',s:'same OS user',k:'ext'},{n:'Inbox socket',s:'UDS / named pipe'},{n:'Inbound controls',s:'crossSessionInbound'},{n:'Claude',s:'model in the session',k:'session'}],
+    steps:[
+      {self:0,l:'build the full line first'},
+      {f:0,t:1,l:'connect'},
+      {f:0,t:1,l:'{"type":"auth","token":…}  (optional on mac/linux)'},
+      {f:0,t:1,l:'message line + \\n   (within 30 s)'},
+      {f:0,t:1,l:'close',ret:true},
+      {f:1,t:2,l:'validate · classify sender'},
+      {note:'accept → deliver · hold → dialog / dialogExpiry · refuse → drop · own-child → deliver',at:[2,2]},
+      {f:2,t:3,l:'delivered'},
+      {note:'idle → new turn now · busy → read at next between-tools checkpoint',at:[3,3]},
+      {f:3,t:0,l:'SendMessage reply only if a reply address exists',ret:true},
+    ]},
+  channel:{
+    actors:[{n:'External service',s:'CI, webhook, chat',k:'ext'},{n:'Channel MCP server',s:'your code, stdio'},{n:'Claude Code',s:'session runtime'},{n:'Claude',k:'session'}],
+    steps:[
+      {f:1,t:2,l:'capability: claude/channel  (at startup)',ret:true},
+      {f:0,t:1,l:'HTTP webhook / bot event'},
+      {f:1,t:2,l:'notifications/claude/channel {content, meta}'},
+      {self:2,l:'wrap as <channel meta…>content</channel>, enqueue'},
+      {f:2,t:3,l:'deliver (new turn if idle)'},
+      {self:3,l:'reads, acts; permissions still prompt'},
+      {f:3,t:1,l:'reply tool (two-way channels)'},
+      {f:1,t:0,l:'post reply',ret:true},
+    ]},
+  roundtrip:{
+    actors:[{n:'worker-a',s:'session',k:'session'},{n:'Stop hook (a)',k:'ext'},{n:'Queue',s:'Redis / NATS',k:'ext'},{n:'bridge-b',s:'daemon',k:'ext'},{n:'worker-b',s:'session',k:'session'}],
+    steps:[
+      {self:0,l:'finishes a unit of work'},
+      {f:0,t:1,l:'Stop {session_id, transcript_path}'},
+      {f:1,t:2,l:'XADD agent.done {from:a, corr, summary}'},
+      {f:1,t:0,l:'exit 0 → turn ends, a goes idle',ret:true},
+      {f:2,t:3,l:'router: done → agent.b.inbox'},
+      {f:3,t:4,l:'post line to b\'s inbox socket'},
+      {self:4,l:'idle → new turn with the line'},
+      {self:4,l:'does its part'},
+      {f:4,t:2,l:'Stop hook (b) → XADD agent.done'},
+      {f:2,t:0,l:'bridge-a → a\'s socket → a wakes',ret:true},
+    ]},
+};
+document.querySelectorAll('[data-seq]').forEach(el=>{const d=S[el.dataset.seq]; el.innerHTML=seq(d.actors,d.steps);});
+</script>
+</body>
+</html>

@@ -1,0 +1,1690 @@
+<title>The Ledger Book</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --ground: #0d0f0e;
+    --surface: #161a18;
+    --surface-2: #1e2420;
+    --ink: #eef0ec;
+    --ink-2: #a9aea7;
+    --muted: #71766f;
+    --hairline: rgba(255,255,255,0.09);
+    --hairline-2: rgba(255,255,255,0.16);
+    --svc: #e0a552;          /* service / enforcement */
+    --svc-ink: #eabd7d;
+    --svc-wash: rgba(224,165,82,0.08);
+    --client: #6fbf9e;       /* judgment / clients */
+    --client-ink: #8ecfb3;
+    --client-wash: rgba(111,191,158,0.08);
+    --data: #6fa8e6;         /* store / data */
+    --data-ink: #93c0f0;
+    --data-wash: rgba(111,168,230,0.08);
+    --warn: #e06666;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--ground); color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px; line-height: 1.6; margin: 0; padding: 0 0 64px; }
+  code { font-family: "IBM Plex Mono", monospace; font-size: 0.86em; color: var(--ink);
+    background: var(--surface-2); padding: 1px 5px; border-radius: 4px; word-break: break-word; }
+
+  header.hero { max-width: 1180px; margin: 0 auto; padding: 40px 24px 18px; }
+  h1 { font-family: "IBM Plex Serif", Georgia, serif; font-weight: 600; font-size: 36px;
+    letter-spacing: -0.015em; margin: 0; text-wrap: balance; }
+  .lede { color: var(--ink-2); font-size: 16px; max-width: 74ch; margin: 12px 0 0; }
+  .stamp { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--muted); margin: 14px 0 0; }
+  .stamp .target { color: var(--svc-ink); }
+
+  .layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 38px;
+    max-width: 1180px; margin: 0 auto; padding: 8px 24px 0; align-items: start; }
+  .rail { position: sticky; top: 14px; align-self: start; max-height: calc(100vh - 28px);
+    overflow-y: auto; padding: 2px 6px 12px 0; }
+  .rail .grp { font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted); margin: 20px 0 6px; padding-left: 10px; }
+  .rail .grp:first-child { margin-top: 0; }
+  .rail a { display: flex; align-items: baseline; gap: 7px; font-size: 13px; color: var(--ink-2);
+    text-decoration: none; padding: 5px 10px; border-left: 2px solid transparent; border-radius: 0 6px 6px 0; }
+  .rail a:hover { color: var(--ink); background: var(--surface); }
+  .rail a.on { color: var(--client-ink); border-left-color: var(--client); background: var(--client-wash); font-weight: 600; }
+  .rail a:focus-visible { outline: 2px solid var(--client); outline-offset: -2px; }
+  .rail a .k { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; }
+  .rail a.sub { padding-left: 22px; font-size: 12.5px; }
+
+  .content { min-width: 0; }
+  .panel[hidden] { display: none; }
+  h2 { font-family: "IBM Plex Serif", Georgia, serif; font-weight: 600; font-size: 25px;
+    margin: 0 0 6px; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-2); margin: 0 0 22px; max-width: 78ch; }
+  h5.lbl { margin: 22px 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--ink-2); font-weight: 600; }
+  h5.lbl span { text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 400; font-size: 11.5px; }
+
+  figure { margin: 0; }
+  .figwrap { background: var(--surface); border: 1px solid var(--hairline); border-radius: 14px;
+    padding: 20px; overflow-x: auto; }
+  svg.d { display: block; width: 100%; height: auto; color: var(--ink-2); }
+  figcaption { color: var(--muted); font-size: 13px; margin-top: 14px; max-width: 82ch; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 16px 0 0;
+    font-size: 12.5px; color: var(--ink-2); font-family: "IBM Plex Mono", monospace; }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .sw { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid; flex: none; }
+  .ln { width: 22px; height: 0; border-top: 2px solid var(--ink-2); flex: none; }
+  .ln.dash { border-top-style: dashed; }
+
+  .tablescroll { overflow-x: auto; border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface); }
+  table.grid { border-collapse: collapse; width: 100%; min-width: 640px; }
+  table.grid th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--ink-2); font-weight: 600; padding: 11px 16px; border-bottom: 1px solid var(--hairline-2);
+    white-space: nowrap; background: var(--surface-2); }
+  table.grid td { padding: 11px 16px; border-bottom: 1px solid var(--hairline); font-size: 13px; vertical-align: top; }
+  table.grid tbody tr:last-child td { border-bottom: none; }
+  td.mono, .mono { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; }
+  td.c-svc { color: var(--svc-ink); white-space: nowrap; }
+  td.c-client { color: var(--client-ink); white-space: nowrap; }
+  td.c-data { color: var(--data-ink); white-space: nowrap; }
+  td .none { color: var(--muted); font-style: italic; }
+  .m { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.04em;
+    padding: 1px 7px; border-radius: 5px; border: 1px solid var(--hairline-2); color: var(--ink-2); white-space: nowrap; }
+  .m.post { color: var(--client-ink); border-color: var(--client); }
+  .m.get { color: var(--data-ink); border-color: var(--data); }
+  .m.put { color: var(--svc-ink); border-color: var(--svc); }
+
+  .card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px;
+    padding: 18px 20px; border-top: 3px solid var(--edge, var(--hairline-2)); }
+  .cardrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+  .card.svc { --edge: var(--svc); } .card.client { --edge: var(--client); } .card.data { --edge: var(--data); }
+  .card h4 { margin: 0 0 8px; font-size: 15px; }
+  .card p { margin: 0; color: var(--ink-2); font-size: 13.5px; }
+
+  .rule { background: var(--surface); border: 1px solid var(--hairline); border-left: 3px solid var(--svc);
+    border-radius: 8px; padding: 14px 18px; margin: 20px 0 0; color: var(--ink-2); font-size: 13.5px; max-width: 86ch; }
+  .rule.client { border-left-color: var(--client); }
+  .rule.warn { border-left-color: var(--warn); }
+  .rule b { color: var(--ink); font-weight: 600; }
+
+  .does { counter-reset: does; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .does li { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px;
+    padding: 14px 18px 14px 58px; position: relative; font-size: 14.5px; max-width: 86ch; }
+  .does li::before { counter-increment: does; content: counter(does);
+    position: absolute; left: 16px; top: 12px; width: 26px; height: 26px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 600;
+    color: var(--client-ink); background: var(--client-wash); border: 1px solid var(--client); }
+  .does b { color: var(--ink); }
+
+  .spec { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; padding: 20px 22px; }
+  .spec + .spec { margin-top: 16px; }
+  .spec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 14px;
+    border-bottom: 1px solid var(--hairline); padding-bottom: 12px; margin-bottom: 4px; }
+  .spec .ep { font-family: "IBM Plex Mono", monospace; font-size: 16px; font-weight: 600; color: var(--svc-ink); }
+  .spec .ep .meth { font-size: 12px; letter-spacing: 0.05em; margin-right: 8px; color: var(--client-ink); }
+  .spec .what { margin: 14px 0 0; font-size: 14.5px; color: var(--ink); font-weight: 600; max-width: 78ch; }
+  .spec .qual { margin: 6px 0 0; font-size: 13px; color: var(--ink-2); max-width: 78ch; }
+  table.mini { width: 100%; border-collapse: collapse; }
+  table.mini th { background: none; border-bottom: 1px solid var(--hairline-2); padding: 6px 14px 6px 0;
+    font-size: 10px; white-space: nowrap; text-align: left; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--ink-2); font-weight: 600; }
+  table.mini td { padding: 7px 14px 7px 0; border-bottom: 1px solid var(--hairline); font-size: 12.5px; vertical-align: top; }
+  table.mini tr:last-child td { border-bottom: none; }
+  table.mini .f { font-family: "IBM Plex Mono", monospace; color: var(--ink); white-space: nowrap; }
+  .schema { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink-2); line-height: 1.7;
+    white-space: pre; overflow-x: auto; background: var(--surface-2); border-radius: 6px; padding: 12px 14px;
+    display: block; margin: 3px 0 0; }
+  .schema b { color: var(--client-ink); font-weight: 500; }
+  .schema i { color: var(--muted); font-style: normal; }
+  .rr { margin: 16px 0 0; padding-top: 12px; border-top: 1px solid var(--hairline); font-size: 12.5px; color: var(--ink-2); }
+  .rr b { color: var(--ink-2); text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.06em;
+    font-family: "IBM Plex Mono", monospace; margin-right: 4px; }
+
+  .og { font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.05em;
+    padding: 1px 7px; border-radius: 999px; border: 1px solid var(--hairline-2); white-space: nowrap; color: var(--ink-2); }
+  .og.cc { color: var(--muted); }
+  .og.svc { color: var(--svc-ink); border-color: var(--svc); }
+  .og.dv { color: var(--data-ink); border-color: var(--data); }
+  .og.tel { color: var(--data-ink); border-color: var(--data); }
+  .og.rec { color: var(--client-ink); border-color: var(--client); }
+
+  footer { max-width: 1180px; margin: 26px auto 0; padding: 18px 24px 0;
+    border-top: 1px solid var(--hairline); color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+</style>
+
+<header class="hero">
+  <h1>The Ledger Book</h1>
+  <p class="lede">The single reference for the ledger: what it does, the layers it is built from, its
+    objects and their lifecycles, and the <code>/ledger</code> API. One system of record — the BotBeam
+    ledger service. Every schema and state transition is enforced in service code.</p>
+  <p class="stamp">rev 19 · 2026-09-12 · <span class="target">TARGET ARCHITECTURE — sessions plane live · record plane (events + streams) next</span> · migration plan inside</p>
+</header>
+
+<div class="layout">
+  <nav class="rail" aria-label="Contents">
+    <div class="grp">Orientation</div>
+    <a href="#does" data-target="does">What this system does</a>
+    <a href="#howitruns" data-target="howitruns">How it runs</a>
+    <a href="#arch" data-target="arch">The layers</a>
+    <a href="#lifecycle" data-target="lifecycle">Session lifecycle</a>
+    <a href="#cheatsheet" data-target="cheatsheet">Session cheat sheet</a>
+    <a href="#status" data-target="status">Status &amp; migration</a>
+
+    <div class="grp">Objects</div>
+    <a href="#glance" data-target="glance">At a glance</a>
+    <a href="#o-workspace" data-target="o-workspace" class="sub">Workspace</a>
+    <a href="#o-session" data-target="o-session" class="sub">Session</a>
+    <a href="#o-event" data-target="o-event" class="sub">Event</a>
+    <a href="#o-stream" data-target="o-stream" class="sub">Stream</a>
+    <a href="#o-product" data-target="o-product" class="sub">Work product</a>
+
+    <div class="grp">Ledger API</div>
+    <a href="#api" data-target="api">All endpoints</a>
+    <a href="#api-repr" data-target="api-repr" class="sub">Representations</a>
+    <a href="#api-events" data-target="api-events" class="sub"><span class="k">/ledger/events</span></a>
+    <a href="#api-streams" data-target="api-streams" class="sub"><span class="k">/ledger/streams</span></a>
+    <a href="#api-sessions" data-target="api-sessions" class="sub"><span class="k">/ledger/sessions</span></a>
+    <a href="#api-products" data-target="api-products" class="sub"><span class="k">/ledger/products</span></a>
+    <a href="#api-search" data-target="api-search" class="sub"><span class="k">/ledger/search</span></a>
+    <a href="#api-views" data-target="api-views" class="sub"><span class="k">/ledger/index · /board</span></a>
+    <a href="#api-conv" data-target="api-conv" class="sub">Conventions</a>
+
+    <div class="grp">Clients — the feeds</div>
+    <a href="#c-overview" data-target="c-overview">How it hangs together</a>
+    <a href="#c-skill" data-target="c-skill" class="sub">Claude — the skill</a>
+    <a href="#c-hooks" data-target="c-hooks" class="sub">Hooks &amp; sweep — the sensors</a>
+
+    <div class="grp">Projections</div>
+    <a href="#c-displays" data-target="c-displays">Displays</a>
+
+    <div class="grp">Reference</div>
+    <a href="#emission" data-target="emission">Event emission rules</a>
+    <a href="#invariants" data-target="invariants">Invariants</a>
+    <a href="#storage" data-target="storage">Storage &amp; ownership</a>
+  </nav>
+
+  <div class="content">
+
+    <!-- ================= WHAT THIS SYSTEM DOES ================= -->
+    <section class="panel" id="does" aria-label="What this system does">
+      <h2>What this system does</h2>
+      <p class="sub">Work happens in many sessions, across many workspaces, on multiple machines —
+        concurrently, with no session aware of the others. Off that activity the system captures
+        <b style="color:var(--data-ink)">two kinds of data</b>: automatic telemetry about the sessions
+        themselves, and the curated record of the work those sessions throw off. One service holds
+        both, and aggregates them back into one picture.</p>
+
+      <div class="figwrap">
+        <figure>
+          <svg class="d" viewBox="0 0 1000 700" style="min-width:720px" role="img"
+            aria-label="Multiple machines, each containing workspaces, each containing sessions in various states. Each cluster emits two kinds of data to one central ledger service: automatic session telemetry, and the logged work record — events, streams, products. The service sends orientation back to every new session on any machine, and serves the user a board that re-collects the same session marks shown in the clusters.">
+            <defs>
+              <marker id="cv" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+              </marker>
+              <marker id="cvb" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="var(--data)"/>
+              </marker>
+              <marker id="cvg" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="var(--client)"/>
+              </marker>
+            </defs>
+
+            <!-- machine: cmr-nuc -->
+            <rect x="40" y="40" width="340" height="180" rx="12" fill="var(--surface)" stroke="var(--hairline-2)" stroke-width="1.5"/>
+            <text x="58" y="66" font-size="11" font-family="IBM Plex Mono, monospace" letter-spacing="1" fill="var(--muted)">MACHINE · cmr-nuc</text>
+            <rect x="58" y="82" width="145" height="110" rx="9" fill="var(--surface-2)" stroke="var(--hairline)"/>
+            <text x="72" y="106" font-size="12.5" fill="var(--ink)" font-family="IBM Plex Mono, monospace">woodshed</text>
+            <circle cx="82" cy="136" r="5.5" fill="#2ecc55"/>
+            <circle cx="82" cy="136" r="9" fill="none" stroke="#2ecc55" stroke-opacity="0.35"/>
+            <circle cx="108" cy="136" r="5" fill="#4a4d47"/>
+            <text x="72" y="172" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">2 sessions</text>
+            <rect x="217" y="82" width="145" height="110" rx="9" fill="var(--surface-2)" stroke="var(--hairline)"/>
+            <text x="231" y="106" font-size="12.5" fill="var(--ink)" font-family="IBM Plex Mono, monospace">perf-monitor</text>
+            <circle cx="241" cy="136" r="5" fill="none" stroke="#2ecc55" stroke-width="2"/>
+            <circle cx="267" cy="136" r="5" fill="#4a4d47"/>
+            <text x="231" y="172" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">2 sessions</text>
+
+            <!-- machine: laptop -->
+            <rect x="660" y="40" width="300" height="160" rx="12" fill="var(--surface)" stroke="var(--hairline-2)" stroke-width="1.5"/>
+            <text x="678" y="66" font-size="11" font-family="IBM Plex Mono, monospace" letter-spacing="1" fill="var(--muted)">MACHINE · laptop</text>
+            <rect x="678" y="82" width="190" height="95" rx="9" fill="var(--surface-2)" stroke="var(--hairline)"/>
+            <text x="692" y="106" font-size="12.5" fill="var(--ink)" font-family="IBM Plex Mono, monospace">lexintel - plugin</text>
+            <circle cx="702" cy="136" r="5" fill="none" stroke="#2ecc55" stroke-width="2"/>
+            <circle cx="728" cy="136" r="5" fill="#4a4d47"/>
+            <text x="692" y="164" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">2 sessions</text>
+
+            <!-- machine: any -->
+            <rect x="40" y="470" width="280" height="150" rx="12" fill="none" stroke="var(--hairline-2)" stroke-width="1.5" stroke-dasharray="6 4"/>
+            <text x="58" y="496" font-size="11" font-family="IBM Plex Mono, monospace" letter-spacing="1" fill="var(--muted)">MACHINE · any</text>
+            <rect x="58" y="512" width="160" height="86" rx="9" fill="none" stroke="var(--hairline)" stroke-dasharray="5 4"/>
+            <text x="72" y="536" font-size="12.5" fill="var(--ink-2)" font-family="IBM Plex Mono, monospace">any workspace</text>
+            <circle cx="82" cy="566" r="5" fill="none" stroke="#2ecc55" stroke-width="2"/>
+            <text x="100" y="571" font-size="13" fill="var(--muted)" font-family="IBM Plex Mono, monospace">…</text>
+            <text x="240" y="560" font-size="20" fill="var(--muted)">…</text>
+
+            <!-- you + the aggregate board -->
+            <rect x="720" y="470" width="240" height="185" rx="12" fill="var(--surface)" stroke="var(--hairline-2)" stroke-width="1.5"/>
+            <text x="738" y="500" font-size="15" font-weight="600" fill="var(--ink)">You</text>
+            <rect x="738" y="514" width="170" height="94" rx="6" fill="var(--surface-2)" stroke="var(--hairline-2)"/>
+            <text x="750" y="532" font-size="9.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">all sessions · all machines</text>
+            <circle cx="754" cy="548" r="5.5" fill="#2ecc55"/>
+            <circle cx="754" cy="548" r="9" fill="none" stroke="#2ecc55" stroke-opacity="0.35"/>
+            <circle cx="776" cy="548" r="5" fill="#4a4d47"/>
+            <circle cx="798" cy="548" r="5" fill="none" stroke="#2ecc55" stroke-width="2"/>
+            <circle cx="820" cy="548" r="5" fill="#4a4d47"/>
+            <circle cx="842" cy="548" r="5" fill="none" stroke="#2ecc55" stroke-width="2"/>
+            <circle cx="864" cy="548" r="5" fill="#4a4d47"/>
+            <rect x="750" y="566" width="130" height="3" rx="1.5" fill="var(--hairline-2)"/>
+            <rect x="750" y="574" width="104" height="3" rx="1.5" fill="var(--hairline-2)"/>
+            <rect x="750" y="582" width="76" height="3" rx="1.5" fill="var(--hairline-2)"/>
+            <rect x="750" y="592" width="58" height="4" rx="2" fill="var(--svc)" opacity="0.65"/>
+            <text x="738" y="630" font-size="11.5" fill="var(--ink-2)">the board — those same six sessions,</text>
+            <text x="738" y="646" font-size="11.5" fill="var(--ink-2)">gathered · backed by the record</text>
+
+            <!-- center: ledger service holding both planes -->
+            <rect x="380" y="270" width="240" height="150" rx="12" fill="var(--svc-wash)" stroke="var(--svc)" stroke-width="2"/>
+            <text x="500" y="300" text-anchor="middle" font-size="15.5" font-weight="600" fill="var(--ink)">Ledger service</text>
+            <text x="500" y="318" text-anchor="middle" font-size="11" fill="var(--svc-ink)" font-family="IBM Plex Mono, monospace">one system of record</text>
+            <rect x="396" y="330" width="208" height="32" rx="6" fill="var(--data-wash)" stroke="var(--data)"/>
+            <text x="406" y="351" font-size="11" fill="var(--data-ink)" font-family="IBM Plex Mono, monospace">telemetry — sessions</text>
+            <rect x="396" y="372" width="208" height="32" rx="6" fill="var(--client-wash)" stroke="var(--client)"/>
+            <text x="406" y="393" font-size="10.5" fill="var(--client-ink)" font-family="IBM Plex Mono, monospace">record — events·streams·products</text>
+
+            <!-- plane 1 in: telemetry (blue) -->
+            <g fill="none" stroke="var(--data)" stroke-width="1.6">
+              <path d="M200 222 C250 258 320 268 392 300" marker-end="url(#cvb)"/>
+              <path d="M810 202 C800 250 700 280 624 300" marker-end="url(#cvb)"/>
+              <path d="M160 468 C230 436 300 420 378 398" marker-end="url(#cvb)"/>
+            </g>
+            <text x="84" y="256" font-size="11.5" fill="var(--data-ink)" font-family="IBM Plex Mono, monospace">telemetry (automatic)</text>
+
+            <!-- plane 2 in: logged work (green) -->
+            <g fill="none" stroke="var(--client)" stroke-width="1.6">
+              <path d="M250 222 C310 272 330 302 378 334" marker-end="url(#cvg)"/>
+              <path d="M850 200 C840 270 730 312 622 342" marker-end="url(#cvg)"/>
+            </g>
+            <text x="252" y="326" font-size="11.5" fill="var(--client-ink)" font-family="IBM Plex Mono, monospace">logged work (judged)</text>
+
+            <!-- context out (dashed) -->
+            <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="5 4">
+              <path d="M468 422 C400 452 310 462 240 478" marker-end="url(#cv)"/>
+              <path d="M622 396 C700 418 756 438 806 470" marker-end="url(#cv)"/>
+            </g>
+            <text x="380" y="460" font-size="11.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">orientation at session start</text>
+            <text x="692" y="428" font-size="11.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">board · recall</text>
+          </svg>
+          <figcaption>Every cluster emits two kinds of data: blue telemetry — the sessions' own
+            lifecycle, automatic — and green logged work — the events, stream updates, and products
+            their activity throws off, admitted by judgment. One service holds both planes. The board
+            you watch re-collects the very session marks drawn in the clusters — the same six dots,
+            gathered into one frame — with the record behind them.</figcaption>
+        </figure>
+        <div class="legend">
+          <span><svg width="14" height="14" style="flex:none"><circle cx="7" cy="7" r="5" fill="#2ecc55"/></svg> processing</span>
+          <span><svg width="14" height="14" style="flex:none"><circle cx="7" cy="7" r="5" fill="none" stroke="#2ecc55" stroke-width="2"/></svg> waiting</span>
+          <span><svg width="14" height="14" style="flex:none"><circle cx="7" cy="7" r="5" fill="#4a4d47"/></svg> dormant</span>
+          <span><span class="ln" style="border-top-color:var(--data)"></span> telemetry in</span>
+          <span><span class="ln" style="border-top-color:var(--client)"></span> logged work in</span>
+          <span><span class="ln dash"></span> context out</span>
+        </div>
+      </div>
+
+      <h5 class="lbl">The two planes, and exactly what each consists of</h5>
+      <div class="cardrow">
+        <div class="card data">
+          <h4>Session telemetry <span class="og tel">automatic</span></h4>
+          <p>One object: the <a href="#o-session"><b>Session</b></a> — lifecycle state declared by
+            hook <b>signals</b> as it lives (active, waiting, processing, run, dormant).
+            Machine-generated; no judgment, no content. Answers: <b>what is running, where, right
+            now?</b> Its surface is the board. (Logging an event also writes it — invariant 9.)</p>
+        </div>
+        <div class="card client">
+          <h4>The work record <span class="og rec">curated</span></h4>
+          <p>Three objects, thrown off by what those sessions <em>do</em> and admitted by judgment:</p>
+          <table class="mini" style="margin-top:8px">
+            <tbody>
+              <tr><td class="f"><a href="#o-event">Event</a></td><td>what happened — immutable, one line + bullets, belongs to one stream</td></tr>
+              <tr><td class="f"><a href="#o-stream">Stream</a></td><td>a thread of work under management — state, next action, open loops</td></tr>
+              <tr style="opacity:0.6"><td class="f"><a href="#o-product">Work product</a></td><td>what was made — a name plus exactly one home; payload stays at the home <b>(deferred)</b></td></tr>
+            </tbody>
+          </table>
+          <p style="margin-top:8px">Answers: <b>what has been done, what's in flight, what's
+            next?</b> Its surfaces are the orientation, recall, and the board's record columns.</p>
+        </div>
+      </div>
+      <p class="sub" style="margin:14px 0 0;font-size:13.5px">These four objects — Session; Event,
+        Stream, Work product — plus the <a href="#o-workspace">Workspace</a> a session runs in, are
+        the system's <b>entire vocabulary</b>. Every panel in this book moves those five things and
+        nothing else. Plane one emits plane two: a session's activity is where every event, product,
+        and stream update comes from, and attribution stitches them — every event carries its
+        session, every product its provenance, every session at most one stream.</p>
+
+      <h5 class="lbl">The seven behaviors <span>— what each plane gets, and what spans both</span></h5>
+      <ol class="does">
+        <li><span class="og tel">telemetry</span> <b>Tracks sessions.</b> Every Claude Code session's
+          lifecycle — active, dormant, archived, expired; waiting, processing, run — declared by hook
+          signals and API calls, never hand-maintained, never inferred.</li>
+        <li><span class="og rec">record</span> <b>Records events.</b> Immutable, timestamped statements
+          of what happened — a ship, a decision, a send, a state change — each belonging to exactly
+          one stream.</li>
+        <li><span class="og rec">record</span> <b>Maintains streams.</b> One management record per
+          thread of work: current state, the single next action, open loops, staleness.</li>
+        <li style="opacity:0.6"><span class="og rec">record</span> <b>Registers work products.</b>
+          Each product is a name plus exactly one home (repo, Drive, sheet, published page). The
+          ledger stores the record; the payload stays at its home. <b>Deferred — not this
+          phase.</b></li>
+        <li><span class="og rec">record</span> <b>Answers recall.</b> Queries across events, streams,
+          and products return dates, links, and current state.</li>
+        <li><span class="og">both</span> <b>Serves its own views.</b> The board data structure
+          (telemetry, enriched by the record) that the BotBeam view renders, and the session-start
+          orientation (the record) — projections of the one store; no client computes a view.</li>
+        <li><span class="og">both</span> <b>Enforces its rules in code.</b> Schemas, state
+          transitions, atomicity, and attribution are validated by the service on every write. A
+          client can be wrong; the store cannot.</li>
+      </ol>
+    </section>
+
+    <!-- ================= HOW IT RUNS ================= -->
+    <section class="panel" id="howitruns" aria-label="How it runs" hidden>
+      <h2>How it runs</h2>
+      <p class="sub">The system is a <b>live database of sessions and events</b>, kept current by
+        <b>three independent moving parts</b> that never talk to each other — they only talk to the
+        service. This panel is the operational picture: who runs, when, and what each one writes. If
+        you read one panel to understand how the thing actually works, read this one.</p>
+
+      <div class="rule warn" style="margin-top:0"><b>Hooks are NOT part of the skill.</b> This is the
+        single most confusing thing about the system, so state it plainly: the skill is instructions
+        loaded into Claude's context and acts only when Claude decides to act. Hooks are wired in
+        <code>~/.claude/settings.json</code>, fire from Claude Code's own lifecycle, and run
+        <code>session_event.py</code> in a <b>separate OS process</b> with no Claude and no judgment
+        involved. A hook fires whether or not the ledger skill was ever loaded — which is exactly why
+        the sessions half of the database is complete by construction and the events half is not.
+        They share a folder in the repo; they share nothing at runtime.</div>
+
+      <h5 class="lbl">The three moving parts <span>— what runs them, and what each maintains</span></h5>
+      <div class="cardrow">
+        <div class="card client">
+          <h4>1 · Hooks <span class="og tel">telemetry</span></h4>
+          <p><b>Runs:</b> automatically, on five Claude Code lifecycle moments.<br>
+            <b>Trigger:</b> the CLI itself, via <code>settings.json</code>.<br>
+            <b>Writes:</b> session rows — <code>status</code>, <code>turn_state</code>, timestamps.<br>
+            <b>Judgment:</b> none, and none allowed.<br>
+            <b>If it breaks:</b> the board goes stale. The record is unaffected.</p>
+        </div>
+        <div class="card svc">
+          <h4>2 · The sweep <span class="og tel">telemetry</span></h4>
+          <p><b>Runs:</b> every 5 minutes, per machine.<br>
+            <b>Trigger:</b> Windows Task Scheduler → <code>sweep_report.py</code>.<br>
+            <b>Writes:</b> transcript-presence facts; writes <code>expired</code> at 3 misses.<br>
+            <b>Judgment:</b> none — it reports what it sees on disk.<br>
+            <b>If it breaks:</b> deleted sessions linger on the board.</p>
+        </div>
+        <div class="card data">
+          <h4>3 · The skill <span class="og rec">record</span></h4>
+          <p><b>Runs:</b> when Claude judges that work produced an outcome.<br>
+            <b>Trigger:</b> Claude's own activity — not the user, not a timer.<br>
+            <b>Writes:</b> events and streams (and the emitter's liveness).<br>
+            <b>Judgment:</b> everything — this part <em>is</em> judgment.<br>
+            <b>If it breaks:</b> history is silently lost. Nothing can recover it.</p>
+        </div>
+      </div>
+
+      <h5 class="lbl">One session, start to finish <span>— every write, in order</span></h5>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>Moment</th><th>What fires</th><th>Part</th><th>What the database gets</th><th>What you see</th></tr></thead>
+          <tbody>
+            <tr><td>you launch <code>claude</code></td><td class="mono c-client">SessionStart hook</td><td><span class="og tel">1</span></td><td class="mono">session row created · status=active · turn_state=waiting</td><td>nothing yet — never prompted</td></tr>
+            <tr><td>the same hook, second duty</td><td class="mono c-svc">GET /ledger/index</td><td><span class="og tel">1</span></td><td class="mono">— (a read)</td><td>orientation injected into the new session's context</td></tr>
+            <tr><td>you type a prompt</td><td class="mono c-client">UserPromptSubmit hook</td><td><span class="og tel">1</span></td><td class="mono">turn_state=processing · ever_prompted=true</td><td><b>a card appears</b>, solid green</td></tr>
+            <tr><td>Claude edits a file</td><td class="mono c-client">PostToolUse hook</td><td><span class="og tel">1</span></td><td class="mono">last_run_at=now <span style="color:var(--muted)">(debounced 60s)</span></td><td>⚡ on the card</td></tr>
+            <tr><td>…more tool calls…</td><td class="mono c-client">PostToolUse, debounced</td><td><span class="og tel">1</span></td><td class="mono">mostly nothing — a burst carries no new fact</td><td>⚡ stays lit</td></tr>
+            <tr><td><b>the work ships</b></td><td class="mono c-svc">POST /ledger/events</td><td><span class="og rec">3</span></td><td class="mono">event row appended · stream updated · session status=active, last_event_at=now</td><td><b>a line in the events feed</b></td></tr>
+            <tr><td>Claude finishes the turn</td><td class="mono c-client">Stop hook</td><td><span class="og tel">1</span></td><td class="mono">turn_state=waiting · last_stop_at=now</td><td>card goes to a hollow ring — your move</td></tr>
+            <tr><td>every 5 min, throughout</td><td class="mono c-svc">sweep report</td><td><span class="og tel">2</span></td><td class="mono">transcript seen → expiry facts cleared</td><td>nothing — silence is the healthy case</td></tr>
+            <tr><td>you exit cleanly</td><td class="mono c-client">SessionEnd hook</td><td><span class="og tel">1</span></td><td class="mono">status=dormant · ended_at=now</td><td>card goes gray, moves to Inactive</td></tr>
+            <tr><td><i>or the machine crashes</i></td><td class="mono"><i>nothing fires</i></td><td>—</td><td class="mono">nothing — the row stays active <span style="color:var(--muted)">(sweep repair deferred)</span></td><td>a stale green card, by accepted decision</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h5 class="lbl">What this means in practice</h5>
+      <ol class="does">
+        <li><b>The sessions half maintains itself.</b> You do nothing, Claude does nothing, and the
+          board stays true — because hooks are involuntary. The only manual act in the whole
+          telemetry plane is <b>archive</b>, when you want a finished card gone.</li>
+        <li><b>The events half depends entirely on Claude's discipline.</b> No sensor can see that a
+          diff was a deliverable. If Claude doesn't log it, it never happened as far as the database
+          is concerned — and nothing later can reconstruct it. That is why logging is written as a
+          <em>standing duty</em>, not a feature the user invokes.</li>
+        <li><b>The two halves meet in exactly one place.</b> Logging an event writes the emitting
+          session's liveness (<a href="#invariants">invariant 9</a>). Nowhere else does the record
+          plane touch the telemetry plane.</li>
+        <li><b>The service is the only writer.</b> Hooks, sweep, and skill all send intent over HTTP;
+          the service validates it, stamps it, and commits it. No client writes storage, and no
+          client computes a view.</li>
+      </ol>
+
+      <div class="rule client"><b>So who maintains the database?</b> The service maintains it; three
+        clients feed it. Two of them (hooks, sweep) are machinery that runs without anyone deciding
+        anything — they keep the <em>sessions</em> current. One of them (the skill) is Claude
+        exercising judgment — it keeps the <em>events</em> current. Calling the whole thing "the
+        skill" is the mistake: the skill is one of three feeds, and the only one that can forget.</div>
+    </section>
+
+    <!-- ================= LAYERS ================= -->
+    <section class="panel" id="arch" aria-label="The layers" hidden>
+      <h2>The layers</h2>
+      <p class="sub">One stack. Instructions sit above code and drive it: judgment at the top decides
+        <em>what</em>; the service below decides <em>whether it's valid</em> and makes it so. Every
+        write descends the same five layers. Views come back out of the service as projections.</p>
+
+      <div class="figwrap">
+        <figure>
+          <svg class="d" viewBox="0 0 940 620" style="min-width:700px" role="img"
+            aria-label="Five layers stacked vertically. Surfaces: the user's conversation with Claude and Claude Code's lifecycle signals. Judgment: the skill deciding what is logworthy; hooks pass through as judgment-free sensors. API: the typed /ledger contract. Enforcement: the BotBeam ledger service validating, running state machines, and committing atomically. Store: sessions, events, streams, products. Views are served back from the service to displays. The old local folder is replaced by the store.">
+            <defs>
+              <marker id="dn" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+              </marker>
+            </defs>
+
+            <!-- L1 SURFACES -->
+            <rect x="40" y="30" width="640" height="86" rx="11" fill="var(--surface)" stroke="var(--hairline-2)" stroke-width="1.5"/>
+            <text x="60" y="58" font-size="11" font-family="IBM Plex Mono, monospace" letter-spacing="1.2" fill="var(--muted)">1 · SURFACES</text>
+            <text x="60" y="86" font-size="13.5" fill="var(--ink)">You ↔ Claude conversation</text>
+            <text x="400" y="80" font-size="13.5" fill="var(--ink)">Claude Code lifecycle</text>
+            <text x="400" y="102" font-size="11" fill="var(--ink-2)" font-family="IBM Plex Mono, monospace">start · prompt · stop · end · tool</text>
+
+            <!-- L2 JUDGMENT -->
+            <rect x="40" y="150" width="640" height="100" rx="11" fill="var(--client-wash)" stroke="var(--client)" stroke-width="1.8"/>
+            <text x="60" y="178" font-size="11" font-family="IBM Plex Mono, monospace" letter-spacing="1.2" fill="var(--client-ink)">2 · JUDGMENT — the skill</text>
+            <text x="60" y="206" font-size="13.5" fill="var(--ink)">Decides what is logworthy · extracts typed fields · chooses the call</text>
+            <text x="60" y="230" font-size="12" fill="var(--ink-2)" font-family="IBM Plex Mono, monospace">hooks bypass this layer: sensors, no judgment</text>
+
+            <!-- L3 API -->
+            <rect x="40" y="284" width="640" height="86" rx="11" fill="none" stroke="var(--svc)" stroke-width="1.8" stroke-dasharray="7 4"/>
+            <text x="60" y="312" font-size="11" font-family="IBM Plex Mono, monospace" letter-spacing="1.2" fill="var(--svc-ink)">3 · API — the /ledger contract</text>
+            <text x="60" y="340" font-size="12.5" fill="var(--ink-2)" font-family="IBM Plex Mono, monospace">events · sessions/{id}/signals · archive · streams · reads · views</text>
+
+            <!-- L4 ENFORCEMENT -->
+            <rect x="40" y="404" width="640" height="100" rx="11" fill="var(--svc-wash)" stroke="var(--svc)" stroke-width="2"/>
+            <text x="60" y="432" font-size="11" font-family="IBM Plex Mono, monospace" letter-spacing="1.2" fill="var(--svc-ink)">4 · ENFORCEMENT — BotBeam ledger service</text>
+            <text x="60" y="460" font-size="13.5" fill="var(--ink)">Validates · runs the state machines · commits atomically · attributes streams</text>
+            <text x="60" y="484" font-size="12" fill="var(--ink-2)" font-family="IBM Plex Mono, monospace">the only writer</text>
+
+            <!-- L5 STORE -->
+            <rect x="40" y="538" width="640" height="66" rx="11" fill="var(--data-wash)" stroke="var(--data)" stroke-width="1.8"/>
+            <text x="60" y="564" font-size="11" font-family="IBM Plex Mono, monospace" letter-spacing="1.2" fill="var(--data-ink)">5 · STORE</text>
+            <text x="60" y="588" font-size="13" fill="var(--ink)" font-family="IBM Plex Mono, monospace">sessions · events · streams&nbsp;&nbsp;<tspan fill="var(--muted)" font-size="11">the only store · ~/claude-memory abandoned</tspan></text>
+
+            <!-- down arrows -->
+            <g fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M240 118 L240 148" marker-end="url(#dn)"/>
+              <path d="M240 252 L240 282" marker-end="url(#dn)"/>
+              <path d="M360 372 L360 402" marker-end="url(#dn)"/>
+              <path d="M360 506 L360 536" marker-end="url(#dn)"/>
+            </g>
+            <!-- hooks bypass judgment: surfaces straight to the API -->
+            <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 3">
+              <path d="M520 118 C520 180 520 220 520 282" marker-end="url(#dn)"/>
+            </g>
+            <g font-size="11.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">
+              <text x="256" y="139">intent</text>
+              <text x="256" y="273">typed calls</text>
+              <text x="536" y="205">hook signals —</text>
+              <text x="536" y="221">bypass judgment</text>
+              <text x="376" y="393">validated writes</text>
+              <text x="376" y="527">facts</text>
+            </g>
+
+            <!-- projections up the right side -->
+            <rect x="742" y="150" width="168" height="240" rx="11" fill="var(--surface)" stroke="var(--hairline-2)" stroke-width="1.5"/>
+            <text x="762" y="178" font-size="11" font-family="IBM Plex Mono, monospace" letter-spacing="1.2" fill="var(--muted)">PROJECTIONS</text>
+            <g font-size="12.5" fill="var(--ink)" font-family="IBM Plex Mono, monospace">
+              <text x="762" y="210">board (data)</text>
+              <text x="762" y="236">orientation</text>
+              <text x="762" y="262">recall answers</text>
+            </g>
+            <text x="762" y="330" font-size="11" fill="var(--muted)">read-only renderings;</text>
+            <text x="762" y="346" font-size="11" fill="var(--muted)">never sources</text>
+            <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="5 4">
+              <path d="M682 452 C740 452 790 430 812 392" marker-end="url(#dn)"/>
+              <path d="M812 148 C800 96 740 76 684 72" marker-end="url(#dn)"/>
+            </g>
+            <text x="756" y="426" font-size="11.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">serves</text>
+            <text x="754" y="112" font-size="11.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">seen by you</text>
+          </svg>
+          <figcaption>Every write descends all five layers; there is no second path. The v1 defect —
+            two parallel writers (Claude editing files beside board.py writing records) — is
+            structurally impossible here.</figcaption>
+        </figure>
+        <div class="legend">
+          <span><span class="sw" style="border-color:var(--client);background:var(--client-wash)"></span> judgment</span>
+          <span><span class="sw" style="border-color:var(--svc);background:var(--svc-wash)"></span> contract &amp; enforcement</span>
+          <span><span class="sw" style="border-color:var(--data);background:var(--data-wash)"></span> store</span>
+          <span><span class="ln"></span> writes descend</span>
+          <span><span class="ln dash"></span> views served back</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= LIFECYCLE ================= -->
+    <section class="panel" id="lifecycle" aria-label="Session lifecycle" hidden>
+      <h2>Session lifecycle</h2>
+      <p class="sub">Sessions move through these states. Every transition is a hook signal or an API
+        call landing in the service's state machine, and every one <b>writes the status it
+        declares</b> — <code>status</code> is a stored column, exactly like <code>turn_state</code>;
+        nothing infers a lifecycle state from timestamps. A crash fires no signal, so a crashed
+        session keeps its last declared status until the sweep repairs it — a separate mechanism,
+        <b>deferred</b>, the same pattern as the <code>turn_state</code> cleanup. <b>dormant</b>
+        means &ldquo;declared closed&rdquo; (SessionEnd, or unarchive); dormant sessions leave the
+        board only when the user clears them (archive).</p>
+
+      <div class="figwrap">
+        <figure>
+          <svg class="d" viewBox="0 0 980 330" style="min-width:720px" role="img"
+            aria-label="State diagram. Sessions become active on start. While active they cycle waiting to processing on prompt, processing to waiting on stop, processing to run on mutation. Active becomes dormant on SessionEnd; a resume reactivates it. Dormant and archived interconvert by archive and unarchive calls. Dormant or archived becomes expired when the transcript is missing across N sweeps with no events. Resume or prompt returns archived or expired sessions to active.">
+            <defs>
+              <marker id="lf" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+              </marker>
+            </defs>
+            <rect x="40" y="60" width="400" height="210" rx="12" fill="var(--client-wash)" stroke="var(--client)" stroke-width="1.8"/>
+            <text x="60" y="88" font-size="13" font-weight="600" fill="var(--client-ink)" font-family="IBM Plex Mono, monospace">ACTIVE</text>
+            <g>
+              <rect x="70" y="110" width="106" height="44" rx="8" fill="var(--surface)" stroke="var(--hairline-2)"/>
+              <text x="123" y="137" text-anchor="middle" font-size="13" fill="var(--ink)">waiting</text>
+              <rect x="230" y="110" width="118" height="44" rx="8" fill="var(--surface)" stroke="var(--hairline-2)"/>
+              <text x="289" y="137" text-anchor="middle" font-size="13" fill="var(--ink)">processing</text>
+              <rect x="230" y="196" width="118" height="44" rx="8" fill="var(--surface)" stroke="var(--svc)" stroke-width="1.6"/>
+              <text x="289" y="223" text-anchor="middle" font-size="13" fill="var(--svc-ink)">run ⚡</text>
+            </g>
+            <g fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M176 122 C196 118 208 118 228 122" marker-end="url(#lf)"/>
+              <path d="M228 144 C208 148 196 148 178 144" marker-end="url(#lf)"/>
+              <path d="M289 156 L289 194" marker-end="url(#lf)"/>
+              <path d="M232 218 C160 218 128 186 123 158" marker-end="url(#lf)"/>
+            </g>
+            <g font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">
+              <text x="202" y="110" text-anchor="middle">prompt</text>
+              <text x="202" y="162" text-anchor="middle">stop</text>
+              <text x="297" y="180">mutation</text>
+              <text x="150" y="196">stop</text>
+            </g>
+            <rect x="530" y="80" width="130" height="48" rx="9" fill="var(--surface)" stroke="var(--hairline-2)" stroke-width="1.5"/>
+            <text x="595" y="109" text-anchor="middle" font-size="13.5" fill="var(--ink)">dormant</text>
+            <rect x="530" y="196" width="130" height="48" rx="9" fill="var(--surface)" stroke="var(--hairline-2)" stroke-width="1.5"/>
+            <text x="595" y="225" text-anchor="middle" font-size="13.5" fill="var(--ink)">archived</text>
+            <rect x="790" y="138" width="130" height="48" rx="9" fill="none" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="4 4"/>
+            <text x="855" y="167" text-anchor="middle" font-size="13.5" fill="var(--ink-2)">expired</text>
+            <g fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M442 104 L528 104" marker-end="url(#lf)"/>
+              <path d="M528 88 C500 66 470 66 444 78" marker-end="url(#lf)"/>
+              <path d="M580 130 L580 194" marker-end="url(#lf)"/>
+              <path d="M610 194 L610 130" marker-end="url(#lf)"/>
+              <path d="M662 112 C724 118 750 134 788 150" marker-end="url(#lf)"/>
+              <path d="M662 232 C724 226 750 196 788 178" marker-end="url(#lf)"/>
+            </g>
+            <g fill="none" stroke="var(--client)" stroke-width="1.5" stroke-dasharray="5 4">
+              <path d="M530 244 C440 288 300 288 240 272" marker-end="url(#lf)"/>
+              <path d="M788 186 C700 280 480 306 236 280" marker-end="url(#lf)"/>
+            </g>
+            <g font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">
+              <text x="484" y="94" text-anchor="middle">SessionEnd</text>
+              <text x="484" y="60" text-anchor="middle">resume</text>
+              <text x="568" y="166" text-anchor="end">archive</text>
+              <text x="620" y="166">unarchive</text>
+              <text x="726" y="122">missing ×N, no events</text>
+              <text x="368" y="300" fill="var(--client-ink)">resume / prompt — any sign of life writes active</text>
+            </g>
+          </svg>
+          <figcaption>The compound state is active, containing waiting ⇄ processing ⊇ run. Every
+            arrow is a write: the signal or call that causes a transition stores the new status.
+            The dashed green returns are declared recoveries — any sign of life writes
+            <code>status="active"</code>, which is what un-archives and un-expires. A crashed
+            session keeps its last status until the sweep repairs it (deferred).</figcaption>
+        </figure>
+      </div>
+
+      <h5 class="lbl">Transition → signal → fields written <span>— the exact writes, per transition</span></h5>
+      <p class="sub" style="margin:0 0 10px;font-size:13px"><b>Universal writes first:</b> every hook
+        signal, whatever its type, also writes <code>last_event_at = now</code>, resets
+        <code>transcript_missing_since = null</code>, <code>sweep_miss_count = 0</code>, and — every
+        signal except SessionEnd — writes <code>status = "active"</code>: any sign of life is
+        declared, not derived. <b>Event emission counts as a signal here</b> (invariant 9). The rows
+        below list only what each transition writes on top of that.</p>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>Transition</th><th>Real-world trigger</th><th>Signal into the service</th><th>Fields written</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">→ active</td><td>launch or resume</td><td class="mono c-client">event: SessionStart</td><td class="mono">status="active" · row created if new: workspace_id · machine · label · first_seen=now · turn_state="waiting"</td></tr>
+            <tr><td class="mono">→ active</td><td>the session logs an event</td><td class="mono c-svc">POST /ledger/events</td><td class="mono">status="active" · last_event_at=now · archived_at=null <span style="color:var(--muted)">— same transaction as the event (invariant 9); turn_state untouched</span></td></tr>
+            <tr><td class="mono">waiting → processing</td><td>a prompt is submitted</td><td class="mono c-client">event: UserPromptSubmit</td><td class="mono">turn_state="processing" · last_prompt_at=now · ever_prompted=true</td></tr>
+            <tr><td class="mono">processing → run</td><td>Claude mutates something</td><td class="mono c-client">event: PostToolUse (mutating tool)</td><td class="mono">last_run_at=now <span style="color:var(--muted)">— ⚡ shows while now − last_run_at ≤ run window</span></td></tr>
+            <tr><td class="mono">processing → waiting</td><td>the turn finishes</td><td class="mono c-client">event: Stop</td><td class="mono">turn_state="waiting" · last_stop_at=now</td></tr>
+            <tr><td class="mono">active → dormant</td><td>clean exit</td><td class="mono c-client">event: SessionEnd</td><td class="mono">status="dormant" · ended_at=now · turn_state="waiting"</td></tr>
+            <tr><td class="mono">active → <i>(stale)</i></td><td>crash</td><td class="mono c-client"><i>nothing</i></td><td class="mono">no write — the row keeps status="active" until the sweep repairs it: status → "dormant", stale turn_state="processing" → "waiting" <span style="color:var(--muted)">(the crashed-session cleanup — DEFERRED, out of scope for now)</span></td></tr>
+            <tr><td class="mono">dormant → archived</td><td>the user clears it</td><td class="mono c-svc">POST …/archive</td><td class="mono">status="archived" · archived_at=now <span style="color:var(--muted)">— 409 if active</span></td></tr>
+            <tr><td class="mono">archived → dormant</td><td>user restores it</td><td class="mono c-svc">POST …/unarchive</td><td class="mono">status="dormant" · archived_at=null</td></tr>
+            <tr><td class="mono">archived → active</td><td>user resumes it</td><td class="mono c-client">event: SessionStart / prompt</td><td class="mono">the universal writes — status="active" is written like any sign of life · archived_at=null</td></tr>
+            <tr><td class="mono">→ expired</td><td>transcript deleted</td><td class="mono c-svc">sweep report, per miss</td><td class="mono">transcript_missing_since=now on first miss · sweep_miss_count += 1 · at ≥3 with no event since, the handler writes status="expired"</td></tr>
+            <tr><td class="mono">expired → active</td><td>false alarm</td><td class="mono c-client">any event · transcript seen</td><td class="mono">the universal writes — status="active" and the expiry facts reset; the write is the unlatch</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= SESSION CHEAT SHEET ================= -->
+    <section class="panel" id="cheatsheet" aria-label="Session cheat sheet" hidden>
+      <h2>Session cheat sheet</h2>
+      <p class="sub">Written from the board backwards: three rules that say what you're looking at,
+        then every transition the board can show — cornered, one cause each. The facts come last;
+        they anchor the rules, you don't memorize them.</p>
+
+      <h5 class="lbl">Rule 1 — what's listed</h5>
+      <div class="rule client" style="margin-top:0"><b>The board lists every session you ever
+        prompted, minus the ones you archived, minus the ones whose transcript is gone.</b> Nothing
+        else, ever. A card you don't want → archive it (the one manual act in the whole system). A
+        card you expected but don't see → never prompted, archived, or expired — there is no fourth
+        reason.</div>
+
+      <h5 class="lbl">Rule 2 — what the glyph says</h5>
+      <div class="tablescroll"><table class="grid">
+        <thead><tr><th>Glyph</th><th>State</th><th>Means</th><th>Your move</th></tr></thead>
+        <tbody>
+          <tr><td><svg width="18" height="14"><circle cx="8" cy="7" r="5.5" fill="#2ecc55"/></svg></td><td class="mono c-client">processing</td><td>Claude is mid-turn</td><td>none — it's working</td></tr>
+          <tr><td><svg width="18" height="14"><circle cx="8" cy="7" r="5.5" fill="#2ecc55"/></svg> ⚡</td><td class="mono c-client">run</td><td>mid-turn and it changed something just now</td><td>none — it's mutating</td></tr>
+          <tr><td><svg width="18" height="14"><circle cx="8" cy="7" r="5" fill="none" stroke="#2ecc55" stroke-width="2"/></svg></td><td class="mono c-client">waiting</td><td>the turn is finished</td><td>yours — it's waiting on you</td></tr>
+          <tr><td><svg width="18" height="14"><circle cx="8" cy="7" r="5.5" fill="#4a4d47"/></svg></td><td class="mono">dormant</td><td>silent — exited, crashed, or idle; unknowable and equivalent, all resumable</td><td>resume it, or archive it away</td></tr>
+        </tbody>
+      </table></div>
+
+      <h5 class="lbl">Rule 3 — the only timing in the system</h5>
+      <div class="rule" style="margin-top:0"><b>One window.</b> The ⚡ goes out after the
+        <b>run window</b> — that long after the last mutation. Nothing else in the system ages: a
+        card goes gray only when its session declares dormant (clean exit, or unarchive). A crashed
+        session stays green until the sweep repair lands — the one known lie on the board, accepted
+        for now (deferred).</div>
+
+      <h5 class="lbl">Cornering the transitions <span>— every change the board can show, one cause each</span></h5>
+      <div class="tablescroll"><table class="grid">
+        <thead><tr><th>You see</th><th>What happened</th><th>The fact underneath</th></tr></thead>
+        <tbody>
+          <tr><td>a new card appears</td><td>a session got its first prompt</td><td class="mono">ever_prompted flips true</td></tr>
+          <tr><td>ring → solid green</td><td>a prompt was submitted</td><td class="mono">turn_state → processing</td></tr>
+          <tr><td>green gains ⚡</td><td>it mutated something</td><td class="mono">last_run_at within run window</td></tr>
+          <tr><td>⚡ goes out, still green</td><td>still working; nothing mutated lately</td><td class="mono">run window elapsed</td></tr>
+          <tr><td>solid green → ring</td><td>the turn finished — your move</td><td class="mono">turn_state → waiting</td></tr>
+          <tr><td>anything → gray</td><td>it exited cleanly (or you unarchived it)</td><td class="mono">status → dormant — a written transition</td></tr>
+          <tr><td>gray → green</td><td>it was resumed and prompted</td><td class="mono">new prompt</td></tr>
+          <tr><td>a card disappears</td><td>you archived it — or its transcript was deleted</td><td class="mono">status → archived · or status → expired (sweep)</td></tr>
+          <tr><td>an archived card returns</td><td>it did something — any sign of life un-archives</td><td class="mono">any event writes status → active</td></tr>
+        </tbody>
+      </table></div>
+
+      <h5 class="lbl">Under the hood <span>— the state the rules stand on</span></h5>
+      <p class="sub" style="margin:0 0 10px;font-size:13px">The board reads stored state — the two
+        declared status columns plus the facts below. Every status was written by the signal or call
+        that caused it; a wrong one is overwritten by the next signal, and crashed rows wait on the
+        sweep repair (deferred).</p>
+      <div class="tablescroll"><table class="grid">
+        <thead><tr><th>Fact</th><th>Written by</th><th>Carries the rule</th></tr></thead>
+        <tbody>
+          <tr><td class="mono c-data">status</td><td>every signal and call — the transition table</td><td>green vs gray vs listed at all — stored, not inferred</td></tr>
+          <tr><td class="mono c-data">turn_state</td><td>UserPromptSubmit → processing · Stop → waiting</td><td>solid vs ring — stored, not inferred</td></tr>
+          <tr><td class="mono c-data">last_event_at</td><td>every signal</td><td>recency — ordering the inactive section</td></tr>
+          <tr><td class="mono c-data">last_run_at</td><td>PostToolUse — mutating tools</td><td>the ⚡</td></tr>
+          <tr><td class="mono c-data">ended_at</td><td>SessionEnd</td><td>clean-close time — a fact; status carries the state</td></tr>
+          <tr><td class="mono c-data">ever_prompted</td><td>first prompt</td><td>Rule 1's "ever prompted"</td></tr>
+          <tr><td class="mono c-data">archived_at</td><td>archive call — you</td><td>when you last archived it — a fact; status carries the state</td></tr>
+          <tr><td class="mono c-data">transcript_missing_since</td><td>sweep reports</td><td>feeds the sweep's expiry write</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ================= STATUS ================= -->
+    <section class="panel" id="status" aria-label="Status and migration" hidden>
+      <h2>Status &amp; migration</h2>
+      <p class="sub">This book is the target. The running implementation (v1) is the local-folder
+        system it replaces. Work is tracked in <code>skills/ledger/design/session-state.md</code>.</p>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>Concern</th><th>v1 — running today</th><th>Target — this book</th></tr></thead>
+          <tbody>
+            <tr><td>System of record</td><td><code>~/claude-memory</code> markdown + JSON files — <b>abandoned, not migrated</b></td><td class="c-svc mono">BotBeam ledger service</td></tr>
+            <tr><td>Write paths</td><td>two parallel writers: Claude hand-edits files; board.py writes session records</td><td class="c-svc mono">one path through the API</td></tr>
+            <tr><td>Session status</td><td>stored booleans that latch wrongly</td><td class="c-svc mono">stored statuses — one writer per transition; sweep repair for crashes (deferred)</td></tr>
+            <tr><td>Cross-machine</td><td>lockbox mirror + merge heuristic</td><td class="c-svc mono">inherent — one shared service</td></tr>
+            <tr><td>Board display</td><td>board.py renders and pushes HTML</td><td class="c-svc mono">BotBeam view built from GET /ledger/board</td></tr>
+            <tr><td>Skill's scope</td><td>judgment and file mechanics</td><td class="c-svc mono">judgment only</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h5 class="lbl">Migration order</h5>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>#</th><th>Step</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">1</td><td>Ledger API in BotBeam: store, <code>/ledger</code> endpoints, session state machine</td><td>foundation for all clients</td></tr>
+            <tr><td class="mono">2</td><td>Hooks post to <code>/ledger/sessions/{id}/signals</code>; sweep reporter posts observations; board.py's local store retired</td><td>latched statuses, ghost cards, and sweep failures eliminated</td></tr>
+            <tr><td class="mono">3</td><td><b>this phase:</b> <code>POST /ledger/events</code> + streams + <code>GET /ledger/index</code>; SKILL.md verbs rewritten as API calls; <code>~/claude-memory</code> abandoned outright (no import)</td><td>the record plane comes online; file drift and logging re-attribution eliminated</td></tr>
+            <tr><td class="mono">4</td><td>Work products: registry, <code>product</code> block accepted, board column <span style="color:var(--muted)">— deferred to a later phase by decision</span></td><td>the record plane complete</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="rule warn"><b>Open decisions.</b> Offline behavior when the service is unreachable
+        (hook spool vs accepted gaps). Journal migration format (structured events vs archived
+        markdown). Auth scope per client.</div>
+    </section>
+
+    <!-- ================= AT A GLANCE ================= -->
+    <section class="panel" id="glance" aria-label="Objects at a glance" hidden>
+      <h2>Objects at a glance</h2>
+      <p class="sub">The system's entire vocabulary: five objects. Workspace and Session originate in
+        Claude Code (the service annotates the Session — that annotation <em>is</em> the telemetry
+        plane); Event, Stream, and Work product are the ledger's own — together they <em>are</em> the
+        work record. Session status and turn state are stored, declared by the signals and calls
+        that cause them; the only computed fields are display windows and filters (run bolt,
+        relevance, staleness, attribution).</p>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>Object</th><th>Origin</th><th>Plane</th><th>What it is</th><th>Status</th><th>Related to</th></tr></thead>
+          <tbody>
+            <tr><td class="c-data mono"><a href="#o-workspace">Workspace</a></td><td><span class="og cc">CC</span></td><td><span class="og">context</span></td><td>directory Claude launches in</td><td>active iff any session active</td><td>has many sessions</td></tr>
+            <tr><td class="c-data mono"><a href="#o-session">Session</a></td><td><span class="og cc">CC</span> <span class="og svc">annotated</span></td><td><span class="og tel">telemetry</span></td><td>persistent conversation, resumable</td><td>active → dormant ⇄ archived → expired · active: waiting/processing/run</td><td>one workspace; ≤1 attributed stream; emits events; produces products</td></tr>
+            <tr><td class="c-data mono"><a href="#o-event">Event</a></td><td><span class="og svc">ledger</span></td><td><span class="og rec">record</span></td><td>something that happened</td><td>immutable</td><td>one stream; one emitting session</td></tr>
+            <tr><td class="c-data mono"><a href="#o-stream">Stream</a></td><td><span class="og svc">ledger</span></td><td><span class="og rec">record</span></td><td>thread of work under management</td><td>active → closed</td><td>many events, products, attributed sessions</td></tr>
+            <tr style="opacity:0.55"><td class="c-data mono"><a href="#o-product">Work product</a></td><td><span class="og svc">ledger</span></td><td><span class="og rec">record</span></td><td>something made — record + link; payload at its home <b>· deferred</b></td><td>registered</td><td>one stream; one session; one home</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="legend" style="margin-top:14px">
+        <span><span class="og cc">CC</span> Claude Code native</span>
+        <span><span class="og svc">ledger</span> service-owned</span>
+        <span><span class="og tel">telemetry</span> plane 1 — automatic</span>
+        <span><span class="og rec">record</span> plane 2 — curated</span>
+      </div>
+
+      <h5 class="lbl">Relationships &amp; cardinality</h5>
+      <div class="figwrap">
+        <figure>
+          <svg class="d" viewBox="0 0 960 460" style="min-width:700px" role="img"
+            aria-label="Entity relationship diagram. A workspace has many sessions. A session emits many events and produces many work products; each event and each product carries exactly one session. A stream owns many events and many work products; each belongs to exactly one stream. A session's board attribution is at most one stream, and a stream has many attributed sessions — attribution, not ownership, drawn dotted. The full working relationship between sessions and streams is many-to-many, carried through events and products.">
+            <!-- entities -->
+            <rect x="40" y="185" width="150" height="90" rx="10" fill="var(--surface)" stroke="var(--hairline-2)" stroke-width="1.6"/>
+            <text x="115" y="220" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--ink)">Workspace</text>
+            <text x="115" y="242" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">id = path · CC</text>
+
+            <rect x="280" y="180" width="170" height="100" rx="10" fill="var(--data-wash)" stroke="var(--data)" stroke-width="1.8"/>
+            <text x="365" y="214" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--ink)">Session</text>
+            <text x="365" y="236" text-anchor="middle" font-size="11" fill="var(--data-ink)" font-family="IBM Plex Mono, monospace">id = uuid · telemetry</text>
+            <text x="365" y="256" text-anchor="middle" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">the emitter</text>
+
+            <rect x="520" y="40" width="170" height="90" rx="10" fill="var(--client-wash)" stroke="var(--client)" stroke-width="1.8"/>
+            <text x="605" y="72" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--ink)">Event</text>
+            <text x="605" y="94" text-anchor="middle" font-size="11" fill="var(--client-ink)" font-family="IBM Plex Mono, monospace">record · immutable</text>
+
+            <rect x="740" y="180" width="170" height="100" rx="10" fill="var(--client-wash)" stroke="var(--client)" stroke-width="1.8"/>
+            <text x="825" y="214" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--ink)">Stream</text>
+            <text x="825" y="236" text-anchor="middle" font-size="11" fill="var(--client-ink)" font-family="IBM Plex Mono, monospace">id = slug · record</text>
+            <text x="825" y="256" text-anchor="middle" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">the container</text>
+
+            <rect x="520" y="330" width="170" height="96" rx="10" fill="var(--client-wash)" stroke="var(--client)" stroke-width="1.8"/>
+            <text x="605" y="362" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--ink)">Work product</text>
+            <text x="605" y="384" text-anchor="middle" font-size="11" fill="var(--client-ink)" font-family="IBM Plex Mono, monospace">name · record</text>
+            <text x="605" y="404" text-anchor="middle" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">home: exactly 1 (external)</text>
+
+            <!-- ownership edges (solid) -->
+            <g stroke="currentColor" stroke-width="1.6" fill="none">
+              <line x1="190" y1="230" x2="280" y2="230"/>
+              <line x1="430" y1="182" x2="528" y2="112"/>
+              <line x1="740" y1="182" x2="690" y2="112"/>
+              <line x1="430" y1="278" x2="528" y2="348"/>
+              <line x1="740" y1="278" x2="690" y2="348"/>
+            </g>
+            <!-- attribution edge (dotted) -->
+            <line x1="450" y1="230" x2="740" y2="230" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 5"/>
+
+            <!-- verbs -->
+            <g font-size="11.5" fill="var(--ink-2)" font-family="IBM Plex Sans, sans-serif">
+              <text x="235" y="220" text-anchor="middle">has</text>
+              <text x="448" y="140">emits</text>
+              <text x="700" y="140" text-anchor="end">owns</text>
+              <text x="436" y="330">produces</text>
+              <text x="712" y="330" text-anchor="end">owns</text>
+              <text x="595" y="218" text-anchor="middle">board attribution (not ownership)</text>
+            </g>
+
+            <!-- cardinalities: each number = how many of the NEAR object per one of the far object -->
+            <g font-size="11" fill="var(--svc-ink)" font-family="IBM Plex Mono, monospace">
+              <text x="198" y="248">1</text>
+              <text x="262" y="248" text-anchor="end">∗</text>
+              <text x="438" y="176">1</text>
+              <text x="514" y="122" text-anchor="end">∗</text>
+              <text x="732" y="176" text-anchor="end">1</text>
+              <text x="698" y="122">∗</text>
+              <text x="438" y="294">1</text>
+              <text x="514" y="342" text-anchor="end">∗</text>
+              <text x="732" y="294" text-anchor="end">1</text>
+              <text x="698" y="342">∗</text>
+              <text x="462" y="248">∗</text>
+              <text x="730" y="248" text-anchor="end">0..1</text>
+            </g>
+          </svg>
+          <figcaption>Each number is the count of the <em>nearer</em> object per one of the farther
+            object — so Workspace <span class="mono">1 — ∗</span> Session reads &ldquo;one workspace
+            has many sessions.&rdquo; Every event and every product belongs to exactly <b>one
+            stream</b> and carries exactly <b>one session</b> of provenance. Sessions and streams have
+            <b>two distinct relationships</b>: the dotted link is <em>board attribution</em> — at most
+            one stream per session, many sessions per stream — while the full <em>working</em>
+            relationship is many-to-many and needs no link of its own: it flows through the diamond's
+            side paths, because each of a session's events and products names its own stream. A
+            product's home is exactly one, and external — the payload never lives in the
+            ledger.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ================= WORKSPACE ================= -->
+    <section class="panel" id="o-workspace" aria-label="Workspace" hidden>
+      <h2>Workspace <span class="og cc">CC</span></h2>
+      <p class="sub">A directory Claude is launched in — Claude Code's project directory. The service
+        stores no workspace records; a workspace exists as the <code>workspace</code> field on its
+        sessions.</p>
+      <div class="tablescroll"><table class="grid">
+        <thead><tr><th>Property</th><th>Meaning</th></tr></thead>
+        <tbody><tr><td class="mono c-data">path</td><td>identity — the directory itself</td></tr></tbody>
+      </table></div>
+      <h5 class="lbl">Status</h5>
+      <p class="sub" style="margin:0">Derived only: <em>active</em> iff ≥1 of its sessions is active.</p>
+      <h5 class="lbl">Relationships</h5>
+      <p class="sub" style="margin:0">Has many <b>sessions</b>, several possibly open at once. A
+        <b>stream</b>'s working paths may claim it — one input to attribution.</p>
+    </section>
+
+    <!-- ================= SESSION ================= -->
+    <section class="panel" id="o-session" aria-label="Session" hidden>
+      <h2>Session <span class="og cc">CC</span> <span class="og tel">telemetry</span></h2>
+      <p class="sub">A persistent Claude Code conversation: durable id and transcript, resumable across
+        process runs. The object is Claude Code's; the service keeps a record about it. The record
+        stores facts <b>and two declared statuses</b> — <code>status</code> and
+        <code>turn_state</code> — each written only by the signal or call that causes its
+        transition, never inferred from timestamps; see <a href="#lifecycle">Session lifecycle</a>
+        for the exact writes. (v1's failure was latching booleans with no single writer; the fix is
+        one writer per transition plus the deferred sweep repair — not inference.)</p>
+      <div class="rule client" style="margin-top:0"><b>Two writers, one record.</b> Hook signals are
+        not the only thing that writes a session: <a href="#ep-events-post">POST /ledger/events</a>
+        writes <code>last_event_at</code> and <code>status="active"</code> for its emitting session
+        in the same transaction as the event — logging work is itself a sign of life (invariant 9).
+        <code>turn_state</code> remains the hook plane's alone.</div>
+      <h5 class="lbl">Stored facts</h5>
+      <div class="tablescroll"><table class="grid">
+        <thead><tr><th>Field</th><th>Type</th><th>Set by</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono c-data">id</td><td class="mono">uuid</td><td>Claude Code</td><td>identity (the CC session id); names the transcript</td></tr>
+          <tr><td class="mono c-data">workspace_id · machine · label</td><td class="mono">path · host · string</td><td>first event</td><td>where it lives; label = basename + short id</td></tr>
+          <tr><td class="mono c-data">first_seen · last_event_at</td><td class="mono">timestamp</td><td>every signal · event emission</td><td>recency facts</td></tr>
+          <tr><td class="mono c-data">status</td><td class="mono">active | dormant | archived | expired</td><td>every signal · <b>event emission</b> · archive calls · sweep</td><td><b>stored status</b>: any signal but SessionEnd writes active; SessionEnd and unarchive write dormant; archive writes archived; the sweep writes expired. A crash leaves it stale until the sweep repair (deferred)</td></tr>
+          <tr><td class="mono c-data">turn_state</td><td class="mono">waiting | processing</td><td>prompt / Stop</td><td><b>stored status</b>: UserPromptSubmit sets processing, Stop (and SessionEnd) sets waiting — declared by signals, never inferred. Crashed-session cleanup is a separate mechanism (deferred)</td></tr>
+          <tr><td class="mono c-data">last_prompt_at · last_stop_at</td><td class="mono">timestamp?</td><td>prompt / turn end</td><td>recency facts; do not drive state</td></tr>
+          <tr><td class="mono c-data">last_run_at</td><td class="mono">timestamp?</td><td>mutating tool</td><td>drives the run bolt while within the run window</td></tr>
+          <tr><td class="mono c-data">ended_at</td><td class="mono">timestamp?</td><td>SessionEnd</td><td>clean-close time — a fact; status carries the state</td></tr>
+          <tr><td class="mono c-data">ever_prompted</td><td class="mono">bool</td><td>first prompt</td><td>relevance gate — filters launch/picker ghosts</td></tr>
+          <tr><td class="mono c-data">archived_at</td><td class="mono">timestamp?</td><td>archive call</td><td>when the user last archived it — a fact; status carries the state</td></tr>
+          <tr><td class="mono c-data">transcript_missing_since · sweep_miss_count</td><td class="mono">timestamp? · int</td><td>sweep reports</td><td>first consecutive miss + miss count; both reset by any signal or a seen transcript</td></tr>
+        </tbody>
+      </table></div>
+      <h5 class="lbl">Computed on read <span>— display windows and filters only; never lifecycle state</span></h5>
+      <div class="tablescroll"><table class="grid">
+        <thead><tr><th>Field</th><th>Rule</th></tr></thead>
+        <tbody>
+          <tr><td class="mono c-svc">activity — waiting / processing / run</td><td>while <code>status="active"</code>: activity <em>is</em> the stored <code>turn_state</code>; run = processing with <code>last_run_at</code> inside the run window. A non-active session reports no activity</td></tr>
+          <tr><td class="mono c-svc">relevant</td><td><code>ever_prompted</code> and <code>status</code> not archived/expired; only relevant sessions appear on the board</td></tr>
+          <tr><td class="mono c-svc">stream_id</td><td>attribution rule: the stream of the session's most recent non-<code>meta</code> event or product; else the most recently updated active stream whose <code>working_paths</code> contain the workspace; else none. Never stored, so nothing can rebrand it</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ================= STREAM ================= -->
+    <section class="panel" id="o-stream" aria-label="Stream" hidden>
+      <h2>Stream <span class="og svc">ledger</span> <span class="og rec">record</span></h2>
+      <p class="sub">A named thread of work for which the ledger is the management surface. A stream is
+        a service record, read and written only through the API.</p>
+      <div class="tablescroll"><table class="grid">
+        <thead><tr><th>Property</th><th>Type</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono c-data">id</td><td class="mono">slug</td><td>identity — human-readable slug (<code>[a-z0-9-]+</code>); referenced everywhere as <code>stream_id</code></td></tr>
+          <tr><td class="mono c-data">title · state</td><td class="mono">string · prose</td><td>name; current-state narrative, rewritten freely</td></tr>
+          <tr><td class="mono c-data">next_action</td><td class="mono">string</td><td>the single step that resumes the work</td></tr>
+          <tr><td class="mono c-data">open_loops</td><td class="mono">string[]</td><td>unresolved items</td></tr>
+          <tr><td class="mono c-data">working_paths</td><td class="mono">path[]</td><td>attribution hints</td></tr>
+          <tr><td class="mono c-data">since · updated · closed_at</td><td class="mono">timestamps</td><td>opened; last update (staleness: fresh ≤3d, aging 4–14d, stale &gt;14d); closure</td></tr>
+        </tbody>
+      </table></div>
+      <h5 class="lbl">Lifecycle</h5>
+      <p class="sub" style="margin:0"><code>active → closed</code> via <code>POST /ledger/streams/{id}/close</code>.
+        Closure logs its own event. Updates replace whole fields; the service never merges prose.</p>
+      <h5 class="lbl">Relationships</h5>
+      <p class="sub" style="margin:0">Has many <b>events</b> and <b>work products</b>. <b>Sessions</b>
+        are attributed by the service's rule, ≤1 per session; writes into the ledger service itself
+        never re-attribute (rules out the v1 failure where a session's own journal write rebranded
+        it <code>ledger-meta</code>). Attribution is only the board's label — a session's events and
+        products may span any number of streams, so the working relationship is many-to-many.</p>
+      <div class="rule"><b>The meta stream.</b> <code>meta</code> is a permanent built-in stream for
+        ledger-system work: it satisfies &ldquo;every event has exactly one stream,&rdquo; never
+        closes, never attributes sessions, and stays out of the working index.</div>
+    </section>
+
+    <!-- ================= EVENT ================= -->
+    <section class="panel" id="o-event" aria-label="Event" hidden>
+      <h2>Event <span class="og svc">ledger</span> <span class="og rec">record</span></h2>
+      <p class="sub">Something that happened: a decision, a ship, a send, a state change. Events are
+        append-only — never edited, never deleted. Carrying both <code>session_id</code> and
+        <code>stream_id</code>, events (with work products) are also the <b>join records</b> of the
+        session↔stream many-to-many: the streams a session worked are the distinct
+        <code>stream_id</code>s of its events and products, and vice versa.</p>
+      <div class="tablescroll"><table class="grid">
+        <thead><tr><th>Property</th><th>Type</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono c-data">id · at</td><td class="mono">id · timestamp</td><td>identity; server-stamped time</td></tr>
+          <tr><td class="mono c-data">stream_id</td><td class="mono">slug</td><td>the owning Stream's id (<code>meta</code> = the built-in ledger-system stream)</td></tr>
+          <tr><td class="mono c-data">headline</td><td class="mono">string</td><td>what happened — one line, past tense</td></tr>
+          <tr><td class="mono c-data">body</td><td class="mono">markdown[1..4]</td><td>bullets; links out to homes and commits</td></tr>
+          <tr><td class="mono c-data">session_id</td><td class="mono">uuid</td><td>the emitting Session's id — required; every event has exactly one emitter, and emitting writes that session's liveness (invariant 9)</td></tr>
+        </tbody>
+      </table></div>
+      <h5 class="lbl">What qualifies as an event</h5>
+      <p class="sub" style="margin:0">Deliverables shipped, decisions made, external communications
+        sent, streams changing state, open loops created or closed. Routine lookups, intermediate
+        work, and anything reconstructible from git do not qualify. The full rules — what the
+        service enforces versus what the skill judges — are on the
+        <a href="#emission">Event emission rules</a> panel. Events are created only by
+        <a href="#ep-events-post">POST /ledger/events</a>, which also writes the emitting session
+        (invariant 9).</p>
+    </section>
+
+    <!-- ================= WORK PRODUCT ================= -->
+    <section class="panel" id="o-product" aria-label="Work product" hidden>
+      <h2>Work product <span class="og svc">ledger</span> <span class="og rec">record</span></h2>
+      <div class="rule warn" style="margin:0 0 18px"><b>Deferred — not implemented this phase.</b>
+        The record plane ships as events + streams; work products come later. Until then a
+        <code>product</code> block on <a href="#ep-events-post">POST /ledger/events</a> is rejected
+        422, and the board carries no products column. The design below stands as specified.</div>
+      <p class="sub">A thing that was made. The ledger stores the record; the payload lives at its
+        home. Content is never copied into the ledger.</p>
+      <div class="tablescroll"><table class="grid">
+        <thead><tr><th>Property</th><th>Type</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono c-data">id · at</td><td class="mono">id · timestamp</td><td>identity</td></tr>
+          <tr><td class="mono c-data">name</td><td class="mono">string</td><td>what it is</td></tr>
+          <tr><td class="mono c-data">home</td><td class="mono">url ∣ path</td><td>canonical location — exactly one; a homeless product is a defect to fix, not a state to keep</td></tr>
+          <tr><td class="mono c-data">stream_id · session_id · event_id</td><td class="mono">slug · uuid · id</td><td>the owning Stream; provenance — producing Session and announcing Event, both required (products will exist only via <code>POST /ledger/events</code>)</td></tr>
+        </tbody>
+      </table></div>
+      <div class="rule"><b>Home policy.</b> Landed somewhere real → register the link. Email sent →
+        the event is the record; the mail system holds the payload. Inline-only product → it gets a
+        home first (e.g. Drive <code>Claude-Memory-Artifacts</code>), then a registration.</div>
+    </section>
+
+    <!-- ================= API: ALL ENDPOINTS ================= -->
+    <section class="panel" id="api" aria-label="All endpoints" hidden>
+      <h2>All endpoints</h2>
+      <p class="sub">The complete <code>/ledger</code> surface — this table is the master index.
+        Grouped by resource, one line per call; every row links to its full spec. Every response is
+        assembled from the shapes in <a href="#api-repr">Representations</a>.</p>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>Endpoint</th><th>Plane</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td class="mono c-svc"><a href="#ep-events-post"><span class="m post">POST</span> /ledger/events</a></td><td><span class="og rec">record</span></td><td>Records one event, writes the emitting session's liveness, and applies an optional stream update — one atomic transaction.</td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-sess-signals"><span class="m post">POST</span> /ledger/sessions/{id}/signals</a></td><td><span class="og tel">telemetry</span></td><td>Applies one lifecycle signal — writing the status it declares — and returns the session.</td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-sess-archive"><span class="m post">POST</span> /ledger/sessions/{id}/archive · /unarchive</a></td><td><span class="og tel">telemetry</span></td><td>Dismisses a dormant session from the board, or restores it. Rejects archiving an active session.</td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-sweep"><span class="m post">POST</span> /ledger/sessions/sweep-report</a></td><td><span class="og tel">telemetry</span></td><td>Records one machine's transcript-presence observations; feeds the expiry rule.</td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-sess-get"><span class="m get">GET</span> /ledger/sessions</a></td><td><span class="og tel">telemetry</span></td><td>Lists sessions with status, activity, and relevance; filterable.</td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-streams-put"><span class="m put">PUT</span> /ledger/streams/{id}</a></td><td><span class="og rec">record</span></td><td>Creates a stream or replaces the given fields of its management record.</td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-streams-close"><span class="m post">POST</span> /ledger/streams/{id}/close</a></td><td><span class="og rec">record</span></td><td>Closes a stream, removes it from attribution and the index, and logs the closure event.</td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-streams-get"><span class="m get">GET</span> /ledger/streams</a></td><td><span class="og rec">record</span></td><td>Lists streams with derived staleness.</td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-events-get"><span class="m get">GET</span> /ledger/events</a></td><td><span class="og rec">record</span></td><td>Lists events newest-first; filterable by stream and time.</td></tr>
+            <tr><td class="mono c-svc" style="opacity:0.55"><a href="#ep-products-get"><span class="m get">GET</span> /ledger/products</a></td><td><span class="og rec">record</span></td><td>Lists the work-product registry with provenance. <b>Not this phase</b> — products are deferred.</td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-search"><span class="m get">GET</span> /ledger/search</a></td><td><span class="og rec">record</span></td><td>Searches events, streams, and products for a query. This is <code>recall</code>'s endpoint.</td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-index"><span class="m get">GET</span> /ledger/index</a></td><td><span class="og">both</span></td><td>Returns the one-screen orientation snapshot; injected at session start.</td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-board"><span class="m get">GET</span> /ledger/board</a></td><td><span class="og">both</span></td><td>Returns the data structure the BotBeam board view is built from.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= API: REPRESENTATIONS ================= -->
+    <section class="panel" id="api-repr" aria-label="Representations" hidden>
+      <h2>Representations</h2>
+      <p class="sub">The wire shapes. Every response in the API is assembled from these four
+        representations plus the envelope rules — defined once here, referenced everywhere. Fields
+        marked <i>computed</i> are produced on read and never accepted in any write; statuses are
+        stored, written only by the service's own transition logic.</p>
+
+      <h5 class="lbl">Envelope rules</h5>
+      <div class="tablescroll"><table class="grid">
+        <thead><tr><th>Response kind</th><th>Shape</th></tr></thead>
+        <tbody>
+          <tr><td>Single read</td><td>the bare representation</td></tr>
+          <tr><td>List read</td><td class="mono">{ "items": [ … ], "next": cursor | null }</td></tr>
+          <tr><td>Write</td><td>the full representation(s) the transaction touched — never bare ids, so no read-after-write</td></tr>
+          <tr><td>Error</td><td class="mono">{ "error", "field"?, "reason" } — 404 unknown reference · 409 state conflict · 422 validation</td></tr>
+        </tbody>
+      </table></div>
+
+      <h5 class="lbl">Session <span>— stored facts and statuses + computed fields; rules on the Session panel</span></h5>
+      <span class="schema">{
+  <b>"id"</b>: "b1c482f7-…",
+  <b>"workspace_id"</b>: "C:\\code\\woodshed", <b>"machine"</b>: "cmr-nuc", <b>"label"</b>: "woodshed·b1c4",
+  <b>"first_seen"</b>: ts, <b>"last_event_at"</b>: ts,
+  <b>"status"</b>: "active"|"dormant"|"archived"|"expired",  <i>stored — declared by signals, archive calls, the sweep</i>
+  <b>"turn_state"</b>: "waiting"|"processing",                <i>stored — set by prompt/Stop signals</i>
+  <b>"last_prompt_at"</b>: ts|null, <b>"last_stop_at"</b>: ts|null, <b>"last_run_at"</b>: ts|null, <b>"ended_at"</b>: ts|null,
+  <b>"ever_prompted"</b>: bool, <b>"archived_at"</b>: ts|null, <b>"transcript_missing_since"</b>: ts|null,
+  <b>"stream_id"</b>: slug|null,                             <i>computed — the attribution rule</i>
+  <b>"activity"</b>: "waiting"|"processing"|"run"|null,      <i>computed — turn_state + run window; active only</i>
+  <b>"relevant"</b>: bool                                    <i>computed — the board filter</i>
+}</span>
+
+      <h5 class="lbl">Stream</h5>
+      <span class="schema">{
+  <b>"id"</b>: "nuc-perf-slowdown", <b>"title"</b>: "…",
+  <b>"state"</b>: "…", <b>"next_action"</b>: "…", <b>"open_loops"</b>: ["…"],
+  <b>"working_paths"</b>: ["C:\\…"],
+  <b>"since"</b>: ts, <b>"updated"</b>: ts, <b>"closed_at"</b>: ts|null,
+  <b>"staleness"</b>: "fresh"|"aging"|"stale"|null           <i>derived — null when closed</i>
+}</span>
+
+      <h5 class="lbl">Event</h5>
+      <span class="schema">{
+  <b>"id"</b>: "ev_…", <b>"at"</b>: ts,
+  <b>"stream_id"</b>: slug, <b>"headline"</b>: "…", <b>"body"</b>: ["…"],
+  <b>"session_id"</b>: uuid                                  <i>the emitter — writing it is part of the same transaction</i>
+}</span>
+
+      <h5 class="lbl">Work product <span>— deferred; specified, not implemented this phase</span></h5>
+      <span class="schema">{
+  <b>"id"</b>: "wp_…", <b>"at"</b>: ts, <b>"name"</b>: "…", <b>"home"</b>: url|path,
+  <b>"stream_id"</b>: slug, <b>"session_id"</b>: uuid, <b>"event_id"</b>: "ev_…"
+}</span>
+    </section>
+
+    <!-- ================= API: EVENTS (POST + GET) ================= -->
+    <section class="panel" id="api-events" aria-label="/ledger/events" hidden>
+      <article class="spec" id="ep-events-post">
+        <div class="spec-head">
+          <span class="ep"><span class="meth">POST</span>/ledger/events</span>
+        </div>
+        <p class="what" id="ep-log">Records one event and its consequences — the emitting session's liveness, an
+          optional stream update, and (later) a product registration — in one atomic transaction.</p>
+        <p class="qual">The only way an event comes into existence. All parts commit together or
+          nothing commits. Index and board are recomputed by the service; clients never maintain
+          views. <b>Named for its object:</b> this is the write half of <code>/ledger/events</code>,
+          the read half is below. <span style="color:var(--muted)">(Was <code>POST /ledger/log</code>
+          through rev 18 — renamed at rev 19; <code>log</code> remains the <em>skill's</em> verb, not
+          an API path.)</span></p>
+        <h5 class="lbl">Request body</h5>
+        <span class="schema">{
+  <b>"stream_id"</b>: "nuc-perf-slowdown",       <i>the Stream's id (slug) — must exist ("meta" is built-in) or come with create_stream</i>
+  <b>"headline"</b>: "Dust cleaning fixed the clamp",
+  <b>"body"</b>:     ["3000–3600 MHz under load (was ~500)", "…"],   <i>1–4 markdown strings</i>
+  <b>"session_id"</b>: "b1c482f7-…",             <i>required — the emitting Session's id</i>
+
+  <b>"product"</b>: {                            <i>NOT YET IMPLEMENTED — rejected 422 this phase</i>
+    "name": "cpu-log collector v2",
+    "home": "C:\\Users\\cliff\\perf-monitor"     <i>url or path — exactly one home</i>
+  },
+
+  <b>"stream_update"</b>: {                      <i>optional — new management state</i>
+    "state":       "Fixed by dust clean; verifying overnight.",
+    "next_action": "Full restart, check flags clear",
+    "open_loops":  ["BIOS 0038 → 0042"]
+  },
+
+  <b>"create_stream"</b>: {                      <i>only if the slug is new</i>
+    "title": "…", "working_paths": ["C:\\…"]
+  }
+}</span>
+        <h5 class="lbl">Effects</h5>
+        <table class="mini">
+          <thead><tr><th>Store</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td class="f">events</td><td>appends the immutable event, server-stamped</td></tr>
+            <tr><td class="f">sessions</td><td><b>writes the emitting session</b> — <code>last_event_at = now</code>, <code>status = "active"</code>, and <code>archived_at = null</code> if it was archived. Emitting an event <em>is</em> a sign of life, declared exactly like a hook signal. <code>turn_state</code> is NOT touched — that is the hook plane's alone</td></tr>
+            <tr><td class="f">streams</td><td>applies <code>stream_update</code>; bumps <code>updated</code>; creates on <code>create_stream</code></td></tr>
+            <tr><td class="f">products</td><td><span style="color:var(--muted)">not this phase — a <code>product</code> block is rejected 422</span></td></tr>
+            <tr><td class="f">views</td><td>index and board recomputed</td></tr>
+          </tbody>
+        </table>
+        <h5 class="lbl">Response — 201</h5>
+        <span class="schema">{
+  <b>"event"</b>:   Event,             <i>the appended event, server-stamped</i>
+  <b>"session"</b>: Session,           <i>the emitter, post-write — status/last_event_at current</i>
+  <b>"stream"</b>:  Stream             <i>post-transaction, staleness recomputed</i>
+}</span>
+        <p class="rr"><b>errors</b> <code>404</code> unknown <code>stream_id</code> without <code>create_stream</code> · <code>422</code> missing <code>session_id</code> · body over 4 bullets · multi-line headline · <code>product</code> block (not yet implemented)</p>
+      </article>
+
+      <article class="spec" id="ep-events-get">
+        <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/events</span></div>
+        <p class="what">Lists events, newest first.</p>
+        <p class="qual">The read half of the same resource. Events are created only by the POST
+          above — no other write path, and no update or delete ever.</p>
+        <h5 class="lbl">Query parameters</h5>
+        <table class="mini">
+          <thead><tr><th>Param</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td class="f">stream_id</td><td>only this stream's events</td></tr>
+            <tr><td class="f">session_id</td><td>only this session's events — the session→streams traversal of the many-to-many</td></tr>
+            <tr><td class="f">since · limit</td><td>time window · page size</td></tr>
+          </tbody>
+        </table>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">{ <b>"items"</b>: Event[], <b>"next"</b>: cursor | null }   <i>newest first</i></span>
+      </article>
+    </section>
+
+    <!-- ================= API: SESSIONS ================= -->
+    <section class="panel" id="api-sessions" aria-label="/ledger/sessions" hidden>
+      <article class="spec" id="ep-sess-signals">
+        <div class="spec-head"><span class="ep"><span class="meth">POST</span>/ledger/sessions/{id}/signals</span></div>
+        <p class="what">Applies one lifecycle signal — writing the status it declares — and returns the session.</p>
+        <p class="qual">Called by the five Claude Code hooks. Hooks transmit every signal
+          unclassified; the mutating-tool list (run vs read) is service policy.
+          <b>These are signals, not Events:</b> a lifecycle signal is not one of the five objects and
+          never reaches the record plane. <span style="color:var(--muted)">(Was
+          <code>…/events</code> through rev 18 — renamed at rev 19 to end the collision with the
+          record plane's Event.)</span></p>
+        <h5 class="lbl">Request body</h5>
+        <span class="schema">{
+  <b>"signal"</b>: "SessionStart" | "UserPromptSubmit" | "Stop" | "SessionEnd" | "PostToolUse",
+  <b>"cwd"</b>:   "C:\\code\\woodshed",
+  <b>"machine"</b>: "cmr-nuc",
+  <b>"tool"</b>:  { "name": "Edit", "input": { "file_path": "…", "command": "…" } }   <i>PostToolUse only</i>
+}</span>
+        <h5 class="lbl">Effects</h5>
+        <p class="qual" style="margin-top:0">Writes the declared statuses and facts listed on the
+          Session panel (<code>status</code>, <code>turn_state</code>, <code>last_event_at</code>,
+          <code>last_prompt_at</code>, <code>last_stop_at</code>, <code>last_run_at</code>,
+          <code>ended_at</code>, <code>ever_prompted</code>) per the lifecycle transition table.</p>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">Session   <i>the full representation, post-write</i></span>
+        <p class="rr"><b>errors</b> <code>422</code> unknown <code>signal</code> value</p>
+      </article>
+
+      <article class="spec" id="ep-sess-archive">
+        <div class="spec-head"><span class="ep"><span class="meth">POST</span>/ledger/sessions/{id}/archive&nbsp;·&nbsp;/unarchive</span></div>
+        <p class="what">Dismisses a dormant session from the board, or restores it — how the user
+          clears crashed or finished sessions.</p>
+        <p class="qual">Archiving an active session is rejected with <code>409 {reason:"session is
+          active"}</code>. Any later signal writes the session back to active without any call.</p>
+        <h5 class="lbl">Request body</h5>
+        <span class="schema">{}   <i>none — the id in the path is the whole input</i>
+<i>batch form:</i>  POST /ledger/sessions/archive   { "prefixes": ["b1c4","a90f"] } | { "all": true, "keep": ["b1c4"] }</span>
+        <h5 class="lbl">Effects</h5>
+        <p class="qual" style="margin-top:0">Archive writes <code>status="archived"</code> ·
+          <code>archived_at=now</code>; unarchive writes <code>status="dormant"</code> ·
+          <code>archived_at=null</code>.</p>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">Session   <i>batch form: { "items": Session[] }</i></span>
+        <p class="rr"><b>errors</b> <code>409 {error:"conflict", reason:"session is active"}</code></p>
+      </article>
+
+      <article class="spec" id="ep-sweep">
+        <div class="spec-head"><span class="ep"><span class="meth">POST</span>/ledger/sessions/sweep-report</span></div>
+        <p class="what">Records one machine's transcript-presence observations; feeds the expiry rule.</p>
+        <p class="qual">Transcripts live on each machine's disk, so a small scheduled reporter posts
+          what it sees. The service decides expiry: at N consecutive misses with no events since, the
+          handler writes <code>status="expired"</code>. A false miss corrects when the next report
+          or any signal writes the session active again.</p>
+        <h5 class="lbl">Request body</h5>
+        <span class="schema">{ <b>"machine"</b>: "cmr-nuc", <b>"observed"</b>: [ {"session_id":"…", "transcript_present": true}, … ] }</span>
+        <h5 class="lbl">Effects</h5>
+        <p class="qual" style="margin-top:0">Sets or clears the expiry facts per session; writes
+          <code>status="expired"</code> when the rule trips.</p>
+        <p class="rr"><b>returns</b> <code>200 { "applied": n }</code> — sessions whose facts changed</p>
+      </article>
+
+      <article class="spec" id="ep-sess-get">
+        <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/sessions</span></div>
+        <p class="what">Lists sessions with status, activity, and relevance.</p>
+        <h5 class="lbl">Query parameters</h5>
+        <table class="mini">
+          <thead><tr><th>Param</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td class="f">status</td><td>active · dormant · archived · expired</td></tr>
+            <tr><td class="f">machine · stream_id</td><td>filter by host / attributed stream</td></tr>
+            <tr><td class="f">relevant</td><td>true = only sessions that were ever prompted and are not archived/expired (the board's filter)</td></tr>
+          </tbody>
+        </table>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">{ <b>"items"</b>: Session[], <b>"next"</b>: cursor | null }</span>
+      </article>
+    </section>
+
+    <!-- ================= API: STREAMS ================= -->
+    <section class="panel" id="api-streams" aria-label="/ledger/streams" hidden>
+      <article class="spec" id="ep-streams-put">
+        <div class="spec-head"><span class="ep"><span class="meth">PUT</span>/ledger/streams/{id}</span></div>
+        <p class="what">Creates a stream or replaces the given fields of its management record.</p>
+        <p class="qual">Field-level replace; the service bumps <code>updated</code>. Writes to a closed
+          stream are rejected.</p>
+        <h5 class="lbl">Request body <span>— any subset of writable fields</span></h5>
+        <span class="schema">{
+  <b>"title"</b>: "…", <b>"state"</b>: "…",
+  <b>"next_action"</b>: "…", <b>"open_loops"</b>: ["…"],
+  <b>"working_paths"</b>: ["C:\\code\\woodshed"]
+}</span>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">Stream   <i>staleness recomputed</i></span>
+        <p class="rr"><b>errors</b> <code>409</code> stream is closed · <code>422</code> unknown field</p>
+      </article>
+
+      <article class="spec" id="ep-streams-close">
+        <div class="spec-head"><span class="ep"><span class="meth">POST</span>/ledger/streams/{id}/close</span></div>
+        <p class="what">Closes a stream, removes it from attribution and the index, and logs the
+          closure event — one transaction.</p>
+        <h5 class="lbl">Request body</h5>
+        <span class="schema">{ <b>"reason"</b>: "work done" | "tracking moved elsewhere" | string }</span>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">{ <b>"stream"</b>: Stream, <b>"closure_event"</b>: Event }</span>
+        <p class="rr"><b>errors</b> <code>409</code> already closed</p>
+      </article>
+
+      <article class="spec" id="ep-streams-get">
+        <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/streams</span></div>
+        <p class="what">Lists streams with derived staleness.</p>
+        <h5 class="lbl">Query parameters</h5>
+        <table class="mini">
+          <thead><tr><th>Param</th><th>Meaning</th></tr></thead>
+          <tbody><tr><td class="f">status</td><td>active · closed (default active)</td></tr></tbody>
+        </table>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">{ <b>"items"</b>: Stream[], <b>"next"</b>: cursor | null }   <i>staleness: fresh ≤3d · aging 4–14d · stale &gt;14d</i></span>
+      </article>
+    </section>
+
+    <!-- ================= API: PRODUCTS ================= -->
+    <section class="panel" id="api-products" aria-label="/ledger/products" hidden>
+      <article class="spec" id="ep-products-get">
+        <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/products</span></div>
+        <p class="what">Lists the work-product registry with provenance.</p>
+        <p class="qual"><b>Deferred — not implemented this phase.</b> Products are registered only through <a href="#ep-events-post">POST /ledger/events</a>;
+          the registry is records-and-links only — payloads live at their homes.</p>
+        <h5 class="lbl">Query parameters</h5>
+        <table class="mini">
+          <thead><tr><th>Param</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td class="f">stream_id</td><td>only this stream's products</td></tr>
+            <tr><td class="f">session_id</td><td>only this session's products</td></tr>
+            <tr><td class="f">limit</td><td>page size</td></tr>
+          </tbody>
+        </table>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">{ <b>"items"</b>: Product[], <b>"next"</b>: cursor | null }   <i>newest first</i></span>
+      </article>
+    </section>
+
+    <!-- ================= API: SEARCH ================= -->
+    <section class="panel" id="api-search" aria-label="/ledger/search" hidden>
+      <article class="spec" id="ep-search">
+        <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/search</span></div>
+        <p class="what">Searches events, streams, and products for a query — the <code>recall</code>
+          verb is this endpoint plus a prose answer.</p>
+        <h5 class="lbl">Query parameters</h5>
+        <table class="mini">
+          <thead><tr><th>Param</th><th>Meaning</th></tr></thead>
+          <tbody><tr><td class="f">q</td><td>the search text</td></tr></tbody>
+        </table>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">{ <b>"items"</b>: [ { "kind": "event"|"stream"|"product", "score": 0.93,
+             "record": Event | Stream | Product } ],       <i>the full representation of its kind</i>
+  <b>"next"</b>: cursor | null }   <i>newest-first within rank</i></span>
+      </article>
+    </section>
+
+    <!-- ================= API: INDEX & VIEWS ================= -->
+    <section class="panel" id="api-views" aria-label="/ledger/index and views" hidden>
+      <article class="spec" id="ep-index">
+        <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/index</span></div>
+        <p class="what">Returns the one-screen orientation snapshot.</p>
+        <p class="qual">Markdown, service-rendered from both planes. The SessionStart hook injects it
+          into every new session. <b>Required this phase:</b> <code>~/claude-memory</code> is
+          abandoned, so the hand-maintained INDEX.md is gone — without this endpoint, session-start
+          orientation has no source at all.</p>
+        <p class="rr"><b>returns</b> <code>200 text/markdown</code></p>
+      </article>
+
+      <article class="spec" id="ep-board">
+        <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/board</span></div>
+        <p class="what">Returns the data structure the BotBeam board view is built from.</p>
+        <p class="qual">The service serves data; the BotBeam display renders it. v1 pushed
+          pre-rendered HTML at a passive display — here the view pulls typed data from the one store,
+          always current, no push-and-diff pipeline.</p>
+        <div class="rule"><b>Layout ruling (rev 18–19).</b> The view splits into two sections —
+          <b>Active</b> and <b>Inactive</b>. Active sessions render as <b>cards in a grid</b>, not
+          rows, in a <b>stable arrangement</b>: ordered by <code>first_seen</code> ascending, so a
+          card never moves while its session stays active; newly activated sessions append at the
+          end. Cards must not reorder on prompt/stop/run changes — only their glyphs update.
+          Inactive (dormant) sessions list below, most recent first. Beneath both sections, the
+          <b>events feed</b>: recent events newest-first, each showing its stream, headline, and
+          time — the record plane's presence on the board.</div>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">{
+  <b>"sessions"</b>: Session[],   <i>relevant only — active first in STABLE order (first_seen asc), then inactive by recency</i>
+  <b>"events"</b>:   Event[],     <i>most recent N — rendered BELOW the session sections</i>
+  <b>"streams"</b>:  Stream[],    <i>active streams with staleness — labels the events</i>
+  <b>"as_of"</b>:    ts
+}</span>
+        <p class="qual" style="margin-top:12px"><code>products</code> is absent by decision — work
+        products are deferred to a later phase.</p>
+      </article>
+    </section>
+
+    <!-- ================= API: CONVENTIONS ================= -->
+    <section class="panel" id="api-conv" aria-label="Conventions" hidden>
+      <h2>Conventions</h2>
+      <p class="sub">Rules that apply to every <code>/ledger</code> call.</p>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>Concern</th><th>Rule</th></tr></thead>
+          <tbody>
+            <tr><td>Two planes, two nouns</td><td>the telemetry plane says <b>signal</b> (<code>POST /ledger/sessions/{id}/signals</code>) — a hook observation, not an object; the record plane says <b>event</b> (<code>POST · GET /ledger/events</code>) — one of the five objects. The two words are never interchanged. <span style="color:var(--muted)">(Rev 19 fixed the collision: hook signals used to POST to <code>…/events</code>, and record events used to POST to <code>/ledger/log</code>.)</span></td></tr>
+            <tr><td>Identity &amp; references</td><td>every object has an <code>id</code> — a Stream's id is its slug, a Session's is the Claude Code uuid, a Workspace's is its path. A reference to object X is always the field <code>X_id</code>, holding X's id. No exceptions.</td></tr>
+            <tr><td>Auth</td><td><code>Authorization: Bearer &lt;token&gt;</code> on every call; credentials from <code>~/.config/orchestra/botbeam.json</code> or environment</td></tr>
+            <tr><td>Time</td><td>server-stamped; clients never supply timestamps</td></tr>
+            <tr><td>Validation</td><td>unknown fields rejected; slugs match <code>[a-z0-9-]+</code>; enum values are closed sets</td></tr>
+            <tr><td>Atomicity</td><td>composite writes commit entirely or not at all</td></tr>
+            <tr><td>Responses</td><td>single read → the bare <a href="#api-repr">representation</a>; list → <code>{items, next}</code>; write → the full representation(s) it touched, never bare ids</td></tr>
+            <tr><td>Pagination</td><td><code>limit</code> caps a page; <code>next</code> is an opaque cursor, <code>null</code> on the last page</td></tr>
+            <tr><td>Errors</td><td><code>404</code> unknown referenced object · <code>409</code> state conflict · <code>422</code> validation — body always <code>{error, field?, reason}</code>; each spec lists its own</td></tr>
+            <tr><td>Statuses</td><td>statuses are stored, written only by the service's own transition logic — no client may set one directly. Computed fields (run bolt, relevance, staleness, attribution) are produced per request and never accepted in writes</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= CLIENTS: HOW IT HANGS TOGETHER ================= -->
+    <section class="panel" id="c-overview" aria-label="How the clients hang together" hidden>
+      <h2>How it hangs together</h2>
+      <p class="sub">Work happens in sessions. Everything the ledger knows arrives as one of
+        <b>two kinds of knowledge</b> — what can be <em>witnessed</em>, and what must be
+        <em>judged</em> — and everything anyone sees comes back out as a projection. (Witnessed
+        knowledge arrives through two feeds, hooks and the sweep; judged knowledge through one, the
+        skill. See <a href="#howitruns">How it runs</a> for the three of them in operation.) This
+        panel is the principle; the two panels after it are the details.</p>
+
+      <p class="sub" style="margin-bottom:14px"><b style="color:var(--client-ink)">Hooks write what
+        can be witnessed.</b> Session lifecycle is mechanical — a launch, a prompt, a tool call, an
+        exit are observable moments. Hooks are involuntary: they fire from Claude Code's own
+        lifecycle, in their own OS process, <b>independent of the skill and of Claude entirely</b>,
+        so the telemetry plane is complete <em>by construction</em>. No judgment is involved, and
+        none is allowed. (The sweep is the same kind of thing on a timer, for the one fact no hook
+        can witness: whether a transcript still exists on disk.)</p>
+      <p class="sub" style="margin-bottom:14px"><b style="color:var(--client-ink)">The skill writes
+        what must be judged.</b> No sensor can see that a diff was a deliverable or that a
+        conversation settled a decision. The only agent positioned to know is the one doing the work —
+        so Claude logs its own work as a standing duty, triggered by the work itself, never by the
+        user narrating it. That is the record plane.</p>
+      <p class="sub"><b style="color:var(--svc-ink)">Neither writer is trusted.</b> The service
+        validates every write, stamps every timestamp, commits composites atomically, and is the
+        only writer of every status. A missed signal costs a stale status until the next signal
+        overwrites it — or, for a crashed session, until the sweep repair lands (deferred). The one
+        loss the design
+        cannot derive back is an unlogged event — which is exactly why logging is a duty, not a
+        request.</p>
+
+      <h5 class="lbl">Coverage <span>— every data transition has exactly one feed and a backstop</span></h5>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>Data transition</th><th>Feed</th><th>If it is missed</th><th>Backstop</th></tr></thead>
+          <tbody>
+            <tr><td>session facts — start · prompt · stop · end · tool</td><td class="mono c-client">hooks</td><td>a stale status or timestamp</td><td>the next signal overwrites it; crashed rows wait on the sweep repair (deferred)</td></tr>
+            <tr><td>transcript presence → expiry</td><td class="mono c-client">sweep reporter</td><td>delayed expiry</td><td>next sweep or any event corrects it</td></tr>
+            <tr><td>archive · unarchive</td><td class="mono c-client">the user, relayed by the skill</td><td>— (explicit act)</td><td>409 if active; any later event writes the session back to active</td></tr>
+            <tr><td>events · stream updates</td><td class="mono c-client">the skill — POST /ledger/events</td><td>a hole in the record</td><td>none derivable — hence logging is a standing duty of the agent doing the work</td></tr>
+            <tr><td>stream state · close</td><td class="mono c-client">the skill — log · PUT · close</td><td>stale management state</td><td>staleness derivation exposes it on every read</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="rule"><b>Displays are not clients.</b> The board and the orientation write nothing
+        and know nothing of their own — they are projections of the store, listed under
+        <a href="#c-displays">Projections</a>.</div>
+    </section>
+
+    <!-- ================= CLIENT: SKILL ================= -->
+    <section class="panel" id="c-skill" aria-label="Claude skill client" hidden>
+      <h2>Claude — the skill</h2>
+      <p class="sub">The skill is the judgment layer, and judgment is mostly <b>self-triggered</b>:
+        Claude is already doing the work, so Claude is the one who knows when the work just produced
+        something the record must hold. Two modes — standing duties that fire off Claude's own
+        activity, and answering duties that fire off a user question. The skill formats no files,
+        maintains no index, computes no status, renders no view — and it never touches session
+        telemetry: sessions appear, change state, and close on the board entirely via hooks, with no
+        Claude and no user involvement.</p>
+
+      <h5 class="lbl">Standing duties <span>— self-triggered by the work; the user says nothing</span></h5>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>Duty</th><th>Fires when</th><th>API call</th><th>Claude synthesizes</th></tr></thead>
+          <tbody>
+            <tr><td class="mono c-client">log</td><td>Claude's work just produced a logworthy event — a ship, a decision, an external send (the <a href="#emission">emission rules</a>). The only way plane-2 events come into existence. <span style="color:var(--muted)">The skill's verb is <code>log</code>; the API path is <code>/ledger/events</code>.</span></td><td class="mono c-svc">POST /ledger/events</td><td>stream_id, headline, body[], stream_update?, create_stream?</td></tr>
+            <tr><td class="mono c-client">stream upkeep</td><td>normally rides inside <code>log</code> as <code>stream_update</code>; standalone only when management state changed with no new event, or a thread is finished</td><td class="mono c-svc">PUT /ledger/streams/{id} · POST …/close</td><td>the replacement fields, or the closure reason</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h5 class="lbl">Answering duties <span>— triggered by a user question, rarely by verb name</span></h5>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>Duty</th><th>Fires when</th><th>API call(s)</th><th>Claude synthesizes</th></tr></thead>
+          <tbody>
+            <tr><td class="mono c-client">recall</td><td>a question about past work — "what happened with X", "when did we send Y"</td><td class="mono c-svc"><a href="#ep-search">GET /ledger/search</a> · /events · /products</td><td>the query; then a prose answer from results</td></tr>
+            <tr><td class="mono c-client">review</td><td>"what's going on" — the management overlay: open loops, staleness, next actions</td><td class="mono c-svc">GET /ledger/streams · /events · /sessions</td><td>the digest prose</td></tr>
+            <tr><td class="mono c-client">board relay</td><td>the user asks to archive or restore sessions — the <em>only</em> session write Claude ever makes; <em>seeing</em> the board needs no Claude at all</td><td class="mono c-svc">POST /ledger/sessions/…/archive · /unarchive</td><td>which sessions, from prefixes</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="rule client"><b>Division of labor.</b> Hooks own the sessions plane: every status on
+        the board is theirs. Claude owns the record plane: every event, stream, and product is a
+        judgment call about its own work. The record's completeness never depends on the user
+        narrating what Claude did.</div>
+      <div class="rule client"><b>Boundary rule.</b> A change that would require hand-editing a data
+        file means the API is missing an endpoint. The service gets extended; the skill never reaches
+        around it.</div>
+      <div class="rule client"><b>Rendering rule.</b> Claude renders no view and moves no pixels. The
+        board is the BotBeam view built from <code>GET /ledger/board</code>; the orientation is
+        served markdown. A view missing data means the endpoint gets extended, never supplemented
+        client-side.</div>
+    </section>
+
+    <!-- ================= CLIENT: HOOKS ================= -->
+    <section class="panel" id="c-hooks" aria-label="Hooks client" hidden>
+      <h2>Hooks &amp; sweep — the sensors</h2>
+      <p class="sub">The five Claude Code lifecycle hooks are thin transmitters: each pipes its payload
+        to <code>POST /ledger/sessions/{id}/signals</code> and exits. They hold no state, render
+        nothing, and decide nothing. <b>They are not part of the skill</b> — they are wired in
+        <code>~/.claude/settings.json</code> and run as separate OS processes on Claude Code's
+        lifecycle, firing whether or not the ledger skill was ever loaded. That independence is what
+        makes the telemetry plane complete by construction.</p>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>Hook</th><th>Fires when</th><th>Payload highlights</th></tr></thead>
+          <tbody>
+            <tr><td class="mono c-client">SessionStart</td><td>launch or resume; also fires for the resume-picker — the <code>ever_prompted</code> gate keeps those ghosts off the board. Second duty: fetches <code>GET /ledger/index</code> and injects the orientation into the new session's context</td><td class="mono">event, cwd</td></tr>
+            <tr><td class="mono c-client">UserPromptSubmit</td><td>a prompt is submitted</td><td class="mono">event</td></tr>
+            <tr><td class="mono c-client">Stop</td><td>the turn finishes</td><td class="mono">event</td></tr>
+            <tr><td class="mono c-client">SessionEnd</td><td>clean CLI exit — the service writes status="dormant"; a crash fires nothing, so the row stays active until the sweep repair (deferred)</td><td class="mono">event</td></tr>
+            <tr><td class="mono c-client">PostToolUse</td><td>any tool completes — the hook does not classify; the mutating-tool list (run vs read) is service policy</td><td class="mono">tool.name, tool.input</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="sub" style="margin-top:20px">One scheduled reporter per machine posts transcript
+        presence to <code>…/sweep-report</code>. It is the only local moving part and carries no state.</p>
+      <p class="sub" style="margin-top:12px">Platform background: the hooks-as-transmitters pattern, the
+        per-session inbox socket, SendMessage, and every other way to get an event into or out of a
+        running session are documented in the companion
+        <a href="agent-messaging-reference.html">agent messaging reference</a> — platform facts, revved
+        independently of this book.</p>
+      <div class="rule warn"><b>Required behavior on service outage.</b> Hooks must never block a
+        session. The failure mode — local spool with retry vs accepted gaps absorbed by the heartbeat
+        model — is an open decision, tracked in the working notes.</div>
+    </section>
+
+    <!-- ================= CLIENT: DISPLAYS ================= -->
+    <section class="panel" id="c-displays" aria-label="Displays" hidden>
+      <h2>Displays — projections</h2>
+      <p class="sub">Not clients: displays write nothing. Every surface the user looks at is a
+        projection of the one store, rendered by the service. No surface is a source.</p>
+      <div class="cardrow">
+        <div class="card svc"><h4>Session board — the BotBeam view</h4>
+          <p>The live display tab, built from <code>GET /ledger/board</code>: two sections —
+            <b>Active</b>, a stable grid of cards (green = processing, ring = waiting, ⚡ = run;
+            ordered by first_seen so cards never jump), and <b>Inactive</b>, dormant sessions by
+            recency — with the <b>events feed below them</b>, newest first, each labeled with its
+            stream. No products column this phase.</p></div>
+        <div class="card svc"><h4>Session-start orientation</h4>
+          <p><code>GET /ledger/index</code>: the one-screen "what's going on" injected into every new
+            session by the SessionStart hook. Required this phase — the hand-maintained INDEX.md is
+            gone with <code>~/claude-memory</code>.</p></div>
+      </div>
+    </section>
+
+    <!-- ================= EVENT EMISSION RULES ================= -->
+    <section class="panel" id="emission" aria-label="Event emission rules" hidden>
+      <h2>Event emission rules</h2>
+      <p class="sub">What it takes for an event to exist, split exactly where invariant 8 puts the
+        seam: the <b>service</b> enforces shape — it can reject, but it never decides what is worth
+        recording; the <b>skill</b> enforces judgment — it decides what happened, but it never
+        decides what is valid. Both halves are binding.</p>
+
+      <h5 class="lbl">Service-enforced <span>— shape; violations are rejected, not corrected</span></h5>
+      <div class="tablescroll"><table class="grid">
+        <thead><tr><th>Rule</th><th>Enforcement</th></tr></thead>
+        <tbody>
+          <tr><td><code>headline</code> is one line, past tense, non-empty</td><td class="mono">422 on empty or multi-line</td></tr>
+          <tr><td><code>body</code> is 1–4 markdown bullets</td><td class="mono">422 outside the range</td></tr>
+          <tr><td><code>session_id</code> names an existing session — every event has exactly one emitter</td><td class="mono">422 missing · 404 unknown</td></tr>
+          <tr><td><code>stream_id</code> names an existing stream, or <code>create_stream</code> accompanies it</td><td class="mono">404 unknown without create</td></tr>
+          <tr><td>the whole transaction — event, session write, stream update — commits or none of it does</td><td class="mono">atomic; invariant 5</td></tr>
+          <tr><td>events are immutable: no update, no delete, server-stamped time</td><td class="mono">no endpoint exists</td></tr>
+          <tr><td>a ledger-service write never re-attributes the emitting session's stream</td><td class="mono">invariant 6</td></tr>
+          <tr><td>a <code>product</code> block is refused while products are deferred</td><td class="mono">422 not implemented</td></tr>
+        </tbody>
+      </table></div>
+
+      <h5 class="lbl">Skill-enforced <span>— judgment; no sensor can see any of this</span></h5>
+      <ol class="does">
+        <li><b>What qualifies.</b> A deliverable shipped · a decision made · an external
+          communication sent · a stream changing state · an open loop opened or closed. <b>Not:</b>
+          routine lookups, intermediate steps, or anything reconstructible from git or the tool it
+          lives in.</li>
+        <li><b>One event per outcome, at completion.</b> Not per step, not per tool call. A long
+          session that ships one thing emits one event.</li>
+        <li><b>Self-triggered.</b> Claude logs because the work happened — never because the user
+          narrated it, and never asking permission first. The record's completeness cannot depend on
+          the user remembering.</li>
+        <li><b>Stream discipline.</b> Every event names its stream; a genuinely new thread of work
+          carries <code>create_stream</code> in the same call; ledger-system work goes to
+          <code>meta</code>. If the outcome changed the thread's state or next action, the
+          <code>stream_update</code> rides in the same transaction — never a second call.</li>
+        <li><b>Corrections are new events.</b> An event is never edited or deleted; a later event
+          supersedes it. The journal is a record of what was believed when, not a tidy summary.</li>
+      </ol>
+      <div class="rule client"><b>Why the seam is here.</b> The service cannot know that a diff was a
+        deliverable, and the skill cannot be trusted to be consistent about shape. Each layer
+        enforces what only it can see — which is the whole of invariant 8.</div>
+    </section>
+
+    <!-- ================= INVARIANTS ================= -->
+    <section class="panel" id="invariants" aria-label="Invariants" hidden>
+      <h2>Invariants</h2>
+      <p class="sub">Rules the service enforces on every operation, with the v1 failure each one
+        eliminates.</p>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>#</th><th>Invariant</th><th>v1 failure eliminated</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">1</td><td><b>One writer.</b> All mutations go through <code>/ledger</code>; nothing edits the store directly.</td><td>two parallel writers; three files drifting out of sync</td></tr>
+            <tr><td class="mono">2</td><td><b>Statuses are declared, never inferred.</b> The store holds facts plus two declared statuses — <code>status</code> and <code>turn_state</code> — each written only by the signal or call that causes its transition; nothing computes a lifecycle state from timestamps. Stale statuses from crashes are repaired by the sweep, a separate mechanism (deferred), never by inference. <span style="color:var(--muted)">(Rev 18 ruling — supersedes the derive-at-read model; rev 17 had made turn_state the lone stored exception.)</span></td><td>latched booleans with no single writer: stuck open, permanent false expired, noise un-archiving — fixed by one writer per transition plus explicit repair</td></tr>
+            <tr><td class="mono">3</td><td><b>Events are immutable.</b> Append-only, server-stamped.</td><td>rewritten history</td></tr>
+            <tr><td class="mono">4</td><td><b>Records, not payloads.</b> A product is a name plus one home; content lives at the home.</td><td>ledger becoming a content dump</td></tr>
+            <tr><td class="mono">5</td><td><b>Composite writes are atomic.</b> <code>POST /ledger/events</code> commits the event, the session write, and the stream update together or not at all.</td><td>event logged, stream and index never updated</td></tr>
+            <tr><td class="mono">6</td><td><b>Attribution is a server rule.</b> Writes into the ledger service never re-attribute a session's stream.</td><td>sessions rebranded <code>ledger-meta</code> by their own journal writes</td></tr>
+            <tr><td class="mono">9</td><td><b>Emitting an event is a sign of life.</b> <code>POST /ledger/events</code> writes the emitting session in the same transaction — <code>last_event_at</code>, <code>status="active"</code>, un-archiving if needed. The two planes are joined here and nowhere else; <code>turn_state</code> stays the hook plane's alone.</td><td>a session working visibly in the record while its card sat stale on the board</td></tr>
+            <tr><td class="mono">7</td><td><b>Relevance requires a prompt.</b> Sessions never prompted do not reach the board.</td><td>picker-ghost cards requiring manual archiving</td></tr>
+            <tr><td class="mono">8</td><td><b>Judgment stays above the API.</b> The service never decides what is logworthy; the skill never decides what is valid.</td><td>responsibility smeared across layers, so neither enforced</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= STORAGE ================= -->
+    <section class="panel" id="storage" aria-label="Storage and ownership" hidden>
+      <h2>Storage &amp; ownership</h2>
+      <p class="sub">After migration: one authoritative store inside the service, thin configuration at
+        the edges, and Claude Code's transcripts observed but never written.</p>
+      <div class="tablescroll">
+        <table class="grid">
+          <thead><tr><th>Location</th><th>Holds</th><th>Written by</th><th>Owner</th></tr></thead>
+          <tbody>
+            <tr><td class="mono c-svc">service · sessions</td><td>per-session facts (see the Session panel)</td><td>service, from hook events, archive calls, sweep reports</td><td>ledger service</td></tr>
+            <tr><td class="mono c-svc">service · events</td><td>the immutable journal</td><td>service, from POST /ledger/events</td><td>ledger service</td></tr>
+            <tr><td class="mono c-svc">service · streams</td><td>management state per thread</td><td>service, from log · PUT · close</td><td>ledger service</td></tr>
+            <tr><td class="mono c-svc" style="opacity:0.55">service · products</td><td>work-product registry with provenance — <b>deferred, not this phase</b></td><td>service, from POST /ledger/events</td><td>ledger service</td></tr>
+            <tr><td class="mono c-svc">service · views</td><td>board data structure and orientation index — regenerable</td><td>service</td><td>ledger service</td></tr>
+            <tr><td class="mono c-client">~/.claude/settings.json</td><td>hook wiring — five thin transmitters</td><td>setup</td><td>Claude Code config</td></tr>
+            <tr><td class="mono c-client">~/.config/orchestra/botbeam.json</td><td>API base URL and token</td><td>setup</td><td>local config</td></tr>
+            <tr><td class="mono" style="color:var(--muted)">~/.claude/projects/**.jsonl</td><td>transcripts — observed by the sweep reporter, never written</td><td>Claude Code</td><td>Claude Code</td></tr>
+            <tr><td class="mono" style="color:var(--muted);text-decoration:line-through">~/claude-memory</td><td>the v1 store — <b>abandoned outright; no import, no reads, no writes</b> (Cliff's call, rev 19). Files stay on disk as dead weight until deleted</td><td>—</td><td>retired</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<footer>
+  The Ledger Book · rev 19 · 2026-09-12 · supersedes Data Model rev 12 + System Map rev 4 ·
+  working notes: skills/ledger/design/session-state.md
+</footer>
+
+<script>
+  const links = [...document.querySelectorAll('.rail a')];
+  const panels = [...document.querySelectorAll('.panel')];
+  function show(id, focus) {
+    let panel = panels.find(p => p.id === id), inner = null;
+    if (!panel) {
+      inner = document.getElementById(id);
+      panel = inner ? inner.closest('.panel') : null;
+    }
+    if (!panel) { panel = panels[0]; inner = null; id = panel.id; }
+    panels.forEach(p => { p.hidden = p !== panel; });
+    links.forEach(a => {
+      const on = a.dataset.target === panel.id;
+      a.classList.toggle('on', on);
+      if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+    try { history.replaceState(null, '', '#' + id); } catch (e) {}
+    if (focus) { const t = links.find(a => a.dataset.target === panel.id); if (t) t.focus(); }
+    if (inner) inner.scrollIntoView({ block: 'start' }); else window.scrollTo(0, 0);
+  }
+  document.querySelector('.content').addEventListener('click', e => {
+    const a = e.target.closest('a[href^="#"]');
+    if (a) { e.preventDefault(); show(a.getAttribute('href').slice(1)); }
+  });
+  links.forEach((a, i) => {
+    a.addEventListener('click', e => { e.preventDefault(); show(a.dataset.target); });
+    a.addEventListener('keydown', e => {
+      let j;
+      if (e.key === 'ArrowDown') j = i + 1;
+      else if (e.key === 'ArrowUp') j = i - 1;
+      else return;
+      e.preventDefault();
+      if (links[j]) show(links[j].dataset.target, true);
+    });
+  });
+  show(location.hash.slice(1) || panels[0].id);
+</script>

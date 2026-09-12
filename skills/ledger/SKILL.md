@@ -1,162 +1,197 @@
 ---
 name: ledger
-description: Global cross-session work memory and session board — journal of events, work-product registry, per-stream state files, and hook-driven session tracking in the user's ledger root (default ~/claude-memory). Use when significant work completes (deliverable shipped, decision made, work product produced, email sent), when asked to log work, recall what happened, review open loops, check what's going on, or manage sessions/streams on the board. Verbs — log, recall, review, dash, stream, sessions.
+description: Global cross-session work memory and session board — a live database of sessions (what's running) and events (what happened), plus the streams of work they belong to, held by the BotBeam ledger service (/ledger API). Use when significant work completes (deliverable shipped, decision made, external communication sent), when asked to log work, recall what happened, review open loops, check what's going on, or manage sessions/streams on the board. Verbs — log, recall, review, stream, sessions.
 ---
 
 # Work ledger
 
-The ledger is the user's global, cross-session memory of *what happened* and
-*what was produced*, plus a live board of session activity. It lives in the
-**ledger root** — `~/claude-memory` unless the user designates otherwise —
-and works from any workspace.
+A **live database of sessions and events**, held by the BotBeam ledger service
+and shared across every machine and workspace. Sessions answer *what is running
+right now*; events answer *what happened*. It works from any workspace.
 
-Canonical reference: the **data model** (`views/glossary.html` in the ledger
-root, published as an Artifact). Summary of the objects:
+The service is the only system of record. Everything reaches it through the
+`/ledger` API — no local files, ever.
+
+Canonical reference: **The Ledger Book**
+(`C:\code\woodshed\docs\ledger\ledger-reference.html`) — its "How it runs"
+panel is the operational picture behind this skill.
+
+## Your place in the system
+
+Three independent feeds keep the database current. They never talk to each
+other; each talks only to the service, which is the only writer.
+
+| Feed | Runs | Maintains | If it stops |
+|---|---|---|---|
+| **Hooks** | automatically, on 5 CC lifecycle moments | session rows | the board goes stale |
+| **Sweep** | every 5 min, per machine | transcript presence → expiry | dead cards linger |
+| **You (this skill)** | when your work produces an outcome | **events and streams** | history is lost, unrecoverably |
+
+**Hooks are not part of this skill.** They are wired in
+`~/.claude/settings.json`, run `scripts/session_event.py` in a separate OS
+process, and fire whether or not this skill was ever loaded. They share a
+folder with this skill and nothing else. Consequence: **session telemetry is
+not your job and never needs your help** — sessions appear, change state, and
+close on the board with no action from you.
+
+**Events are entirely your job.** No sensor can see that a diff was a
+deliverable or that a conversation settled a decision. You are the only feed
+that can forget, which is why logging is a standing duty rather than a feature
+someone invokes.
+
+## Objects
 
 | Object | Origin | What it is |
 |---|---|---|
 | Workspace | Claude Code | directory Claude launches in; has many sessions |
-| Session | Claude Code | persistent conversation; ledger annotates it (status, stream, activity) |
-| Stream | ledger | thread of work the ledger manages; the file IS the stream |
-| Event | ledger | something that happened; append-only journal entry |
-| Work product | ledger | something made; record + link, payload lives at its home |
+| Session | Claude Code | persistent conversation; the service annotates it (status, stream, activity) |
+| Stream | ledger | thread of work under management — state, next action, open loops |
+| Event | ledger | something that happened; append-only, immutable |
 
-Session lifecycle: **open** (waiting ⇄ processing ⊇ run) → **closed** ⇄
-**archived** → **expired**. A *run* is processing toward a mutation. Archived
-is a dismissed closed session; any activity un-archives. These states are
-maintained automatically by hooks (see Setup) — never edit `sessions/*.json`
-by hand except through `scripts/board.py`.
+**Two planes, two nouns, never interchanged.** Hooks post **signals**
+(telemetry — mechanical, high-volume, not stored as records; they update
+columns on the session row). You post **events** (the record — judged, rare,
+stored forever, immutable).
+
+Session lifecycle: **active** (waiting ⇄ processing ⊇ run) → **dormant** ⇄
+**archived** → **expired**. Statuses are **stored, declared** by the signal or
+call that causes each transition — nothing is inferred from timestamps. A
+crashed session keeps its last status until a sweep repair lands (deferred,
+known gap).
 
 Boundary with Claude Code's auto-memory: facts that stay true → auto-memory;
-things that happened or were made → ledger.
+things that happened → ledger.
 
-## Layout
+## Credentials
 
-```
-<ledger root>/
-  INDEX.md              one-screen orientation; injected at session start
-  journal/YYYY-MM-DD.md append-only daily events: "## slug: headline [sid:xxxxxx]"
-  streams/<slug>.md     one file per stream; closed → streams/archive/
-  artifacts/index.md    work-product registry: | date | stream | product | home |
-  sessions/<id>.json    session records (hook-maintained)
-  config/board.json     board engine settings (BotBeam device id, TTLs)
-  config/stream-paths.json  stream → working directories (attribution map)
-  scripts/board.py      board engine (hooks pipe events into it)
-  views/                generated views: dashboard.html, glossary.html (data model)
-```
+Base URL and bearer token from `~/.config/orchestra/botbeam.json`. Every call
+carries `Authorization: Bearer <token>`. The service stamps all timestamps —
+never send one.
 
-If the root doesn't exist, offer to bootstrap: create the layout, empty
-registry, first journal entry, then walk Setup below.
-
-## Verbs (`/ledger <verb>`; bare `/ledger` shows INDEX.md and offers them)
+## Verbs (`/ledger <verb>`; bare `/ledger` shows orientation and offers them)
 
 ### log
 
-Record what just happened.
+**A standing duty, not a request.** Log the moment your work produces an
+outcome — never waiting to be asked, never asking permission first.
 
-1. Append to today's `journal/YYYY-MM-DD.md`:
-   `## <stream-slug>: <headline> [sid:<your short id>]` plus 1–4 bullets with
-   links. Your short id = first 6 chars of your session id (visible in your
-   scratchpad directory path). Use slug `meta` for ledger-system work.
-2. Work product made? Add a registry row (newest first) linking its home.
-3. Update the stream file: current state, open loops, **Next action**,
-   Updated date. New stream: create the file, add its working paths to
-   `config/stream-paths.json`, add its line to INDEX.md.
-4. Update INDEX.md (stream one-liner + Recent activity, ~5 entries, ≤40 lines).
+One call: `POST {base}/ledger/events`
+
+```json
+{
+  "stream_id": "orchestra",
+  "headline": "v0.2.5 cut and deployed",
+  "body": ["commit 1ee891f pushed", "marketplace refreshed, plugin updated"],
+  "session_id": "<this session's full uuid>",
+  "stream_update": { "state": "...", "next_action": "...", "open_loops": ["..."] },
+  "create_stream": { "title": "...", "working_paths": ["C:\\code\\..."] }
+}
+```
+
+- `stream_update` **rides in the same call** whenever the outcome changed the
+  thread's state or next action — never a second call.
+- `create_stream` only when the slug is genuinely new.
+- `meta` is the built-in stream for ledger-system work.
+- The response returns the event, the emitting session, and the stream.
+- **Logging also writes your session** (`last_event_at`, `status="active"`) in
+  the same transaction. That is the only place the two planes touch.
+
+Your session id: the full uuid, visible in your scratchpad directory path.
+
+**Emission rules — the judgment half (the service cannot see any of this):**
+
+1. **What qualifies:** a deliverable shipped · a decision made · an external
+   communication sent · a stream changing state · an open loop opened or
+   closed. **Not:** routine lookups, intermediate steps, or anything
+   reconstructible from git or the tool it lives in.
+2. **One event per outcome, at completion** — not per step, not per tool call.
+   A long session that ships one thing emits one event.
+3. **Self-triggered** — because the work happened, not because the user
+   narrated it.
+4. **Stream discipline** — every event names its stream; genuinely new thread
+   → `create_stream` in the same call; ledger-system work → `meta`.
+5. **Corrections are new events** — never edited, never deleted; a later event
+   supersedes an earlier one.
+
+**Shape is the service's business** (one-line headline, 1–4 bullets,
+`session_id` required, stream exists or comes with `create_stream`, atomic,
+immutable). If a call is rejected, fix the call — never route around it, and
+never hand-edit a data file. A change that would require reaching around the
+API means the API is missing an endpoint; the service gets extended.
 
 ### recall <topic>
 
-Answer inline, in prose — no dashboard for single facts. INDEX → stream file
-→ Grep journal/ and artifacts/index.md. Dates, links, current state. If the
-ledger has nothing, say so.
+`GET {base}/ledger/search?q=<topic>` (also `/events?stream_id=&since=`).
+Answer inline, in prose — dates, links, current state. If the ledger has
+nothing, say so.
 
 ### review [week|month]
 
-The management overlay (default: last 7 days). Read active streams + journal
-in scope; digest: what moved, what's stalled, open loops, suggested next
-actions. Regenerate and republish the deep dashboard (below) and give its
-link. Offer to close streams idle for a month.
-
-### dash
-
-Regenerate/republish the deep dashboard without the digest.
+The management overlay (default: last 7 days).
+`GET {base}/ledger/streams` + `GET {base}/ledger/events?since=` — digest what
+moved, what's stalled, open loops, suggested next actions. Offer to close
+streams idle for a month. Staleness comes from the service: fresh ≤3d,
+aging 4–14d, stale >14d.
 
 ### stream <name> [close]
 
-Show or update one stream. `close`: move file to `streams/archive/`, remove
-from INDEX.md and `config/stream-paths.json`, log the closure.
+- Show: `GET {base}/ledger/streams`.
+- Update: `PUT {base}/ledger/streams/{id}` — field-level replace of `title`,
+  `state`, `next_action`, `open_loops`, `working_paths`. Usually unnecessary:
+  prefer `stream_update` inside `log`.
+- Close: `POST {base}/ledger/streams/{id}/close` with `{"reason": "..."}` —
+  logs its own closure event.
 
-### sessions [list | archive <prefix>… | archive --all --keep <prefix>… | unarchive <prefix> | seed [--days N] [--apply [prefix…]]]
+### sessions [list | archive <prefix>… | archive --all --keep <prefix>… | unarchive <prefix>]
 
-Session management via `python <root>/scripts/board.py <args>`:
-- `list` — every known session with status (open/closed/archived/expired)
-- `archive` / `unarchive` — dismiss/restore board cards (archived is sticky
-  only until the session next does something)
-- `seed` — survey Claude Code transcripts for sessions the hooks haven't
-  seen; dry-run first, then `--apply` the user's chosen prefixes
+The **only** session write you ever make — and only when the user asks.
+*Seeing* the board needs no Claude at all.
 
-## The session board (automatic — don't duplicate it)
+- `list` — `GET {base}/ledger/sessions` → `{items: [...]}`, each with stored
+  `status` plus computed `activity`, `relevant`. Filters: `?status=`
+  `?machine=` `?relevant=true`.
+- `archive <prefix>…` — resolve prefixes against `list`, then
+  `POST {base}/ledger/sessions/{id}/archive` per session (409 = it's active;
+  tell the user, don't force). Batch:
+  `POST {base}/ledger/sessions/archive` with `{"prefixes": [...]}` or
+  `{"all": true, "keep": [...]}`.
+- `unarchive <prefix>` — `POST {base}/ledger/sessions/{id}/unarchive`
+  (usually unnecessary: any activity writes the session back to active).
 
-Hooks pipe every SessionStart / UserPromptSubmit / Stop / SessionEnd /
-PostToolUse event into `scripts/board.py`, which maintains `sessions/*.json`
-and beams a dark board to the BotBeam "Ledger" display: card per relevant
-session (green dot = processing, hollow ring = open·waiting, gray = closed,
-⚡ = run), recent events with session chips, recent work products. A
-scheduled task (`LedgerBoardSweep`, every 5 min) repaints TTL decay and marks
-expired sessions. Your own activity appears on it automatically — never
-hand-beam session state.
+There is no `seed` — the store initializes from live activity; a session
+appears on its first prompt.
 
-## Deep dashboard
+## The board and the orientation — both automatic
 
-Overview questions ("what have we been up to?") and `review` get the visual
-dashboard — `views/dashboard.html`, template `assets/dashboard-template.html`
-(copy on first use; replace every `<!-- DATA:... -->` block: GENERATED,
-TILES, STREAMS, ACTIVITY, LOOPS, ARTIFACTS→work products). Publish with the
-Artifact tool; the persistent URL is in `views/artifact-url.md` — pass it as
-`url` so the address never changes. Keep stream colors in fixed creation
-order; staleness fresh ≤3d / aging 4–14d / stale >14d, always labeled.
-Optionally also beam to a display integration (e.g. BotBeam) if one exists
-and the user asks — optional, never a substitute for the Artifact.
+**The board.** Hooks post every SessionStart / UserPromptSubmit / Stop /
+SessionEnd / PostToolUse signal to
+`POST {base}/ledger/sessions/{id}/signals`. The service writes the
+declared statuses and serves `GET {base}/ledger/board`; the user watches the
+**Sessions view in the BotBeam app** — Active sessions as cards in a stable
+grid (solid green = processing, ⚡ = run, hollow ring = waiting; ordered by
+first_seen so cards never jump), Inactive sessions below by recency, and the
+**events feed** beneath both. Only ever-prompted, non-archived, non-expired
+sessions appear.
 
-## What qualifies for logging
+**The orientation.** The one-screen "what's going on" injected into every new
+session by the SessionStart hook — active streams with their state and next
+action, plus recent activity. It comes from `GET {base}/ledger/index`, served
+by the service. It is why a brand-new session already knows what is in flight.
+You never maintain it and never write it.
 
-Log: deliverables shipped, decisions made, work products produced, external
-communications sent, a stream changing state, open loops created/closed.
-Don't log: routine lookups, intermediate work, anything reconstructible from
-git or the tool it lives in. Decision-shaped conversation → log the
-conclusion in two sentences.
-
-## Work-product policy
-
-**Records, never payloads — unless the payload has no home.**
-- Landed somewhere real (Drive, repo, sheet, published Artifact) → registry
-  row with link. Never copy content into the ledger.
-- Email sent → journal event (recipient, subject, date); the mail system is
-  the record.
-- Inline-only product → give it a home: upload via available cloud tooling
-  (suggested Drive folder `Claude-Memory-Artifacts`, created on first use)
-  and register the link; else `artifacts/inline/` + note it needs a home.
-
-## Hygiene
-
-- Journal is append-only; never rewrite past days. Stream files are current
-  state; rewrite freely. Absolute dates always.
-- INDEX.md ≤ ~40 lines; it's injected into every session.
-- Stream files coordinate sessions by shared disk — last writer wins, so
-  keep stream edits short and current.
+Never post session state by hand, and never render or beam a board yourself.
 
 ## Setup (once per machine — offer if not wired)
 
-1. **CLAUDE.md pointer** (`~/.claude/CLAUDE.md`): log significant work via
-   this skill; consult the ledger for "what's going on."
-2. **Hooks** (`~/.claude/settings.json`): SessionStart (cat INDEX.md, plus
-   board.py), UserPromptSubmit, Stop, SessionEnd (board.py), PostToolUse
-   matcher `Write|Edit|NotebookEdit|Bash|PowerShell` (board.py) — all
+1. **CLAUDE.md pointer** (`~/.claude/CLAUDE.md`): log significant work via this
+   skill; consult the ledger for "what's going on."
+2. **Hooks** (`~/.claude/settings.json`): SessionStart (fetch
+   `GET {base}/ledger/index` for orientation, plus the transmitter),
+   UserPromptSubmit, Stop, SessionEnd, PostToolUse (no matcher — all tools; the
+   service classifies) →
+   `python "C:/code/woodshed/skills/ledger/scripts/session_event.py"`, all
    `"shell": "bash"`, `"async": true`.
-3. **Sweep task**: schedule `board.py sweep` every 5 minutes (Windows:
-   `schtasks /Create /TN LedgerBoardSweep /SC MINUTE /MO 5 /TR "pythonw
-   <root>/scripts/board.py sweep"`).
-4. **BotBeam display** (optional): create a "Ledger" display, put its id in
-   `config/board.json` as `botbeam_device`. Without it the board silently
-   skips beaming; everything else works.
-5. **Seed**: `board.py seed` → show the user, `seed --apply <chosen>`.
+3. **Sweep task**: `schtasks /Create /TN LedgerSweepReport /SC MINUTE /MO 5
+   /TR "pythonw C:\code\woodshed\skills\ledger\scripts\sweep_report.py"`.
+4. **Credentials**: `~/.config/orchestra/botbeam.json` — `base_url` + agent
+   `token`.
