@@ -154,7 +154,7 @@
   <p class="lede">The single reference for the ledger: what it does, the layers it is built from, its
     objects and their lifecycles, and the <code>/ledger</code> API. One system of record — the BotBeam
     ledger service. Every schema and state transition is enforced in service code.</p>
-  <p class="stamp">rev 19 · 2026-09-12 · <span class="target">TARGET ARCHITECTURE — sessions plane live · record plane (events + streams) next</span> · migration plan inside</p>
+  <p class="stamp">rev 20 · 2026-09-13 · <span class="target">LIVE — sessions and record planes both deployed (BotBeam v1.7.0)</span></p>
 </header>
 
 <div class="layout">
@@ -189,7 +189,7 @@
     <div class="grp">Clients — the feeds</div>
     <a href="#c-overview" data-target="c-overview">How it hangs together</a>
     <a href="#c-skill" data-target="c-skill" class="sub">Claude — the skill</a>
-    <a href="#c-hooks" data-target="c-hooks" class="sub">Hooks &amp; sweep — the sensors</a>
+    <a href="#c-hooks" data-target="c-hooks" class="sub">Hooks — the sensors</a>
 
     <div class="grp">Projections</div>
     <a href="#c-displays" data-target="c-displays">Displays</a>
@@ -360,7 +360,7 @@
       <h5 class="lbl">The seven behaviors <span>— what each plane gets, and what spans both</span></h5>
       <ol class="does">
         <li><span class="og tel">telemetry</span> <b>Tracks sessions.</b> Every Claude Code session's
-          lifecycle — active, dormant, archived, expired; waiting, processing, run — declared by hook
+          lifecycle — active, dormant, archived; waiting, processing, run — declared by hook
           signals and API calls, never hand-maintained, never inferred.</li>
         <li><span class="og rec">record</span> <b>Records events.</b> Immutable, timestamped statements
           of what happened — a ship, a decision, a send, a state change — each belonging to exactly
@@ -386,7 +386,7 @@
     <section class="panel" id="howitruns" aria-label="How it runs" hidden>
       <h2>How it runs</h2>
       <p class="sub">The system is a <b>live database of sessions and events</b>, kept current by
-        <b>three independent moving parts</b> that never talk to each other — they only talk to the
+        <b>two independent moving parts</b> that never talk to each other — they only talk to the
         service. This panel is the operational picture: who runs, when, and what each one writes. If
         you read one panel to understand how the thing actually works, read this one.</p>
 
@@ -399,7 +399,7 @@
         the sessions half of the database is complete by construction and the events half is not.
         They share a folder in the repo; they share nothing at runtime.</div>
 
-      <h5 class="lbl">The three moving parts <span>— what runs them, and what each maintains</span></h5>
+      <h5 class="lbl">The two moving parts <span>— what runs them, and what each maintains</span></h5>
       <div class="cardrow">
         <div class="card client">
           <h4>1 · Hooks <span class="og tel">telemetry</span></h4>
@@ -409,16 +409,8 @@
             <b>Judgment:</b> none, and none allowed.<br>
             <b>If it breaks:</b> the board goes stale. The record is unaffected.</p>
         </div>
-        <div class="card svc">
-          <h4>2 · The sweep <span class="og tel">telemetry</span></h4>
-          <p><b>Runs:</b> every 5 minutes, per machine.<br>
-            <b>Trigger:</b> Windows Task Scheduler → <code>sweep_report.py</code>.<br>
-            <b>Writes:</b> transcript-presence facts; writes <code>expired</code> at 3 misses.<br>
-            <b>Judgment:</b> none — it reports what it sees on disk.<br>
-            <b>If it breaks:</b> deleted sessions linger on the board.</p>
-        </div>
         <div class="card data">
-          <h4>3 · The skill <span class="og rec">record</span></h4>
+          <h4>2 · The skill <span class="og rec">record</span></h4>
           <p><b>Runs:</b> when Claude judges that work produced an outcome.<br>
             <b>Trigger:</b> Claude's own activity — not the user, not a timer.<br>
             <b>Writes:</b> events and streams (and the emitter's liveness).<br>
@@ -439,9 +431,8 @@
             <tr><td>…more tool calls…</td><td class="mono c-client">PostToolUse, debounced</td><td><span class="og tel">1</span></td><td class="mono">mostly nothing — a burst carries no new fact</td><td>⚡ stays lit</td></tr>
             <tr><td><b>the work ships</b></td><td class="mono c-svc">POST /ledger/events</td><td><span class="og rec">3</span></td><td class="mono">event row appended · stream updated · session status=active, last_event_at=now</td><td><b>a line in the events feed</b></td></tr>
             <tr><td>Claude finishes the turn</td><td class="mono c-client">Stop hook</td><td><span class="og tel">1</span></td><td class="mono">turn_state=waiting · last_stop_at=now</td><td>card goes to a hollow ring — your move</td></tr>
-            <tr><td>every 5 min, throughout</td><td class="mono c-svc">sweep report</td><td><span class="og tel">2</span></td><td class="mono">transcript seen → expiry facts cleared</td><td>nothing — silence is the healthy case</td></tr>
             <tr><td>you exit cleanly</td><td class="mono c-client">SessionEnd hook</td><td><span class="og tel">1</span></td><td class="mono">status=dormant · ended_at=now</td><td>card goes gray, moves to Inactive</td></tr>
-            <tr><td><i>or the machine crashes</i></td><td class="mono"><i>nothing fires</i></td><td>—</td><td class="mono">nothing — the row stays active <span style="color:var(--muted)">(sweep repair deferred)</span></td><td>a stale green card, by accepted decision</td></tr>
+            <tr><td><i>or the machine crashes</i></td><td class="mono"><i>nothing fires</i></td><td>—</td><td class="mono">nothing — the row stays active <span style="color:var(--muted)">(repair deferred)</span></td><td>a stale green card, by accepted decision</td></tr>
           </tbody>
         </table>
       </div>
@@ -458,16 +449,16 @@
         <li><b>The two halves meet in exactly one place.</b> Logging an event writes the emitting
           session's liveness (<a href="#invariants">invariant 9</a>). Nowhere else does the record
           plane touch the telemetry plane.</li>
-        <li><b>The service is the only writer.</b> Hooks, sweep, and skill all send intent over HTTP;
+        <li><b>The service is the only writer.</b> Hooks and skill both send intent over HTTP;
           the service validates it, stamps it, and commits it. No client writes storage, and no
           client computes a view.</li>
       </ol>
 
-      <div class="rule client"><b>So who maintains the database?</b> The service maintains it; three
-        clients feed it. Two of them (hooks, sweep) are machinery that runs without anyone deciding
-        anything — they keep the <em>sessions</em> current. One of them (the skill) is Claude
-        exercising judgment — it keeps the <em>events</em> current. Calling the whole thing "the
-        skill" is the mistake: the skill is one of three feeds, and the only one that can forget.</div>
+      <div class="rule client"><b>So who maintains the database?</b> The service maintains it; two
+        clients feed it. One (hooks) is machinery that runs without anyone deciding anything — it
+        keeps the <em>sessions</em> current. The other (the skill) is Claude exercising judgment —
+        it keeps the <em>events</em> current. Calling the whole thing "the skill" is the mistake:
+        the skill is one of two feeds, and the only one that can forget.</div>
     </section>
 
     <!-- ================= LAYERS ================= -->
@@ -574,15 +565,24 @@
         call landing in the service's state machine, and every one <b>writes the status it
         declares</b> — <code>status</code> is a stored column, exactly like <code>turn_state</code>;
         nothing infers a lifecycle state from timestamps. A crash fires no signal, so a crashed
-        session keeps its last declared status until the sweep repairs it — a separate mechanism,
-        <b>deferred</b>, the same pattern as the <code>turn_state</code> cleanup. <b>dormant</b>
-        means &ldquo;declared closed&rdquo; (SessionEnd, or unarchive); dormant sessions leave the
-        board only when the user clears them (archive).</p>
+        session keeps its last declared status until a repair mechanism is added — <b>deferred</b>,
+        the same pattern as the <code>turn_state</code> cleanup. <b>dormant</b> means
+        &ldquo;declared closed&rdquo; (SessionEnd, or unarchive); dormant sessions leave the board
+        only when the user clears them (archive), which is the one manual act in the system.</p>
+      <div class="rule client" style="margin-top:0"><b>Three states, and no fourth.</b> Rev 20
+        retired <code>expired</code>. It was never a state of the session — it described whether a
+        <em>file</em> still sat on one machine's disk, which is a different kind of fact and the
+        source of every edge case the lifecycle used to carry. Claude Code deletes transcripts on
+        its own retention clock (<code>cleanupPeriodDays</code>, 30 days by default), so
+        &ldquo;the transcript is gone&rdquo; reduces to &ldquo;this session is older than the
+        retention period&rdquo; — computable from <code>last_event_at</code>, never worth observing.
+        And the ledger's record of a session should outlive the local file that session was typed
+        into. The whole sweep apparatus that fed it is retired with it.</div>
 
       <div class="figwrap">
         <figure>
           <svg class="d" viewBox="0 0 980 330" style="min-width:720px" role="img"
-            aria-label="State diagram. Sessions become active on start. While active they cycle waiting to processing on prompt, processing to waiting on stop, processing to run on mutation. Active becomes dormant on SessionEnd; a resume reactivates it. Dormant and archived interconvert by archive and unarchive calls. Dormant or archived becomes expired when the transcript is missing across N sweeps with no events. Resume or prompt returns archived or expired sessions to active.">
+            aria-label="State diagram. Sessions become active on start. While active they cycle waiting to processing on prompt, processing to waiting on stop, processing to run on mutation. Active becomes dormant on SessionEnd; a resume reactivates it. Dormant and archived interconvert by archive and unarchive calls. Any signal, or logging an event, returns an archived session to active. There are three states and no fourth.">
             <defs>
               <marker id="lf" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
@@ -614,60 +614,52 @@
             <text x="595" y="109" text-anchor="middle" font-size="13.5" fill="var(--ink)">dormant</text>
             <rect x="530" y="196" width="130" height="48" rx="9" fill="var(--surface)" stroke="var(--hairline-2)" stroke-width="1.5"/>
             <text x="595" y="225" text-anchor="middle" font-size="13.5" fill="var(--ink)">archived</text>
-            <rect x="790" y="138" width="130" height="48" rx="9" fill="none" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="4 4"/>
-            <text x="855" y="167" text-anchor="middle" font-size="13.5" fill="var(--ink-2)">expired</text>
             <g fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M442 104 L528 104" marker-end="url(#lf)"/>
               <path d="M528 88 C500 66 470 66 444 78" marker-end="url(#lf)"/>
               <path d="M580 130 L580 194" marker-end="url(#lf)"/>
               <path d="M610 194 L610 130" marker-end="url(#lf)"/>
-              <path d="M662 112 C724 118 750 134 788 150" marker-end="url(#lf)"/>
-              <path d="M662 232 C724 226 750 196 788 178" marker-end="url(#lf)"/>
             </g>
             <g fill="none" stroke="var(--client)" stroke-width="1.5" stroke-dasharray="5 4">
               <path d="M530 244 C440 288 300 288 240 272" marker-end="url(#lf)"/>
-              <path d="M788 186 C700 280 480 306 236 280" marker-end="url(#lf)"/>
             </g>
             <g font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">
               <text x="484" y="94" text-anchor="middle">SessionEnd</text>
               <text x="484" y="60" text-anchor="middle">resume</text>
               <text x="568" y="166" text-anchor="end">archive</text>
               <text x="620" y="166">unarchive</text>
-              <text x="726" y="122">missing ×N, no events</text>
-              <text x="368" y="300" fill="var(--client-ink)">resume / prompt — any sign of life writes active</text>
+              <text x="368" y="300" fill="var(--client-ink)">any signal, or logging an event, writes active</text>
             </g>
           </svg>
           <figcaption>The compound state is active, containing waiting ⇄ processing ⊇ run. Every
             arrow is a write: the signal or call that causes a transition stores the new status.
             The dashed green returns are declared recoveries — any sign of life writes
             <code>status="active"</code>, which is what un-archives and un-expires. A crashed
-            session keeps its last status until the sweep repairs it (deferred).</figcaption>
+            session keeps its last status until a repair mechanism is added (deferred).</figcaption>
         </figure>
       </div>
 
       <h5 class="lbl">Transition → signal → fields written <span>— the exact writes, per transition</span></h5>
       <p class="sub" style="margin:0 0 10px;font-size:13px"><b>Universal writes first:</b> every hook
         signal, whatever its type, also writes <code>last_event_at = now</code>, resets
-        <code>transcript_missing_since = null</code>, <code>sweep_miss_count = 0</code>, and — every
-        signal except SessionEnd — writes <code>status = "active"</code>: any sign of life is
-        declared, not derived. <b>Event emission counts as a signal here</b> (invariant 9). The rows
-        below list only what each transition writes on top of that.</p>
+        and — every signal except SessionEnd — writes <code>status = "active"</code> and clears
+        <code>archived_at</code>: any sign of life is declared, not derived. <b>Event emission
+        counts as a signal here</b> (invariant 9). The rows below list only what each transition
+        writes on top of that.</p>
       <div class="tablescroll">
         <table class="grid">
           <thead><tr><th>Transition</th><th>Real-world trigger</th><th>Signal into the service</th><th>Fields written</th></tr></thead>
           <tbody>
             <tr><td class="mono">→ active</td><td>launch or resume</td><td class="mono c-client">event: SessionStart</td><td class="mono">status="active" · row created if new: workspace_id · machine · label · first_seen=now · turn_state="waiting"</td></tr>
-            <tr><td class="mono">→ active</td><td>the session logs an event</td><td class="mono c-svc">POST /ledger/events</td><td class="mono">status="active" · last_event_at=now · archived_at=null <span style="color:var(--muted)">— same transaction as the event (invariant 9); turn_state untouched</span></td></tr>
+            <tr><td class="mono">→ active</td><td>the session logs an event</td><td class="mono c-svc">POST /ledger/events</td><td class="mono">the universal writes, in the same transaction as the event <span style="color:var(--muted)">— invariant 9; turn_state untouched</span></td></tr>
             <tr><td class="mono">waiting → processing</td><td>a prompt is submitted</td><td class="mono c-client">event: UserPromptSubmit</td><td class="mono">turn_state="processing" · last_prompt_at=now · ever_prompted=true</td></tr>
             <tr><td class="mono">processing → run</td><td>Claude mutates something</td><td class="mono c-client">event: PostToolUse (mutating tool)</td><td class="mono">last_run_at=now <span style="color:var(--muted)">— ⚡ shows while now − last_run_at ≤ run window</span></td></tr>
             <tr><td class="mono">processing → waiting</td><td>the turn finishes</td><td class="mono c-client">event: Stop</td><td class="mono">turn_state="waiting" · last_stop_at=now</td></tr>
             <tr><td class="mono">active → dormant</td><td>clean exit</td><td class="mono c-client">event: SessionEnd</td><td class="mono">status="dormant" · ended_at=now · turn_state="waiting"</td></tr>
-            <tr><td class="mono">active → <i>(stale)</i></td><td>crash</td><td class="mono c-client"><i>nothing</i></td><td class="mono">no write — the row keeps status="active" until the sweep repairs it: status → "dormant", stale turn_state="processing" → "waiting" <span style="color:var(--muted)">(the crashed-session cleanup — DEFERRED, out of scope for now)</span></td></tr>
+            <tr><td class="mono">active → <i>(stale)</i></td><td>crash</td><td class="mono c-client"><i>nothing</i></td><td class="mono">no write — the row keeps status="active"; a future repair mechanism will write status → "dormant" and stale turn_state="processing" → "waiting" <span style="color:var(--muted)">(the crashed-session cleanup — DEFERRED, out of scope for now)</span></td></tr>
             <tr><td class="mono">dormant → archived</td><td>the user clears it</td><td class="mono c-svc">POST …/archive</td><td class="mono">status="archived" · archived_at=now <span style="color:var(--muted)">— 409 if active</span></td></tr>
             <tr><td class="mono">archived → dormant</td><td>user restores it</td><td class="mono c-svc">POST …/unarchive</td><td class="mono">status="dormant" · archived_at=null</td></tr>
-            <tr><td class="mono">archived → active</td><td>user resumes it</td><td class="mono c-client">event: SessionStart / prompt</td><td class="mono">the universal writes — status="active" is written like any sign of life · archived_at=null</td></tr>
-            <tr><td class="mono">→ expired</td><td>transcript deleted</td><td class="mono c-svc">sweep report, per miss</td><td class="mono">transcript_missing_since=now on first miss · sweep_miss_count += 1 · at ≥3 with no event since, the handler writes status="expired"</td></tr>
-            <tr><td class="mono">expired → active</td><td>false alarm</td><td class="mono c-client">any event · transcript seen</td><td class="mono">the universal writes — status="active" and the expiry facts reset; the write is the unlatch</td></tr>
+            <tr><td class="mono">archived → active</td><td>user resumes it</td><td class="mono c-client">signal: SessionStart / prompt</td><td class="mono">the universal writes — status="active" is written like any sign of life · archived_at=null</td></tr>
           </tbody>
         </table>
       </div>
@@ -682,10 +674,9 @@
 
       <h5 class="lbl">Rule 1 — what's listed</h5>
       <div class="rule client" style="margin-top:0"><b>The board lists every session you ever
-        prompted, minus the ones you archived, minus the ones whose transcript is gone.</b> Nothing
-        else, ever. A card you don't want → archive it (the one manual act in the whole system). A
-        card you expected but don't see → never prompted, archived, or expired — there is no fourth
-        reason.</div>
+        prompted, minus the ones you archived.</b> Nothing else, ever. A card you don't want →
+        archive it (the one manual act in the whole system). A card you expected but don't see →
+        it was never prompted, or you archived it — there is no third reason.</div>
 
       <h5 class="lbl">Rule 2 — what the glyph says</h5>
       <div class="tablescroll"><table class="grid">
@@ -702,8 +693,8 @@
       <div class="rule" style="margin-top:0"><b>One window.</b> The ⚡ goes out after the
         <b>run window</b> — that long after the last mutation. Nothing else in the system ages: a
         card goes gray only when its session declares dormant (clean exit, or unarchive). A crashed
-        session stays green until the sweep repair lands — the one known lie on the board, accepted
-        for now (deferred).</div>
+        session stays green until a repair mechanism is added — the one known lie on the board,
+        accepted for now (deferred).</div>
 
       <h5 class="lbl">Cornering the transitions <span>— every change the board can show, one cause each</span></h5>
       <div class="tablescroll"><table class="grid">
@@ -716,7 +707,7 @@
           <tr><td>solid green → ring</td><td>the turn finished — your move</td><td class="mono">turn_state → waiting</td></tr>
           <tr><td>anything → gray</td><td>it exited cleanly (or you unarchived it)</td><td class="mono">status → dormant — a written transition</td></tr>
           <tr><td>gray → green</td><td>it was resumed and prompted</td><td class="mono">new prompt</td></tr>
-          <tr><td>a card disappears</td><td>you archived it — or its transcript was deleted</td><td class="mono">status → archived · or status → expired (sweep)</td></tr>
+          <tr><td>a card disappears</td><td>you archived it — the only way</td><td class="mono">status → archived</td></tr>
           <tr><td>an archived card returns</td><td>it did something — any sign of life un-archives</td><td class="mono">any event writes status → active</td></tr>
         </tbody>
       </table></div>
@@ -725,7 +716,7 @@
       <p class="sub" style="margin:0 0 10px;font-size:13px">The board reads stored state — the two
         declared status columns plus the facts below. Every status was written by the signal or call
         that caused it; a wrong one is overwritten by the next signal, and crashed rows wait on the
-        sweep repair (deferred).</p>
+        repair mechanism (deferred).</p>
       <div class="tablescroll"><table class="grid">
         <thead><tr><th>Fact</th><th>Written by</th><th>Carries the rule</th></tr></thead>
         <tbody>
@@ -736,7 +727,6 @@
           <tr><td class="mono c-data">ended_at</td><td>SessionEnd</td><td>clean-close time — a fact; status carries the state</td></tr>
           <tr><td class="mono c-data">ever_prompted</td><td>first prompt</td><td>Rule 1's "ever prompted"</td></tr>
           <tr><td class="mono c-data">archived_at</td><td>archive call — you</td><td>when you last archived it — a fact; status carries the state</td></tr>
-          <tr><td class="mono c-data">transcript_missing_since</td><td>sweep reports</td><td>feeds the sweep's expiry write</td></tr>
         </tbody>
       </table></div>
     </section>
@@ -752,7 +742,7 @@
           <tbody>
             <tr><td>System of record</td><td><code>~/claude-memory</code> markdown + JSON files — <b>abandoned, not migrated</b></td><td class="c-svc mono">BotBeam ledger service</td></tr>
             <tr><td>Write paths</td><td>two parallel writers: Claude hand-edits files; board.py writes session records</td><td class="c-svc mono">one path through the API</td></tr>
-            <tr><td>Session status</td><td>stored booleans that latch wrongly</td><td class="c-svc mono">stored statuses — one writer per transition; sweep repair for crashes (deferred)</td></tr>
+            <tr><td>Session status</td><td>stored booleans that latch wrongly</td><td class="c-svc mono">stored statuses — three states, one writer per transition; crash repair deferred</td></tr>
             <tr><td>Cross-machine</td><td>lockbox mirror + merge heuristic</td><td class="c-svc mono">inherent — one shared service</td></tr>
             <tr><td>Board display</td><td>board.py renders and pushes HTML</td><td class="c-svc mono">BotBeam view built from GET /ledger/board</td></tr>
             <tr><td>Skill's scope</td><td>judgment and file mechanics</td><td class="c-svc mono">judgment only</td></tr>
@@ -765,7 +755,7 @@
           <thead><tr><th>#</th><th>Step</th><th>Result</th></tr></thead>
           <tbody>
             <tr><td class="mono">1</td><td>Ledger API in BotBeam: store, <code>/ledger</code> endpoints, session state machine</td><td>foundation for all clients</td></tr>
-            <tr><td class="mono">2</td><td>Hooks post to <code>/ledger/sessions/{id}/signals</code>; sweep reporter posts observations; board.py's local store retired</td><td>latched statuses, ghost cards, and sweep failures eliminated</td></tr>
+            <tr><td class="mono">2</td><td>Hooks post to <code>/ledger/sessions/{id}/signals</code>; the local store retired</td><td>latched statuses and ghost cards eliminated</td></tr>
             <tr><td class="mono">3</td><td><b>this phase:</b> <code>POST /ledger/events</code> + streams + <code>GET /ledger/index</code>; SKILL.md verbs rewritten as API calls; <code>~/claude-memory</code> abandoned outright (no import)</td><td>the record plane comes online; file drift and logging re-attribution eliminated</td></tr>
             <tr><td class="mono">4</td><td>Work products: registry, <code>product</code> block accepted, board column <span style="color:var(--muted)">— deferred to a later phase by decision</span></td><td>the record plane complete</td></tr>
           </tbody>
@@ -790,7 +780,7 @@
           <thead><tr><th>Object</th><th>Origin</th><th>Plane</th><th>What it is</th><th>Status</th><th>Related to</th></tr></thead>
           <tbody>
             <tr><td class="c-data mono"><a href="#o-workspace">Workspace</a></td><td><span class="og cc">CC</span></td><td><span class="og">context</span></td><td>directory Claude launches in</td><td>active iff any session active</td><td>has many sessions</td></tr>
-            <tr><td class="c-data mono"><a href="#o-session">Session</a></td><td><span class="og cc">CC</span> <span class="og svc">annotated</span></td><td><span class="og tel">telemetry</span></td><td>persistent conversation, resumable</td><td>active → dormant ⇄ archived → expired · active: waiting/processing/run</td><td>one workspace; ≤1 attributed stream; emits events; produces products</td></tr>
+            <tr><td class="c-data mono"><a href="#o-session">Session</a></td><td><span class="og cc">CC</span> <span class="og svc">annotated</span></td><td><span class="og tel">telemetry</span></td><td>persistent conversation, resumable</td><td>active → dormant ⇄ archived · active: waiting/processing/run</td><td>one workspace; ≤1 attributed stream; emits events; produces products</td></tr>
             <tr><td class="c-data mono"><a href="#o-event">Event</a></td><td><span class="og svc">ledger</span></td><td><span class="og rec">record</span></td><td>something that happened</td><td>immutable</td><td>one stream; one emitting session</td></tr>
             <tr><td class="c-data mono"><a href="#o-stream">Stream</a></td><td><span class="og svc">ledger</span></td><td><span class="og rec">record</span></td><td>thread of work under management</td><td>active → closed</td><td>many events, products, attributed sessions</td></tr>
             <tr style="opacity:0.55"><td class="c-data mono"><a href="#o-product">Work product</a></td><td><span class="og svc">ledger</span></td><td><span class="og rec">record</span></td><td>something made — record + link; payload at its home <b>· deferred</b></td><td>registered</td><td>one stream; one session; one home</td></tr>
@@ -910,7 +900,7 @@
         <code>turn_state</code> — each written only by the signal or call that causes its
         transition, never inferred from timestamps; see <a href="#lifecycle">Session lifecycle</a>
         for the exact writes. (v1's failure was latching booleans with no single writer; the fix is
-        one writer per transition plus the deferred sweep repair — not inference.)</p>
+        one writer per transition, with crash repair deferred — not inference.)</p>
       <div class="rule client" style="margin-top:0"><b>Two writers, one record.</b> Hook signals are
         not the only thing that writes a session: <a href="#ep-events-post">POST /ledger/events</a>
         writes <code>last_event_at</code> and <code>status="active"</code> for its emitting session
@@ -923,14 +913,13 @@
           <tr><td class="mono c-data">id</td><td class="mono">uuid</td><td>Claude Code</td><td>identity (the CC session id); names the transcript</td></tr>
           <tr><td class="mono c-data">workspace_id · machine · label</td><td class="mono">path · host · string</td><td>first event</td><td>where it lives; label = basename + short id</td></tr>
           <tr><td class="mono c-data">first_seen · last_event_at</td><td class="mono">timestamp</td><td>every signal · event emission</td><td>recency facts</td></tr>
-          <tr><td class="mono c-data">status</td><td class="mono">active | dormant | archived | expired</td><td>every signal · <b>event emission</b> · archive calls · sweep</td><td><b>stored status</b>: any signal but SessionEnd writes active; SessionEnd and unarchive write dormant; archive writes archived; the sweep writes expired. A crash leaves it stale until the sweep repair (deferred)</td></tr>
+          <tr><td class="mono c-data">status</td><td class="mono">active | dormant | archived</td><td>every signal · <b>event emission</b> · archive calls</td><td><b>stored status</b>: any signal but SessionEnd writes active; SessionEnd and unarchive write dormant; archive writes archived. Three states, no fourth. A crash leaves it stale until a repair mechanism is added (deferred)</td></tr>
           <tr><td class="mono c-data">turn_state</td><td class="mono">waiting | processing</td><td>prompt / Stop</td><td><b>stored status</b>: UserPromptSubmit sets processing, Stop (and SessionEnd) sets waiting — declared by signals, never inferred. Crashed-session cleanup is a separate mechanism (deferred)</td></tr>
           <tr><td class="mono c-data">last_prompt_at · last_stop_at</td><td class="mono">timestamp?</td><td>prompt / turn end</td><td>recency facts; do not drive state</td></tr>
           <tr><td class="mono c-data">last_run_at</td><td class="mono">timestamp?</td><td>mutating tool</td><td>drives the run bolt while within the run window</td></tr>
           <tr><td class="mono c-data">ended_at</td><td class="mono">timestamp?</td><td>SessionEnd</td><td>clean-close time — a fact; status carries the state</td></tr>
           <tr><td class="mono c-data">ever_prompted</td><td class="mono">bool</td><td>first prompt</td><td>relevance gate — filters launch/picker ghosts</td></tr>
           <tr><td class="mono c-data">archived_at</td><td class="mono">timestamp?</td><td>archive call</td><td>when the user last archived it — a fact; status carries the state</td></tr>
-          <tr><td class="mono c-data">transcript_missing_since · sweep_miss_count</td><td class="mono">timestamp? · int</td><td>sweep reports</td><td>first consecutive miss + miss count; both reset by any signal or a seen transcript</td></tr>
         </tbody>
       </table></div>
       <h5 class="lbl">Computed on read <span>— display windows and filters only; never lifecycle state</span></h5>
@@ -938,7 +927,7 @@
         <thead><tr><th>Field</th><th>Rule</th></tr></thead>
         <tbody>
           <tr><td class="mono c-svc">activity — waiting / processing / run</td><td>while <code>status="active"</code>: activity <em>is</em> the stored <code>turn_state</code>; run = processing with <code>last_run_at</code> inside the run window. A non-active session reports no activity</td></tr>
-          <tr><td class="mono c-svc">relevant</td><td><code>ever_prompted</code> and <code>status</code> not archived/expired; only relevant sessions appear on the board</td></tr>
+          <tr><td class="mono c-svc">relevant</td><td><code>ever_prompted</code> and <code>status</code> is not archived; only relevant sessions appear on the board</td></tr>
           <tr><td class="mono c-svc">stream_id</td><td>attribution rule: the stream of the session's most recent non-<code>meta</code> event or product; else the most recently updated active stream whose <code>working_paths</code> contain the workspace; else none. Never stored, so nothing can rebrand it</td></tr>
         </tbody>
       </table></div>
@@ -963,6 +952,15 @@
       <h5 class="lbl">Lifecycle</h5>
       <p class="sub" style="margin:0"><code>active → closed</code> via <code>POST /ledger/streams/{id}/close</code>.
         Closure logs its own event. Updates replace whole fields; the service never merges prose.</p>
+      <div class="rule client"><b>A stream is born with an event and closed only by the user.</b>
+        There is no separate create call: <code>stream_id</code> on
+        <a href="#ep-events-post">POST /ledger/events</a> is the slug the event belongs to, and when
+        that slug is new it arrives with <code>create_stream</code> carrying the opening fields —
+        one atomic transaction, so a stream can never exist with no event behind it. At the other
+        end, a stream stays active until <b>the user explicitly closes it</b> (Cliff's ruling, rev
+        20). Claude never closes one on its own judgment and never proposes closing one because it
+        has gone quiet — staleness is reported, never acted on. Slugs are permanent: events
+        reference them, so a rename orphans history.</div>
       <h5 class="lbl">Relationships</h5>
       <p class="sub" style="margin:0">Has many <b>events</b> and <b>work products</b>. <b>Sessions</b>
         are attributed by the service's rule, ≤1 per session; writes into the ledger service itself
@@ -989,7 +987,7 @@
           <tr><td class="mono c-data">stream_id</td><td class="mono">slug</td><td>the owning Stream's id (<code>meta</code> = the built-in ledger-system stream)</td></tr>
           <tr><td class="mono c-data">headline</td><td class="mono">string</td><td>what happened — one line, past tense</td></tr>
           <tr><td class="mono c-data">body</td><td class="mono">markdown[1..4]</td><td>bullets; links out to homes and commits</td></tr>
-          <tr><td class="mono c-data">session_id</td><td class="mono">uuid</td><td>the emitting Session's id — required; every event has exactly one emitter, and emitting writes that session's liveness (invariant 9)</td></tr>
+          <tr><td class="mono c-data">session_id</td><td class="mono">uuid</td><td>the emitting Session's id — <b>required, with no exceptions</b>: every event has exactly one emitter, including a stream's closure event, and emitting writes that session's liveness (invariant 9)</td></tr>
         </tbody>
       </table></div>
       <h5 class="lbl">What qualifies as an event</h5>
@@ -1038,7 +1036,6 @@
             <tr><td class="mono c-svc"><a href="#ep-events-post"><span class="m post">POST</span> /ledger/events</a></td><td><span class="og rec">record</span></td><td>Records one event, writes the emitting session's liveness, and applies an optional stream update — one atomic transaction.</td></tr>
             <tr><td class="mono c-svc"><a href="#ep-sess-signals"><span class="m post">POST</span> /ledger/sessions/{id}/signals</a></td><td><span class="og tel">telemetry</span></td><td>Applies one lifecycle signal — writing the status it declares — and returns the session.</td></tr>
             <tr><td class="mono c-svc"><a href="#ep-sess-archive"><span class="m post">POST</span> /ledger/sessions/{id}/archive · /unarchive</a></td><td><span class="og tel">telemetry</span></td><td>Dismisses a dormant session from the board, or restores it. Rejects archiving an active session.</td></tr>
-            <tr><td class="mono c-svc"><a href="#ep-sweep"><span class="m post">POST</span> /ledger/sessions/sweep-report</a></td><td><span class="og tel">telemetry</span></td><td>Records one machine's transcript-presence observations; feeds the expiry rule.</td></tr>
             <tr><td class="mono c-svc"><a href="#ep-sess-get"><span class="m get">GET</span> /ledger/sessions</a></td><td><span class="og tel">telemetry</span></td><td>Lists sessions with status, activity, and relevance; filterable.</td></tr>
             <tr><td class="mono c-svc"><a href="#ep-streams-put"><span class="m put">PUT</span> /ledger/streams/{id}</a></td><td><span class="og rec">record</span></td><td>Creates a stream or replaces the given fields of its management record.</td></tr>
             <tr><td class="mono c-svc"><a href="#ep-streams-close"><span class="m post">POST</span> /ledger/streams/{id}/close</a></td><td><span class="og rec">record</span></td><td>Closes a stream, removes it from attribution and the index, and logs the closure event.</td></tr>
@@ -1077,10 +1074,10 @@
   <b>"id"</b>: "b1c482f7-…",
   <b>"workspace_id"</b>: "C:\\code\\woodshed", <b>"machine"</b>: "cmr-nuc", <b>"label"</b>: "woodshed·b1c4",
   <b>"first_seen"</b>: ts, <b>"last_event_at"</b>: ts,
-  <b>"status"</b>: "active"|"dormant"|"archived"|"expired",  <i>stored — declared by signals, archive calls, the sweep</i>
+  <b>"status"</b>: "active"|"dormant"|"archived",            <i>stored — declared by signals and archive calls</i>
   <b>"turn_state"</b>: "waiting"|"processing",                <i>stored — set by prompt/Stop signals</i>
   <b>"last_prompt_at"</b>: ts|null, <b>"last_stop_at"</b>: ts|null, <b>"last_run_at"</b>: ts|null, <b>"ended_at"</b>: ts|null,
-  <b>"ever_prompted"</b>: bool, <b>"archived_at"</b>: ts|null, <b>"transcript_missing_since"</b>: ts|null,
+  <b>"ever_prompted"</b>: bool, <b>"archived_at"</b>: ts|null,
   <b>"stream_id"</b>: slug|null,                             <i>computed — the attribution rule</i>
   <b>"activity"</b>: "waiting"|"processing"|"run"|null,      <i>computed — turn_state + run window; active only</i>
   <b>"relevant"</b>: bool                                    <i>computed — the board filter</i>
@@ -1125,7 +1122,7 @@
           an API path.)</span></p>
         <h5 class="lbl">Request body</h5>
         <span class="schema">{
-  <b>"stream_id"</b>: "nuc-perf-slowdown",       <i>the Stream's id (slug) — must exist ("meta" is built-in) or come with create_stream</i>
+  <b>"stream_id"</b>: "nuc-perf-slowdown",       <i>the slug this event belongs to — an existing one, or a new one minted here alongside create_stream</i>
   <b>"headline"</b>: "Dust cleaning fixed the clamp",
   <b>"body"</b>:     ["3000–3600 MHz under load (was ~500)", "…"],   <i>1–4 markdown strings</i>
   <b>"session_id"</b>: "b1c482f7-…",             <i>required — the emitting Session's id</i>
@@ -1141,7 +1138,7 @@
     "open_loops":  ["BIOS 0038 → 0042"]
   },
 
-  <b>"create_stream"</b>: {                      <i>only if the slug is new</i>
+  <b>"create_stream"</b>: {                      <i>only if the slug above is new — it carries no id of its own</i>
     "title": "…", "working_paths": ["C:\\…"]
   }
 }</span>
@@ -1150,7 +1147,7 @@
           <thead><tr><th>Store</th><th>Effect</th></tr></thead>
           <tbody>
             <tr><td class="f">events</td><td>appends the immutable event, server-stamped</td></tr>
-            <tr><td class="f">sessions</td><td><b>writes the emitting session</b> — <code>last_event_at = now</code>, <code>status = "active"</code>, and <code>archived_at = null</code> if it was archived. Emitting an event <em>is</em> a sign of life, declared exactly like a hook signal. <code>turn_state</code> is NOT touched — that is the hook plane's alone</td></tr>
+            <tr><td class="f">sessions</td><td><b>writes the emitting session</b> — the full universal writes, exactly as a hook signal does: <code>last_event_at = now</code>, <code>status = "active"</code>, <code>archived_at = null</code>. Emitting an event <em>is</em> a sign of life. <code>turn_state</code> is NOT touched — that is the hook plane's alone</td></tr>
             <tr><td class="f">streams</td><td>applies <code>stream_update</code>; bumps <code>updated</code>; creates on <code>create_stream</code></td></tr>
             <tr><td class="f">products</td><td><span style="color:var(--muted)">not this phase — a <code>product</code> block is rejected 422</span></td></tr>
             <tr><td class="f">views</td><td>index and board recomputed</td></tr>
@@ -1230,21 +1227,6 @@
         <p class="rr"><b>errors</b> <code>409 {error:"conflict", reason:"session is active"}</code></p>
       </article>
 
-      <article class="spec" id="ep-sweep">
-        <div class="spec-head"><span class="ep"><span class="meth">POST</span>/ledger/sessions/sweep-report</span></div>
-        <p class="what">Records one machine's transcript-presence observations; feeds the expiry rule.</p>
-        <p class="qual">Transcripts live on each machine's disk, so a small scheduled reporter posts
-          what it sees. The service decides expiry: at N consecutive misses with no events since, the
-          handler writes <code>status="expired"</code>. A false miss corrects when the next report
-          or any signal writes the session active again.</p>
-        <h5 class="lbl">Request body</h5>
-        <span class="schema">{ <b>"machine"</b>: "cmr-nuc", <b>"observed"</b>: [ {"session_id":"…", "transcript_present": true}, … ] }</span>
-        <h5 class="lbl">Effects</h5>
-        <p class="qual" style="margin-top:0">Sets or clears the expiry facts per session; writes
-          <code>status="expired"</code> when the rule trips.</p>
-        <p class="rr"><b>returns</b> <code>200 { "applied": n }</code> — sessions whose facts changed</p>
-      </article>
-
       <article class="spec" id="ep-sess-get">
         <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/sessions</span></div>
         <p class="what">Lists sessions with status, activity, and relevance.</p>
@@ -1252,9 +1234,9 @@
         <table class="mini">
           <thead><tr><th>Param</th><th>Meaning</th></tr></thead>
           <tbody>
-            <tr><td class="f">status</td><td>active · dormant · archived · expired</td></tr>
+            <tr><td class="f">status</td><td>active · dormant · archived</td></tr>
             <tr><td class="f">machine · stream_id</td><td>filter by host / attributed stream</td></tr>
-            <tr><td class="f">relevant</td><td>true = only sessions that were ever prompted and are not archived/expired (the board's filter)</td></tr>
+            <tr><td class="f">relevant</td><td>true = only sessions that were ever prompted and are not archived (the board's filter)</td></tr>
           </tbody>
         </table>
         <h5 class="lbl">Response — 200</h5>
@@ -1285,7 +1267,12 @@
         <p class="what">Closes a stream, removes it from attribution and the index, and logs the
           closure event — one transaction.</p>
         <h5 class="lbl">Request body</h5>
-        <span class="schema">{ <b>"reason"</b>: "work done" | "tracking moved elsewhere" | string }</span>
+        <span class="schema">{ <b>"reason"</b>: "work done" | "tracking moved elsewhere" | string,
+  <b>"session_id"</b>: uuid   <i>required — the closure event has an emitter like any other event</i>
+}</span>
+        <p class="qual" style="margin-top:10px">The closure event is an event, so it carries its
+        emitter and applies that session's liveness in the same transaction (invariant 9). There is
+        no such thing as an authorless event.</p>
         <h5 class="lbl">Response — 200</h5>
         <span class="schema">{ <b>"stream"</b>: Stream, <b>"closure_event"</b>: Event }</span>
         <p class="rr"><b>errors</b> <code>409</code> already closed</p>
@@ -1348,10 +1335,14 @@
       <article class="spec" id="ep-index">
         <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/index</span></div>
         <p class="what">Returns the one-screen orientation snapshot.</p>
-        <p class="qual">Markdown, service-rendered from both planes. The SessionStart hook injects it
-          into every new session. <b>Required this phase:</b> <code>~/claude-memory</code> is
-          abandoned, so the hand-maintained INDEX.md is gone — without this endpoint, session-start
-          orientation has no source at all.</p>
+        <p class="qual">Markdown, service-rendered from both planes, about one screen. The
+          SessionStart hook injects it into every new session — it is the only source of orientation,
+          and the reason a brand-new session already knows what is in flight.</p>
+        <p class="qual"><b>The <code>meta</code> exclusion, precisely:</b> <code>meta</code> is left
+          out of the <em>streams</em> section — it is the ledger's own plumbing, not a thread of work
+          under management. Its <em>events</em> still appear in recent activity, because ledger-system
+          work is real work worth seeing. The board's <code>streams</code> array likewise includes
+          <code>meta</code>, so the events feed can label a meta event.</p>
         <p class="rr"><b>returns</b> <code>200 text/markdown</code></p>
       </article>
 
@@ -1361,14 +1352,16 @@
         <p class="qual">The service serves data; the BotBeam display renders it. v1 pushed
           pre-rendered HTML at a passive display — here the view pulls typed data from the one store,
           always current, no push-and-diff pipeline.</p>
-        <div class="rule"><b>Layout ruling (rev 18–19).</b> The view splits into two sections —
-          <b>Active</b> and <b>Inactive</b>. Active sessions render as <b>cards in a grid</b>, not
-          rows, in a <b>stable arrangement</b>: ordered by <code>first_seen</code> ascending, so a
-          card never moves while its session stays active; newly activated sessions append at the
-          end. Cards must not reorder on prompt/stop/run changes — only their glyphs update.
-          Inactive (dormant) sessions list below, most recent first. Beneath both sections, the
-          <b>events feed</b>: recent events newest-first, each showing its stream, headline, and
-          time — the record plane's presence on the board.</div>
+        <div class="rule"><b>Layout ruling (rev 20).</b> Four sections, in this order:</div>
+        <div class="tablescroll" style="margin-top:12px"><table class="grid">
+          <thead><tr><th>#</th><th>Section</th><th>Renders as</th><th>Rules</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">1</td><td><b>Active sessions</b></td><td>cards in a grid, full width</td><td><b>Stable arrangement</b> — ordered by <code>first_seen</code> ascending, so a card never moves while its session stays active; newly activated sessions append at the end. Cards must not reorder on prompt/stop/run changes — only their glyphs update</td></tr>
+            <tr><td class="mono">2</td><td><b>Inactive sessions</b></td><td>list, full width, <b>collapsible</b></td><td>dormant sessions, most recent first. Collapse state persists across reloads</td></tr>
+            <tr><td class="mono">3</td><td><b>Streams</b></td><td colspan="2">side by side with 4 — a two-column row beneath the session sections. On a narrow viewport they stack, Streams first</td></tr>
+            <tr><td class="mono">4</td><td><b>Events</b></td><td colspan="2">newest first, each line showing its stream, headline, and time</td></tr>
+          </tbody>
+        </table></div>
         <h5 class="lbl">Response — 200</h5>
         <span class="schema">{
   <b>"sessions"</b>: Session[],   <i>relevant only — active first in STABLE order (first_seen asc), then inactive by recency</i>
@@ -1410,17 +1403,16 @@
       <p class="sub">Work happens in sessions. Everything the ledger knows arrives as one of
         <b>two kinds of knowledge</b> — what can be <em>witnessed</em>, and what must be
         <em>judged</em> — and everything anyone sees comes back out as a projection. (Witnessed
-        knowledge arrives through two feeds, hooks and the sweep; judged knowledge through one, the
-        skill. See <a href="#howitruns">How it runs</a> for the three of them in operation.) This
-        panel is the principle; the two panels after it are the details.</p>
+        knowledge arrives through the hooks; judged knowledge through the skill. See
+        <a href="#howitruns">How it runs</a> for both in operation.) This panel is the principle;
+        the two panels after it are the details.</p>
 
       <p class="sub" style="margin-bottom:14px"><b style="color:var(--client-ink)">Hooks write what
         can be witnessed.</b> Session lifecycle is mechanical — a launch, a prompt, a tool call, an
         exit are observable moments. Hooks are involuntary: they fire from Claude Code's own
         lifecycle, in their own OS process, <b>independent of the skill and of Claude entirely</b>,
         so the telemetry plane is complete <em>by construction</em>. No judgment is involved, and
-        none is allowed. (The sweep is the same kind of thing on a timer, for the one fact no hook
-        can witness: whether a transcript still exists on disk.)</p>
+        none is allowed.</p>
       <p class="sub" style="margin-bottom:14px"><b style="color:var(--client-ink)">The skill writes
         what must be judged.</b> No sensor can see that a diff was a deliverable or that a
         conversation settled a decision. The only agent positioned to know is the one doing the work —
@@ -1429,8 +1421,8 @@
       <p class="sub"><b style="color:var(--svc-ink)">Neither writer is trusted.</b> The service
         validates every write, stamps every timestamp, commits composites atomically, and is the
         only writer of every status. A missed signal costs a stale status until the next signal
-        overwrites it — or, for a crashed session, until the sweep repair lands (deferred). The one
-        loss the design
+        overwrites it — or, for a crashed session, until a repair mechanism is added (deferred). The
+        one loss the design
         cannot derive back is an unlogged event — which is exactly why logging is a duty, not a
         request.</p>
 
@@ -1439,8 +1431,7 @@
         <table class="grid">
           <thead><tr><th>Data transition</th><th>Feed</th><th>If it is missed</th><th>Backstop</th></tr></thead>
           <tbody>
-            <tr><td>session facts — start · prompt · stop · end · tool</td><td class="mono c-client">hooks</td><td>a stale status or timestamp</td><td>the next signal overwrites it; crashed rows wait on the sweep repair (deferred)</td></tr>
-            <tr><td>transcript presence → expiry</td><td class="mono c-client">sweep reporter</td><td>delayed expiry</td><td>next sweep or any event corrects it</td></tr>
+            <tr><td>session facts — start · prompt · stop · end · tool</td><td class="mono c-client">hooks</td><td>a stale status or timestamp</td><td>the next signal overwrites it; crashed rows wait on a repair mechanism (deferred)</td></tr>
             <tr><td>archive · unarchive</td><td class="mono c-client">the user, relayed by the skill</td><td>— (explicit act)</td><td>409 if active; any later event writes the session back to active</td></tr>
             <tr><td>events · stream updates</td><td class="mono c-client">the skill — POST /ledger/events</td><td>a hole in the record</td><td>none derivable — hence logging is a standing duty of the agent doing the work</td></tr>
             <tr><td>stream state · close</td><td class="mono c-client">the skill — log · PUT · close</td><td>stale management state</td><td>staleness derivation exposes it on every read</td></tr>
@@ -1501,7 +1492,7 @@
 
     <!-- ================= CLIENT: HOOKS ================= -->
     <section class="panel" id="c-hooks" aria-label="Hooks client" hidden>
-      <h2>Hooks &amp; sweep — the sensors</h2>
+      <h2>Hooks — the sensors</h2>
       <p class="sub">The five Claude Code lifecycle hooks are thin transmitters: each pipes its payload
         to <code>POST /ledger/sessions/{id}/signals</code> and exits. They hold no state, render
         nothing, and decide nothing. <b>They are not part of the skill</b> — they are wired in
@@ -1515,13 +1506,11 @@
             <tr><td class="mono c-client">SessionStart</td><td>launch or resume; also fires for the resume-picker — the <code>ever_prompted</code> gate keeps those ghosts off the board. Second duty: fetches <code>GET /ledger/index</code> and injects the orientation into the new session's context</td><td class="mono">event, cwd</td></tr>
             <tr><td class="mono c-client">UserPromptSubmit</td><td>a prompt is submitted</td><td class="mono">event</td></tr>
             <tr><td class="mono c-client">Stop</td><td>the turn finishes</td><td class="mono">event</td></tr>
-            <tr><td class="mono c-client">SessionEnd</td><td>clean CLI exit — the service writes status="dormant"; a crash fires nothing, so the row stays active until the sweep repair (deferred)</td><td class="mono">event</td></tr>
+            <tr><td class="mono c-client">SessionEnd</td><td>clean CLI exit — the service writes status="dormant"; a crash fires nothing, so the row stays active until a repair mechanism is added (deferred)</td><td class="mono">signal</td></tr>
             <tr><td class="mono c-client">PostToolUse</td><td>any tool completes — the hook does not classify; the mutating-tool list (run vs read) is service policy</td><td class="mono">tool.name, tool.input</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="sub" style="margin-top:20px">One scheduled reporter per machine posts transcript
-        presence to <code>…/sweep-report</code>. It is the only local moving part and carries no state.</p>
       <p class="sub" style="margin-top:12px">Platform background: the hooks-as-transmitters pattern, the
         per-session inbox socket, SendMessage, and every other way to get an event into or out of a
         running session are documented in the companion
@@ -1539,11 +1528,11 @@
         projection of the one store, rendered by the service. No surface is a source.</p>
       <div class="cardrow">
         <div class="card svc"><h4>Session board — the BotBeam view</h4>
-          <p>The live display tab, built from <code>GET /ledger/board</code>: two sections —
-            <b>Active</b>, a stable grid of cards (green = processing, ring = waiting, ⚡ = run;
-            ordered by first_seen so cards never jump), and <b>Inactive</b>, dormant sessions by
-            recency — with the <b>events feed below them</b>, newest first, each labeled with its
-            stream. No products column this phase.</p></div>
+          <p>The live display tab, built from <code>GET /ledger/board</code>. Four sections:
+            <b>Active sessions</b> as a stable card grid (green = processing, ring = waiting,
+            ⚡ = run; ordered by first_seen so cards never jump); <b>Inactive sessions</b>,
+            collapsible, by recency; then <b>Streams</b> and <b>Events</b> side by side beneath
+            them.</p></div>
         <div class="card svc"><h4>Session-start orientation</h4>
           <p><code>GET /ledger/index</code>: the one-screen "what's going on" injected into every new
             session by the SessionStart hook. Required this phase — the hand-maintained INDEX.md is
@@ -1624,19 +1613,19 @@
     <section class="panel" id="storage" aria-label="Storage and ownership" hidden>
       <h2>Storage &amp; ownership</h2>
       <p class="sub">After migration: one authoritative store inside the service, thin configuration at
-        the edges, and Claude Code's transcripts observed but never written.</p>
+        the edges. Claude Code's transcripts are never read or written by the ledger at all.</p>
       <div class="tablescroll">
         <table class="grid">
           <thead><tr><th>Location</th><th>Holds</th><th>Written by</th><th>Owner</th></tr></thead>
           <tbody>
-            <tr><td class="mono c-svc">service · sessions</td><td>per-session facts (see the Session panel)</td><td>service, from hook events, archive calls, sweep reports</td><td>ledger service</td></tr>
+            <tr><td class="mono c-svc">service · sessions</td><td>per-session facts (see the Session panel)</td><td>service, from hook signals, event emission, archive calls</td><td>ledger service</td></tr>
             <tr><td class="mono c-svc">service · events</td><td>the immutable journal</td><td>service, from POST /ledger/events</td><td>ledger service</td></tr>
             <tr><td class="mono c-svc">service · streams</td><td>management state per thread</td><td>service, from log · PUT · close</td><td>ledger service</td></tr>
             <tr><td class="mono c-svc" style="opacity:0.55">service · products</td><td>work-product registry with provenance — <b>deferred, not this phase</b></td><td>service, from POST /ledger/events</td><td>ledger service</td></tr>
             <tr><td class="mono c-svc">service · views</td><td>board data structure and orientation index — regenerable</td><td>service</td><td>ledger service</td></tr>
             <tr><td class="mono c-client">~/.claude/settings.json</td><td>hook wiring — five thin transmitters</td><td>setup</td><td>Claude Code config</td></tr>
             <tr><td class="mono c-client">~/.config/orchestra/botbeam.json</td><td>API base URL and token</td><td>setup</td><td>local config</td></tr>
-            <tr><td class="mono" style="color:var(--muted)">~/.claude/projects/**.jsonl</td><td>transcripts — observed by the sweep reporter, never written</td><td>Claude Code</td><td>Claude Code</td></tr>
+            <tr><td class="mono" style="color:var(--muted)">~/.claude/projects/**.jsonl</td><td>transcripts — Claude Code's own, on its own retention clock (<code>cleanupPeriodDays</code>, 30d default). The ledger neither reads nor depends on them</td><td>Claude Code</td><td>Claude Code</td></tr>
             <tr><td class="mono" style="color:var(--muted);text-decoration:line-through">~/claude-memory</td><td>the v1 store — <b>abandoned outright; no import, no reads, no writes</b> (Cliff's call, rev 19). Files stay on disk as dead weight until deleted</td><td>—</td><td>retired</td></tr>
           </tbody>
         </table>
@@ -1647,7 +1636,7 @@
 </div>
 
 <footer>
-  The Ledger Book · rev 19 · 2026-09-12 · supersedes Data Model rev 12 + System Map rev 4 ·
+  The Ledger Book · rev 20 · 2026-09-13 · supersedes Data Model rev 12 + System Map rev 4 ·
   working notes: skills/ledger/design/session-state.md
 </footer>
 

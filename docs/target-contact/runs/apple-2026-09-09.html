@@ -1,0 +1,918 @@
+<!--
+  target-contact results card — Apple run, 2026-09-09, seeker Cliff Rosen.
+  Rendered strictly from apple-2026-09-09.json (output schema v0).
+-->
+<meta charset="utf-8">
+<title>Who at Apple — Cliff</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..600&family=Archivo:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --paper: #F5F5F1; --card: #FFFFFF; --ink: #16232B; --muted: #5C6B74;
+    --faint: #8B979F; --line: #E3E4DE; --accent: #0E5A63; --accent-soft: #E3EEEF;
+    --gold: #A97F2F; --gold-soft: #F4EBD8;
+    --good: #2E7D5B; --good-soft: #E4F0EA;
+    --warn: #A66A1F; --warn-soft: #F5ECDD;
+    --low: #6B7480; --low-soft: #EAECEF;
+    --code-bg: #F0F1EC;
+  }
+  /* Light is the default everywhere; dark only via the page's own toggle. */
+  :root.tc-dark {
+    --paper: #10171C; --card: #182228; --ink: #E7ECEF; --muted: #9AA8B0;
+    --faint: #74828B; --line: #263239; --accent: #6FB9C2; --accent-soft: #14333A;
+    --gold: #CFA85C; --gold-soft: #33291369;
+    --good: #6FBF9A; --good-soft: #16302637;
+    --warn: #D9A055; --warn-soft: #33270f5c;
+    --low: #97A1AC; --low-soft: #232b3170;
+    --code-bg: #131C21;
+  }
+  .btn { font: inherit; font-size: .72rem; font-weight: 600; letter-spacing: .03em; color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: .25rem .6rem; cursor: pointer; white-space: nowrap; }
+  .btn:hover { color: var(--accent); border-color: var(--accent); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .btn.ok { color: var(--good); border-color: var(--good); }
+  .toolbar { display: flex; justify-content: flex-end; gap: .5rem; }
+  .entry-tools { display: flex; gap: .5rem; justify-content: flex-end; border-top: 1px solid var(--line); padding-top: .9rem; }
+  body { background: var(--paper); color: var(--ink); font-family: "Archivo", "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.55; margin: 0; padding: 2.5rem 1.25rem 4rem; }
+  .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; }
+  .query { display: flex; flex-direction: column; gap: .35rem; padding: 0 .25rem; }
+  .query .eyebrow { font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .query h1 { font-family: "Newsreader", Georgia, serif; font-size: 1.9rem; font-weight: 500; line-height: 1.15; margin: 0; text-wrap: balance; }
+  .query .params { color: var(--muted); font-size: .88rem; }
+  .query .params strong { color: var(--ink); font-weight: 600; }
+  .query .meta { display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: center; font-size: .78rem; color: var(--faint); margin-top: .3rem; }
+  .chip { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; font-weight: 600; letter-spacing: .03em; padding: .13rem .55rem; border-radius: 99px; white-space: nowrap; }
+  .chip.high { color: var(--good); background: var(--good-soft); }
+  .chip.medium { color: var(--warn); background: var(--warn-soft); }
+  .chip.low { color: var(--low); background: var(--low-soft); }
+  .entry { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1.4rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+  .entry.top { border-top: 3px solid var(--gold); }
+  .entry.second { border-top: 3px solid var(--accent); }
+  .entry-head { display: flex; gap: 1rem; align-items: flex-start; }
+  .rank-badge { flex: none; width: 2.4rem; height: 2.4rem; border-radius: 50%; display: grid; place-items: center; font-family: "Newsreader", Georgia, serif; font-size: 1.25rem; font-weight: 600; }
+  .entry.top .rank-badge { background: var(--gold-soft); color: var(--gold); }
+  .entry.second .rank-badge { background: var(--accent-soft); color: var(--accent); }
+  .who { flex: 1; min-width: 0; }
+  .who .name { font-family: "Newsreader", Georgia, serif; font-size: 1.45rem; font-weight: 600; line-height: 1.2; margin: 0; }
+  .who .title { color: var(--muted); font-size: .92rem; margin-top: .15rem; }
+  .who .loc { color: var(--faint); font-size: .8rem; }
+  .scorebox { flex: none; text-align: right; display: flex; flex-direction: column; gap: .35rem; align-items: flex-end; }
+  .score { font-variant-numeric: tabular-nums; font-size: 1.5rem; font-weight: 700; line-height: 1; color: var(--accent); }
+  .score small { display: block; font-size: .68rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin-top: .2rem; }
+  .rationale { font-family: "Newsreader", Georgia, serif; font-size: 1.05rem; font-style: italic; color: var(--ink); border-left: 2px solid var(--line); padding-left: .9rem; margin: 0; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .9rem 1.4rem; }
+  .fact .label { font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); margin-bottom: .2rem; }
+  .fact .value { font-size: .9rem; }
+  .fact .value a { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+  .fact .value a:hover, .fact .value a:focus-visible { border-bottom-style: solid; border-bottom-width: 2px; outline: none; }
+  .email-status { font-size: .74rem; color: var(--warn); }
+  .email-status.verified { color: var(--good); }
+  .paths { display: flex; flex-direction: column; gap: .3rem; }
+  .path { font-size: .88rem; display: flex; gap: .5rem; align-items: baseline; }
+  .path::before { content: "↳"; color: var(--accent); flex: none; }
+  .angle { background: var(--accent-soft); border-radius: 4px; padding: .8rem 1rem; font-size: .9rem; }
+  .angle .label { font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: .25rem; }
+  .sources { font-size: .76rem; color: var(--faint); }
+  .sources a { color: var(--faint); text-decoration: underline; text-underline-offset: 2px; }
+  .sources a:hover, .sources a:focus-visible { color: var(--accent); outline: none; }
+  .rows { background: var(--card); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .row { display: flex; gap: .9rem; align-items: baseline; padding: .8rem 1.25rem; border-top: 1px solid var(--line); }
+  .row:first-child { border-top: none; }
+  .row .r { font-variant-numeric: tabular-nums; color: var(--faint); font-weight: 600; flex: none; width: 1.2rem; }
+  .row .n { font-weight: 600; flex: none; }
+  .row .t { color: var(--muted); font-size: .88rem; flex: 1; min-width: 0; }
+  .row .s { font-variant-numeric: tabular-nums; color: var(--faint); font-size: .88rem; flex: none; }
+  .section-label { font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); margin: .4rem .25rem 0; display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+  .plain { padding: 0 .25rem; font-size: .88rem; color: var(--muted); }
+  .plain ul { margin: .3rem 0 0; padding-left: 1.2rem; }
+  .plain li { margin-top: .25rem; }
+  details.record { border: 1px dashed var(--line); border-radius: 6px; padding: .7rem 1rem; }
+  details.record summary { cursor: pointer; font-size: .82rem; font-weight: 600; color: var(--muted); }
+  details.record summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details.record pre { overflow-x: auto; background: var(--code-bg); border-radius: 4px; padding: .9rem 1rem; font-size: .76rem; line-height: 1.5; margin: .7rem 0 0; }
+  details.audit { background: var(--card); border: 1px solid var(--line); border-radius: 6px; }
+  details.audit > summary { cursor: pointer; padding: .85rem 1.25rem; font-size: .82rem; font-weight: 600; color: var(--muted); list-style-position: inside; }
+  details.audit > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  details.audit[open] > summary { border-bottom: 1px solid var(--line); }
+  .audit-body { padding: 1rem 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 1.1rem; }
+  .audit-step .step-name { font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: .5rem; }
+  .search { border-left: 2px solid var(--line); padding-left: .9rem; margin-bottom: .8rem; }
+  .search:last-child { margin-bottom: 0; }
+  .search .q { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .8rem; background: var(--code-bg); border-radius: 3px; padding: .25rem .55rem; display: inline-block; margin-bottom: .35rem; }
+  .search .tool { font-size: .68rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-left: .4rem; }
+  .hits { display: flex; flex-direction: column; gap: .25rem; }
+  .hit { font-size: .82rem; display: flex; gap: .5rem; align-items: baseline; }
+  .hit .mark { flex: none; font-weight: 700; }
+  .hit.used .mark { color: var(--good); }
+  .hit.skipped .mark { color: var(--faint); }
+  .hit.skipped { color: var(--faint); }
+  .hit a { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+  .hit.skipped a { color: var(--faint); border-bottom-color: color-mix(in srgb, var(--faint) 40%, transparent); }
+  .hit a:hover, .hit a:focus-visible { border-bottom-style: solid; border-bottom-width: 2px; outline: none; }
+  .hit .why { color: var(--muted); font-size: .78rem; }
+  @media (max-width: 540px) {
+    .entry-head { flex-wrap: wrap; }
+    .scorebox { flex-direction: row; width: 100%; justify-content: space-between; align-items: center; }
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="toolbar">
+    <button class="btn" id="copy-page" type="button">Copy page</button>
+    <button class="btn" id="theme-toggle" type="button">Dark mode</button>
+  </div>
+
+  <header class="query">
+    <div class="eyebrow">Target Contact</div>
+    <h1>Who at Apple owns the agent orchestration lane?</h1>
+    <div class="params">
+      <strong>Apple</strong> (company) · seeking
+      <strong>leadership</strong> for <strong>AI agent orchestration / agentic systems architecture</strong> ·
+      senior engineering leadership or principal architect · consumer technology, AI platforms ·
+      for <strong>Cliff Rosen</strong>
+    </div>
+    <div class="meta">
+      <span>Run 2026-09-09 · 4 candidates, top 2 detailed</span>
+      <span class="chip high">high confidence</span>
+      <span class="chip medium">medium</span>
+      <span class="chip low">low</span>
+    </div>
+  </header>
+
+  <article class="entry top">
+    <div class="entry-head">
+      <div class="rank-badge">1</div>
+      <div class="who">
+        <h2 class="name">Mike Rockwell</h2>
+        <div class="title">Vice President, Siri (and visionOS software) · Software Engineering, reports to Craig Federighi</div>
+        <div class="loc">Cupertino, CA · Apple since ~2015; Siri org since March 2025</div>
+      </div>
+      <div class="scorebox">
+        <div class="score">92<small>relevance</small></div>
+        <span class="chip high">high confidence</span>
+      </div>
+    </div>
+
+    <p class="rationale">Rockwell owns the Siri AI rebuild announced at WWDC 2026, the org where Apple's agent runtime and orchestration layer are being built, which is exactly the lane Cliff's orchestration methodology and agent-architecture writing address.</p>
+
+    <div class="facts">
+      <div class="fact">
+        <div class="label">LinkedIn</div>
+        <div class="value"><a href="https://www.linkedin.com/in/mirockwell/">linkedin.com/in/mirockwell</a></div>
+      </div>
+      <div class="fact">
+        <div class="label">Email</div>
+        <div class="value">not found
+          <div class="email-status">no published address; use LinkedIn or the application portal</div>
+        </div>
+      </div>
+      <div class="fact">
+        <div class="label">Recent signal</div>
+        <div class="value">Shipped Siri AI at WWDC 2026 (June 8). Bloomberg reported job cuts in Siri and Vision Pro adjacent teams on August 21, 2026, and April 2026 reports say he has weighed a reduced role or exit now that the rebuild has shipped, so his org may be in transition.</div>
+      </div>
+      <div class="fact">
+        <div class="label">Apply via</div>
+        <div class="value">jobs.apple.com, "Software and Services" agentic reqs: Software Engineer, Intelligence Orchestration, Proactive Intelligence (200670440-0836, Cupertino); Senior Software Engineering Manager, Agentic Infrastructure (200671605-3337, Seattle); ML Systems Engineer, Siri Agent Modeling (200620661-0836, Cupertino)</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="fact"><div class="label">Warm paths</div></div>
+      <div class="paths">
+        <div class="path">None found — Rockwell's history (Dolby, Avid, Apple) does not intersect Cliff's network surface (sixdegrees, UPenn, NYC consumer internet). Apply to named reqs and pair with a LinkedIn note.</div>
+      </div>
+    </div>
+
+    <div class="angle">
+      <div class="label">Suggested opening</div>
+      Apply to the named "Software and Services" agentic reqs (Intelligence Orchestration, Agentic Infrastructure, Siri Agent Modeling) rather than cold-emailing a VP; Apple routes hiring through jobs.apple.com. In the application and an accompanying LinkedIn note, lead with the Orchestrator Studios orchestration methodology (Principled Orchestration, The Agent in the Middle, A Diagnostic Framework for Agent Failure) and shipped agent products (Knowledge Horizon, BotBeam): the Siri AI org's open problem is exactly reliability of agentic workflows, Cliff's stated specialty. Mention the sixdegrees co-founding CTO history for platform-scale credibility.
+    </div>
+
+    <div class="sources">Sources:
+      <a href="https://seekingalpha.com/news/4422934-apple-shuffles-exec-ranks-in-effort-to-improve-siri-report">Apple shuffles exec ranks to improve Siri (Seeking Alpha)</a> ·
+      <a href="https://9to5mac.com/2026/06/08/craig-federighi-details-apples-collaboration-with-google-for-siri-ai-in-ios-27/">Federighi details Siri AI collaboration (9to5Mac, June 2026)</a> ·
+      <a href="https://9to5mac.com/2026/04/21/apple-executive-in-charge-of-siri-revamp-has-considered-stepping-back-report-says/">Siri revamp exec considered stepping back (9to5Mac, April 2026)</a>
+    </div>
+
+    <div class="entry-tools">
+      <button class="btn" type="button" data-copy-contact>Copy contact</button>
+      <button class="btn" type="button" data-copy-card>Copy card</button>
+    </div>
+  </article>
+
+  <article class="entry second">
+    <div class="entry-head">
+      <div class="rank-badge">2</div>
+      <div class="who">
+        <h2 class="name">Amar Subramanya</h2>
+        <div class="title">Vice President of AI · Apple Foundation Models, ML research, AI Safety and Evaluation; reports to Craig Federighi</div>
+        <div class="loc">Menlo Park / Cupertino, CA · Apple since December 2025</div>
+      </div>
+      <div class="scorebox">
+        <div class="score">84<small>relevance</small></div>
+        <span class="chip high">high confidence</span>
+      </div>
+    </div>
+
+    <p class="rationale">Subramanya's AIML org is posting the bulk of Apple's open agentic roles (ML Agent Engineer, Agent Sciences and Infrastructure, Sr Manager Siri Agentic Evaluation), making it the most active hiring lane for Cliff's agent-reliability and evaluation expertise.</p>
+
+    <div class="facts">
+      <div class="fact">
+        <div class="label">LinkedIn</div>
+        <div class="value"><a href="https://www.linkedin.com/in/amar-subramanya-3642498a/">linkedin.com/in/amar-subramanya-3642498a</a></div>
+      </div>
+      <div class="fact">
+        <div class="label">Email</div>
+        <div class="value">not found
+          <div class="email-status">no published address; use LinkedIn or the application portal</div>
+        </div>
+      </div>
+      <div class="fact">
+        <div class="label">Recent signal</div>
+        <div class="value">Nine months into consolidating Apple's foundation-model and evaluation orgs, with a visible hiring push: agentic evaluation, agent sciences, and agent infrastructure reqs are open across Cupertino, Seattle, and Cambridge.</div>
+      </div>
+      <div class="fact">
+        <div class="label">Apply via</div>
+        <div class="value">jobs.apple.com, "Machine Learning and AI" agentic reqs: ML Agent Engineer (200672464, Seattle / SF Bay Area); Agent Sciences and Infrastructure Engineer, AIML (200673514, Cupertino / Seattle); Sr Manager, Siri Agentic Evaluation (200673865-1251, Cambridge); Sr. Software Engineer: Agentic Evaluation (200666976-0836, Cupertino)</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="fact"><div class="label">Warm paths</div></div>
+      <div class="paths">
+        <div class="path">None found — his network is Google/Microsoft/University of Washington; no overlap with Cliff's sixdegrees/UPenn/NYC surface found in this run. Apply to named reqs; a LinkedIn note is the direct channel.</div>
+      </div>
+    </div>
+
+    <div class="angle">
+      <div class="label">Suggested opening</div>
+      Target the AIML evaluation and agent-infrastructure reqs, where Cliff's Diagnostic Framework for Agent Failure and Agent POC Maturity Ladder essays are direct writing samples for the job to be done (agentic evaluation at scale). The Cambridge-based Sr Manager, Siri Agentic Evaluation role is the closest to East Coast for a New York-based candidate. Frame the pitch around reliability methodology for high-stakes domains rather than model research, since Subramanya's org owns safety and evaluation, not just models.
+    </div>
+
+    <div class="sources">Sources:
+      <a href="https://www.businesswire.com/news/home/20251201260097/en">John Giannandrea to retire from Apple (Apple / Business Wire, Dec 2025)</a> ·
+      <a href="https://www.axios.com/2025/12/01/new-apple-ai-chief-amar-subramanya">Apple's new AI chief (Axios, Dec 2025)</a> ·
+      <a href="https://www.fortune.com/2025/12/02/amar-subramanya-apple-ai-veteran-google-microsoft-career-research-education-machine-learning">Subramanya's Google and Microsoft career (Fortune, Dec 2025)</a>
+    </div>
+
+    <div class="entry-tools">
+      <button class="btn" type="button" data-copy-contact>Copy contact</button>
+      <button class="btn" type="button" data-copy-card>Copy card</button>
+    </div>
+  </article>
+
+  <div class="section-label"><span>Also ranked</span><button class="btn" type="button" data-copy-next>Copy</button></div>
+  <div class="rows">
+    <div class="row"><span class="r">3</span><span class="n">Sebastien Marineau-Mes</span><span class="t">VP, Intelligent System Experience Engineering — runs the "Intelligent Systems" ML-engineering org under Federighi, the platform lane closest to Cliff's agent-operated-software work (medium confidence: press-described, no stated agentic mandate)</span><span class="s">76</span></div>
+    <div class="row"><span class="r">4</span><span class="n">Benoit Dupin</span><span class="t">Senior Director, AI/ML (ML cloud infrastructure) — took interim AKI oversight in Oct 2025, but the Dec 2025 restructure likely superseded it; a lead needing re-verification (low confidence)</span><span class="s">55</span></div>
+  </div>
+
+  <div class="section-label"><span>Also considered</span><button class="btn" type="button" data-copy-next>Copy</button></div>
+  <div class="rows">
+    <div class="row"><span class="r">–</span><span class="n">Craig Federighi</span><span class="t">SVP, Software Engineering — everything AI rolls up to him, but he is two levels above the practice; the most senior relevant owners are Rockwell and Subramanya</span><span class="s"></span></div>
+    <div class="row"><span class="r">–</span><span class="n">Kim Vorrath</span><span class="t">VP, Program Management (AI/Siri) — runs the program office, not an engineering hiring lane for orchestration work</span><span class="s"></span></div>
+    <div class="row"><span class="r">–</span><span class="n">John Giannandrea</span><span class="t">former SVP, ML and AI Strategy — stepped down Dec 2025, retired spring 2026; org split among Federighi, Sabih Khan, and Eddy Cue</span><span class="s"></span></div>
+    <div class="row"><span class="r">–</span><span class="n">Eddy Cue</span><span class="t">SVP, Services — inherited services-adjacent pieces of the old AI org; his lane is search and services deals, not agent orchestration engineering</span><span class="s"></span></div>
+    <div class="row"><span class="r">–</span><span class="n">Ke Yang</span><span class="t">former head, Answers, Knowledge and Information — left for Meta in October 2025 weeks after taking the role</span><span class="s"></span></div>
+  </div>
+
+  <div class="section-label"><span>Caveats</span><button class="btn" type="button" data-copy-next>Copy</button></div>
+  <div class="plain">
+    <ul>
+      <li>Apple hires through jobs.apple.com; the ranked names orient which org to target and who to reference in outreach, they are not application recipients. The concrete apply lane is the listed agentic reqs.</li>
+      <li>Rockwell reportedly weighed a reduced role or exit after shipping Siri AI (reports April-August 2026); no departure was confirmed in any source fetched this run, but re-verify before building outreach around him.</li>
+      <li>Job-site team buckets ("Software and Services", "Machine Learning and AI") are broad; attribution of specific reqs to a particular VP's org is inferred from scope descriptions in press, not stated by Apple.</li>
+      <li>Apple job detail pages render via JavaScript and two sampled reqs had already closed; titles, teams, and locations come from the jobs.apple.com search results page fetched 2026-09-09. Confirm a req is still open before applying.</li>
+      <li>No New York agentic roles appeared in the sampled listings; open roles cluster in Cupertino, Seattle, Cambridge, and Austin. Relocation or remote terms are an open question for a NYC-based seeker.</li>
+      <li>No published email addresses were found for any candidate; channels are the application portal plus LinkedIn. LinkedIn was viewed logged-out (public pages only).</li>
+      <li>Subramanya's public LinkedIn headline still reads "Corporate VP, AI at Microsoft AI"; it is stale, not evidence he left Apple. Identity was matched on name, Menlo Park location, and University of Washington education.</li>
+      <li>Dupin's entry was downgraded by the verify pass: he is a Senior Director (not VP), and the December 2025 restructure likely superseded his October 2025 AKI oversight; treat his row as a lead needing re-verification.</li>
+    </ul>
+  </div>
+
+  <details class="audit">
+    <summary>Audit trail — 22 searches behind this card</summary>
+    <div class="audit-body">
+      <div class="audit-step">
+        <div class="step-name">Step 1 · Seeker bio</div>
+        <div class="search">
+          <span class="q">"Orchestrator Studio" agent orchestration site</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit skipped"><span class="mark">–</span><span>Generic vendor results (Microsoft Copilot Studio, IBM, Adobe, Flowable) <span class="why">— did not surface the seeker's site; query reformulated</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">"Orchestrator Studios" Cliff Rosen</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit skipped"><span class="mark">–</span><span>Music-industry orchestrators (Cliff Masterson, Charlie Rosen) <span class="why">— name collisions with musicians; discarded</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">https://github.com/orchestrator-studios</span><span class="tool">site fetch</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://github.com/orchestrator-studios">orchestrator-studios GitHub org</a> <span class="why">— confirmed the org and its agent-tooling repos (BotBeam, living-workspace, openreview); no website link shown</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">https://orchestratorstudios.com</span><span class="tool">site fetch</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://orchestratorstudios.com">Orchestrator Studios site</a> <span class="why">— primary source for the seeker's orchestration expertise: methodology, products, insights essays, bio ("getting AI to work in specialized, high-stakes domains requires methodology, not just models")</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">https://ironcliff.ai/about-business/</span><span class="tool">site fetch</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://ironcliff.ai/about-business/">About Ironcliff Partners</a> <span class="why">— Cliff's Managing Partner role at the gen-AI consulting firm; corroborates career summary</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">"Cliff Rosen" sixdegrees CTO LinkedIn</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.linkedin.com/in/cliff-rosen-54b3/">Cliff Rosen — Ironcliff Partners | LinkedIn</a> <span class="why">— LinkedIn URL, sixdegrees.com co-founding CTO Jan 1996 to Jan 2000, BA Economics UPenn, New York base</span></span></div>
+            <div class="hit skipped"><span class="mark">–</span><span><a href="https://en.wikipedia.org/wiki/SixDegrees.com">SixDegrees.com (Wikipedia)</a> <span class="why">— background only; not needed for the record</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="audit-step">
+        <div class="step-name">Step 2 · Enumerate candidates at Apple</div>
+        <div class="search">
+          <span class="q">Apple AI leadership 2026 who runs Apple Intelligence Siri organization</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.apple.com/newsroom/2025/12/john-giannandrea-to-retire-from-apple/">John Giannandrea to retire from Apple (Apple newsroom)</a> <span class="why">— Giannandrea stepped down Dec 2025, retiring spring 2026; org redistributed</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.nbcnews.com/business/business-news/apples-ai-chief-abruptly-steps-rcna246877">Apple's AI chief abruptly steps down (NBC)</a> <span class="why">— corroborates the restructure; remainder of the org shifted toward Sabih Khan and Eddy Cue</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://techcrunch.com/2026/06/09/wwdc-2026-everything-announced-on-siri-ai-os-27-apple-intelligence-and-more/">WWDC 2026: Everything announced (TechCrunch)</a> <span class="why">— Siri AI unveiled June 2026 with Gemini models underneath; frames the agentic push</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">Amar Subramanya Apple VP AI foundation models 2026</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.businesswire.com/news/home/20251201260097/en">John Giannandrea to retire from Apple (Business Wire release)</a> <span class="why">— Apple's own statement of Subramanya's scope: "Apple Foundation Models, ML research, and AI Safety and Evaluation", reporting to Federighi</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.neowin.net/news/four-months-after-google-exit-microsoft-ai-cvp-amar-subramanya-defects-to-apple/">Microsoft AI CVP Subramanya defects to Apple (Neowin)</a> <span class="why">— career history: 16 years Google (Gemini assistant engineering head), Microsoft CVP of AI</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">Apple jobs "agent" orchestration LLM site:jobs.apple.com</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit skipped"><span class="mark">–</span><span><a href="https://jobs.apple.com/en-ae/details/200607565/senior-software-engineer-llms-agent-systems-and-simulation-tooling">Senior SWE — LLMs, Agent Systems, and Simulation Tooling</a> <span class="why">— listing had closed by fetch time; superseded by the live search-page fetch</span></span></div>
+            <div class="hit skipped"><span class="mark">–</span><span><a href="https://jobs.apple.com/en-us/details/200649842-0836/software-engineer-llm-systems-generative-ai-infrastructure-agentic-platforms">SWE — LLM Systems, Generative AI Infrastructure &amp; Agentic Platforms</a> <span class="why">— listing had closed by fetch time; evidence that agentic-platform roles recur</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">Mike Rockwell Siri Apple 2026 organization Vision Pro</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://seekingalpha.com/news/4422934-apple-shuffles-exec-ranks-in-effort-to-improve-siri-report">Apple shuffles exec ranks to improve Siri (Seeking Alpha)</a> <span class="why">— Siri moved from Giannandrea to Rockwell (March 2025), reporting to Federighi; visionOS software teams came with him</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.macrumors.com/2026/04/22/vision-pro-creator-considered-leaving-apple/">Rockwell Has Considered Leaving Apple (MacRumors)</a> <span class="why">— April 2026 report he weighed stepping back; feeds the currency caveat</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">Apple "Answers, Knowledge and Information" team leader 2026 after Ke Yang</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://daringfireball.net/linked/2025/10/22/yang-apple-meta">Ke Yang Was Poached by Meta (Daring Fireball)</a> <span class="why">— Ke Yang left Oct 2025; AKI oversight shifted to Benoit Dupin (ML cloud infrastructure)</span></span></div>
+            <div class="hit skipped"><span class="mark">–</span><span><a href="https://9to5mac.com/2025/08/04/apples-answers-team-is-a-bigger-deal-than-it-might-seem/">Apple's Answers team is a bigger deal than it might seem (9to5Mac)</a> <span class="why">— background on AKI's remit; not load-bearing for ranking</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">Kim Vorrath Sebastien Marineau-Mes Siri AI org 2026 Rockwell deputies</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://spyglass.org/apple-ai-fail/">Failure Has Many Fathers at Apple Right Now (Spyglass)</a> <span class="why">— Marineau-Mes described as a top Federighi deputy running Intelligent Systems, "hundreds of machine-learning engineers"</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.bloomberg.com/news/articles/2025-01-24/apple-enlists-company-veteran-kim-vorrath-to-help-fix-ai-and-siri">Apple Enlists Veteran Software Executive to Help Fix AI and Siri (Bloomberg)</a> <span class="why">— Vorrath moved into the AI/Siri org as program-management fixer; placed in also-considered</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.engadget.com/2189169/apple-wwdc-2026-live-blog-siri-ai-ios-27/">WWDC 2026: Live updates from Apple Park (Engadget)</a> <span class="why">— Federighi, Marineau-Mes, and Rockwell appeared together at WWDC 2026; both VPs active in June 2026</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">jobs.apple.com/en-us/search?search=agentic orchestration</span><span class="tool">site fetch</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://jobs.apple.com/en-us/search?search=agentic%20orchestration">jobs.apple.com search: 20 live agentic/orchestration postings</a> <span class="why">— the concrete apply lane: Intelligence Orchestration (200670440-0836), Agentic Infrastructure manager (200671605-3337), ML Agent Engineer (200672464), Agent Sciences and Infrastructure (200673514), Siri Agentic Evaluation manager (200673865-1251), Agentic Evaluation (200666976-0836), Siri Agent Modeling (200620661-0836), and more across Cupertino, Seattle, Cambridge, Austin</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="audit-step">
+        <div class="step-name">Step 3 · Decorate</div>
+        <div class="search">
+          <span class="q">Mike Rockwell Apple LinkedIn profile</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.linkedin.com/in/mirockwell/">Mike Rockwell — Cupertino, California | LinkedIn</a> <span class="why">— public profile matching the Apple Vision Pro/Siri Rockwell (Cupertino)</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">Amar Subramanya LinkedIn Apple</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.linkedin.com/in/amar-subramanya-3642498a/">Amar Subramanya — Apple | LinkedIn</a> <span class="why">— public profile listing Menlo Park and University of Washington; matches press bio</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">jobs.apple.com detail pages 200670440-0836, 200671605-3337</span><span class="tool">site fetch</span>
+          <div class="hits">
+            <div class="hit skipped"><span class="mark">–</span><span>Job detail pages (Intelligence Orchestration; Agentic Infrastructure) <span class="why">— detail pages render via JavaScript; body not retrievable by plain fetch. Titles, teams, and locations taken from the search results page instead</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="audit-step">
+        <div class="step-name">Step 4 · Verify</div>
+        <div class="search">
+          <span class="q">Mike Rockwell Apple August 2026 Siri still leading</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.macobserver.com/news/mike-rockwell-may-leave-apple-after-completing-major-siri-upgrade/">Rockwell may leave Apple after completing Siri upgrade (MacObserver)</a> <span class="why">— exit rumored, not confirmed; caveat recorded, confidence kept high for current role</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">fresh-eyes subagent: refute Rockwell claim (departure or replacement after June 2026)</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.bloomberg.com/news/articles/2026-08-21/apple-cuts-jobs-in-siri-vision-pro-immersive-video-and-gaming-teams">Apple Cuts Jobs in Siri, Vision Pro Teams (Bloomberg, Aug 21 2026)</a> <span class="why">— most recent Rockwell-adjacent reporting: cuts in his teams, no departure or replacement. Claim holds with flight-risk caveat</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.macrumors.com/2026/04/22/vision-pro-creator-considered-leaving-apple/">Rockwell Has Considered Leaving Apple (MacRumors)</a> <span class="why">— "considered leaving the company or moving into an advisory role as soon as next year"; unlikely to walk before finishing the Siri overhaul (iOS 27)</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">fresh-eyes subagent: refute Subramanya claim (left Apple / returned to Microsoft)</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.apple.com/newsroom/2025/12/john-giannandrea-to-retire-from-apple/">John Giannandrea to retire from Apple (Apple newsroom)</a> <span class="why">— Apple's own release states his role and scope; no July-Sept 2026 departure reporting found. Claim holds</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">fresh-eyes subagent: confirm Marineau-Mes title and org name</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.cnbc.com/2026/06/08/apple-google-nvidia-ai-chips.html">Apple partnering with Google and Nvidia (CNBC, June 2026)</a> <span class="why">— quoted as an Apple VP at WWDC 2026 discussing Private Cloud Compute; still at Apple. Formal title: VP of Intelligent System Experience Engineering; "Intelligent Systems" is press shorthand</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.crunchbase.com/person/sebastian-marineau-mes">Sebastian Marineau-Mes (Crunchbase)</a> <span class="why">— corroborates VP title; org naming loose across sources</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">fresh-eyes subagent: refute Dupin AKI oversight and VP title</span><span class="tool">web search</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://appleinsider.com/articles/25/10/15/apple-ai-team-loses-another-executive-to-meta">Apple AI team loses another executive to Meta (AppleInsider)</a> <span class="why">— confirms the Oct 2025 handoff of AKI to Dupin</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.theregister.com/2025/12/02/apple_ai_chief/">Apple shuffles AI leadership team (The Register, Dec 2025)</a> <span class="why">— Dec 2025 restructure shifted search/knowledge responsibilities toward Sabih Khan and Eddy Cue; Dupin's AKI oversight likely transitional. Entry downgraded</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.crunchbase.com/person/benoit-dupin">Benoit Dupin (Crunchbase)</a> <span class="why">— lists Senior Director, not VP; title corrected in the record</span></span></div>
+          </div>
+        </div>
+        <div class="search">
+          <span class="q">fresh-eyes subagent: check LinkedIn URLs for same-name collisions</span><span class="tool">linkedin</span>
+          <div class="hits">
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.linkedin.com/in/mirockwell/">linkedin.com/in/mirockwell/ public preview</a> <span class="why">— Cupertino location matches the Apple exec; title login-walled; no collision signal</span></span></div>
+            <div class="hit used"><span class="mark">✓</span><span><a href="https://www.linkedin.com/in/amar-subramanya-3642498a/">linkedin.com/in/amar-subramanya-3642498a/ public preview</a> <span class="why">— Menlo Park + University of Washington match his bio; headline still shows Microsoft (stale), caveat recorded</span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <details class="record">
+    <summary>View the underlying record (output schema v0) <button class="btn" type="button" id="copy-json">Copy JSON</button></summary>
+    <pre>{
+  "query": {
+    "organization": { "name": "Apple", "domain": "apple.com", "kind": "company" },
+    "target": {
+      "who": "leadership",
+      "function": "AI agent orchestration / agentic systems architecture",
+      "level": "senior engineering leadership or principal architect",
+      "industries": ["consumer technology", "AI platforms"]
+    },
+    "seeker": {
+      "profile": "profiles/cliff.md",
+      "linkedin": "https://www.linkedin.com/in/cliff-rosen-54b3/"
+    },
+    "options": { "max_results": 6, "decorate_top": 2 },
+    "run_at": "2026-09-09"
+  },
+  "results": [
+    {
+      "rank": 1,
+      "name": "Mike Rockwell",
+      "current_title": "Vice President, Siri (and visionOS software)",
+      "org_unit": "Software Engineering (reports to Craig Federighi)",
+      "location": "Cupertino, CA",
+      "relevance": {
+        "score": 92,
+        "rationale": "Rockwell owns the Siri AI rebuild announced at WWDC 2026, the org where Apple's agent runtime and orchestration layer are being built, which is exactly the lane Cliff's orchestration methodology and agent-architecture writing address."
+      },
+      "confidence": {
+        "level": "high",
+        "basis": "Multiple independent press reports (Bloomberg via 9to5Mac, Seeking Alpha, MacRumors) place Siri under Rockwell since March 2025, and he appeared with Federighi at WWDC 2026 presenting Siri AI."
+      },
+      "contact": {
+        "linkedin": "https://www.linkedin.com/in/mirockwell/",
+        "email": { "status": "unknown" },
+        "other": ["Application path: jobs.apple.com 'Software and Services' agentic roles, e.g. Software Engineer, Intelligence Orchestration, Proactive Intelligence (200670440-0836, Cupertino); Senior Software Engineering Manager, Agentic Infrastructure (200671605-3337, Seattle); ML Systems Engineer, Siri Agent Modeling (200620661-0836, Cupertino)"]
+      },
+      "sources": [
+        { "title": "Apple shuffles exec ranks in effort to improve Siri (Seeking Alpha)", "url": "https://seekingalpha.com/news/4422934-apple-shuffles-exec-ranks-in-effort-to-improve-siri-report" },
+        { "title": "Craig Federighi details Apple's collaboration with Google for Siri AI in iOS 27 (9to5Mac, June 2026)", "url": "https://9to5mac.com/2026/06/08/craig-federighi-details-apples-collaboration-with-google-for-siri-ai-in-ios-27/" },
+        { "title": "Report: Apple executive in charge of Siri revamp has considered stepping back (9to5Mac, April 2026)", "url": "https://9to5mac.com/2026/04/21/apple-executive-in-charge-of-siri-revamp-has-considered-stepping-back-report-says/" }
+      ],
+      "detail": {
+        "bio": "Built and led the Vision Pro effort from ~2016; previously Dolby and Avid. Handed Siri in March 2025, replaced its leadership with Vision Pro lieutenants, and shipped the rebuilt Siri AI (standalone app, cross-app personal context, Gemini models underneath) at WWDC on June 8, 2026.",
+        "tenure": "Apple since ~2015; Siri org since March 2025",
+        "recent_signal": "Shipped Siri AI at WWDC 2026 (June 8). Bloomberg reported job cuts in Siri and Vision Pro adjacent teams on August 21, 2026, and April 2026 reports say he has weighed a reduced role or exit now that the rebuild has shipped, so his org may be in transition.",
+        "warm_paths": [
+          { "via": "None found", "note": "Rockwell's history (Dolby, Avid, Apple) does not intersect Cliff's network surface (sixdegrees, UPenn, NYC consumer internet). Apply to named reqs and pair with a LinkedIn note." }
+        ],
+        "outreach_angle": "Apply to the named 'Software and Services' agentic reqs (Intelligence Orchestration, Agentic Infrastructure, Siri Agent Modeling) rather than cold-emailing a VP; Apple routes hiring through jobs.apple.com. In the application and an accompanying LinkedIn note, lead with the Orchestrator Studios orchestration methodology (Principled Orchestration, The Agent in the Middle, A Diagnostic Framework for Agent Failure) and shipped agent products (Knowledge Horizon, BotBeam): the Siri AI org's open problem is exactly reliability of agentic workflows, Cliff's stated specialty. Mention the sixdegrees co-founding CTO history for platform-scale credibility."
+      }
+    },
+    {
+      "rank": 2,
+      "name": "Amar Subramanya",
+      "current_title": "Vice President of AI",
+      "org_unit": "AI/ML: Apple Foundation Models, ML research, AI Safety and Evaluation (reports to Craig Federighi)",
+      "location": "Menlo Park / Cupertino, CA",
+      "relevance": {
+        "score": 84,
+        "rationale": "Subramanya's AIML org is posting the bulk of Apple's open agentic roles (ML Agent Engineer, Agent Sciences and Infrastructure, Sr Manager Siri Agentic Evaluation), making it the most active hiring lane for Cliff's agent-reliability and evaluation expertise."
+      },
+      "confidence": {
+        "level": "high",
+        "basis": "Apple's own newsroom release (Dec 1, 2025) states his appointment, scope, and reporting line; corroborated by Axios, Fortune, and Business Standard."
+      },
+      "contact": {
+        "linkedin": "https://www.linkedin.com/in/amar-subramanya-3642498a/",
+        "email": { "status": "unknown" },
+        "other": ["Application path: jobs.apple.com 'Machine Learning and AI' agentic roles, e.g. ML Agent Engineer (200672464, Seattle/SF Bay Area); Agent Sciences and Infrastructure Engineer, AIML (200673514, Cupertino/Seattle); Sr Manager, Siri Agentic Evaluation (200673865-1251, Cambridge); Sr. Software Engineer: Agentic Evaluation (200666976-0836, Cupertino)"]
+      },
+      "sources": [
+        { "title": "John Giannandrea to retire from Apple (Apple newsroom / Business Wire, Dec 2025)", "url": "https://www.businesswire.com/news/home/20251201260097/en" },
+        { "title": "Apple AI chief John Giannandrea steps down (Axios, Dec 2025)", "url": "https://www.axios.com/2025/12/01/new-apple-ai-chief-amar-subramanya" },
+        { "title": "Amar Subramanya, Apple AI veteran of Google and Microsoft (Fortune, Dec 2025)", "url": "https://www.fortune.com/2025/12/02/amar-subramanya-apple-ai-veteran-google-microsoft-career-research-education-machine-learning" }
+      ],
+      "detail": {
+        "bio": "16 years at Google, ultimately head of engineering for the Gemini assistant; corporate VP of AI at Microsoft (Copilot foundation models) for a few months in 2025; joined Apple December 2025 as VP of AI, consolidating Apple Foundation Models, ML research, and AI Safety and Evaluation under one leader connected to the software release org.",
+        "tenure": "Apple since December 2025",
+        "recent_signal": "Nine months into consolidating Apple's foundation-model and evaluation orgs, with a visible hiring push: agentic evaluation, agent sciences, and agent infrastructure reqs are open across Cupertino, Seattle, and Cambridge.",
+        "warm_paths": [
+          { "via": "None found", "note": "His network is Google/Microsoft/University of Washington; no overlap with Cliff's sixdegrees/UPenn/NYC surface found in this run. Apply to named reqs; a LinkedIn note is the direct channel." }
+        ],
+        "outreach_angle": "Target the AIML evaluation and agent-infrastructure reqs, where Cliff's Diagnostic Framework for Agent Failure and Agent POC Maturity Ladder essays are direct writing samples for the job to be done (agentic evaluation at scale). The Cambridge-based Sr Manager, Siri Agentic Evaluation role is the closest to East Coast for a New York-based candidate. Frame the pitch around reliability methodology for high-stakes domains rather than model research, since Subramanya's org owns safety and evaluation, not just models."
+      }
+    },
+    {
+      "rank": 3,
+      "name": "Sebastien Marineau-Mes",
+      "current_title": "Vice President, Intelligent System Experience Engineering",
+      "org_unit": "Software Engineering (reports to Craig Federighi); org referred to in press as \"Intelligent Systems\"",
+      "location": "Cupertino, CA",
+      "relevance": {
+        "score": 76,
+        "rationale": "Runs the Intelligent Systems org of ML engineers inside Federighi's software group, the platform lane (App Intents, on-device intelligence plumbing) closest to Cliff's agent-operated-software architecture work."
+      },
+      "confidence": {
+        "level": "medium",
+        "basis": "Press descriptions (Spyglass, WWDC 2026 coverage) name him a top Federighi deputy running Intelligent Systems; no Apple-published mandate for agentic platforms specifically."
+      },
+      "contact": { "email": { "status": "unknown" } },
+      "sources": [
+        { "title": "Failure Has Many Fathers at Apple Right Now (Spyglass)", "url": "https://spyglass.org/apple-ai-fail/" },
+        { "title": "WWDC 2026: Live updates from Apple Park (Engadget, June 2026)", "url": "https://www.engadget.com/2189169/apple-wwdc-2026-live-blog-siri-ai-ios-27/" },
+        { "title": "Apple partnering with Google and Nvidia for most advanced AI model (CNBC, June 2026)", "url": "https://www.cnbc.com/2026/06/08/apple-google-nvidia-ai-chips.html" }
+      ]
+    },
+    {
+      "rank": 4,
+      "name": "Benoit Dupin",
+      "current_title": "Senior Director, AI/ML (machine learning cloud infrastructure)",
+      "org_unit": "AI/ML infrastructure; took interim oversight of the Answers, Knowledge and Information (AKI) team in October 2025",
+      "location": "Cupertino, CA",
+      "relevance": {
+        "score": 55,
+        "rationale": "Runs ML cloud infrastructure and briefly picked up the AKI answers effort, a plausible fit for Cliff's production-reliability lane but centered on infrastructure and search rather than agent orchestration."
+      },
+      "confidence": {
+        "level": "low",
+        "basis": "The verify pass partially refuted this entry: profiles consistently list him as Senior Director (not VP), and the December 2025 restructure shifted search/knowledge responsibilities toward Sabih Khan and Eddy Cue, so his October 2025 AKI oversight was likely transitional."
+      },
+      "contact": { "email": { "status": "unknown" } },
+      "sources": [
+        { "title": "Apple's Head of ChatGPT-Like AI Search Effort Was Poached by Meta (Daring Fireball, Oct 2025)", "url": "https://daringfireball.net/linked/2025/10/22/yang-apple-meta" },
+        { "title": "Apple AI Crises Deepen as Search Exec Ke Yang Moves to Meta (PYMNTS, 2025)", "url": "https://www.pymnts.com/news/artificial-intelligence/2025/apple-ai-crises-deepen-search-exec-ke-yang-moves-meta/" }
+      ]
+    }
+  ],
+  "also_considered": [
+    {
+      "name": "Craig Federighi",
+      "title": "SVP, Software Engineering",
+      "why_not": "Everything AI at Apple now rolls up to him, but he is two levels above the practice; the seniority rule prefers the most senior relevant owner (Rockwell, Subramanya), not the most senior person."
+    },
+    {
+      "name": "Kim Vorrath",
+      "title": "VP, Program Management (AI/Siri)",
+      "why_not": "Runs the program office whipping AI/Siri schedules into shape, not an engineering hiring lane for orchestration work."
+    },
+    {
+      "name": "John Giannandrea",
+      "title": "former SVP, Machine Learning and AI Strategy",
+      "why_not": "Stepped down December 2025 and retired in spring 2026; his org was split among Federighi, Sabih Khan, and Eddy Cue."
+    },
+    {
+      "name": "Eddy Cue",
+      "title": "SVP, Services",
+      "why_not": "Inherited services-adjacent pieces of the old AI org; his lane is search and services deals, not agent orchestration engineering."
+    },
+    {
+      "name": "Ke Yang",
+      "title": "former head, Answers, Knowledge and Information",
+      "why_not": "Left for Meta in October 2025 weeks after taking the role."
+    }
+  ],
+  "caveats": [
+    "Apple hires through jobs.apple.com; the ranked names orient which org to target and who to reference in outreach, they are not application recipients. The concrete apply lane is the listed agentic reqs.",
+    "Rockwell reportedly weighed a reduced role or exit after shipping Siri AI (reports April-August 2026); no departure was confirmed in any source fetched this run, but re-verify before building outreach around him.",
+    "Job-site team buckets ('Software and Services', 'Machine Learning and AI') are broad; attribution of specific reqs to a particular VP's org is inferred from scope descriptions in press, not stated by Apple.",
+    "Apple job detail pages render via JavaScript and two sampled reqs had already closed; titles, teams, and locations come from the jobs.apple.com search results page fetched 2026-09-09. Confirm a req is still open before applying.",
+    "No New York agentic roles appeared in the sampled listings; open roles cluster in Cupertino, Seattle, Cambridge, and Austin. Relocation or remote terms are an open question for a NYC-based seeker.",
+    "No published email addresses were found for any candidate; channels are the application portal plus LinkedIn. LinkedIn was viewed logged-out (public pages only).",
+    "Subramanya's public LinkedIn headline still reads 'Corporate VP, AI at Microsoft AI'; it is stale, not evidence he left Apple. Identity was matched on name, Menlo Park location, and University of Washington education.",
+    "Dupin's entry was downgraded by the verify pass: he is a Senior Director (not VP), and the December 2025 restructure likely superseded his October 2025 AKI oversight; treat his row as a lead needing re-verification."
+  ],
+  "audit": {
+    "searches": [
+      {
+        "step": "seeker_bio",
+        "tool": "web_search",
+        "query": "\"Orchestrator Studio\" agent orchestration site",
+        "results": [
+          { "title": "Generic vendor results (Microsoft Copilot Studio, IBM, Adobe, Flowable)", "used": false, "note": "Did not surface the seeker's site; discarded and query reformulated." }
+        ]
+      },
+      {
+        "step": "seeker_bio",
+        "tool": "web_search",
+        "query": "\"Orchestrator Studios\" Cliff Rosen",
+        "results": [
+          { "title": "Music-industry orchestrators (Cliff Masterson, Charlie Rosen)", "used": false, "note": "Name collisions with musicians; discarded." }
+        ]
+      },
+      {
+        "step": "seeker_bio",
+        "tool": "site_fetch",
+        "query": "https://github.com/orchestrator-studios",
+        "results": [
+          { "title": "orchestrator-studios GitHub org", "url": "https://github.com/orchestrator-studios", "used": true, "note": "Confirmed the org and its agent-tooling repos (BotBeam, living-workspace, openreview); no website link shown.", "as_of": "2026-09-09" }
+        ]
+      },
+      {
+        "step": "seeker_bio",
+        "tool": "site_fetch",
+        "query": "https://orchestratorstudios.com",
+        "results": [
+          { "title": "Orchestrator Studios site", "url": "https://orchestratorstudios.com", "used": true, "note": "Primary source for the seeker's orchestration expertise: methodology, products (Knowledge Horizon, TableThat, BotBeam), insights essays, and bio.", "snippet": "getting AI to work in specialized, high-stakes domains requires methodology, not just models ... Principled Orchestration: Extracting Reliable Value from LLMs", "as_of": "2026-09-09" }
+        ]
+      },
+      {
+        "step": "seeker_bio",
+        "tool": "site_fetch",
+        "query": "https://ironcliff.ai/about-business/",
+        "results": [
+          { "title": "About Ironcliff Partners", "url": "https://ironcliff.ai/about-business/", "used": true, "note": "Cliff's Managing Partner role at the gen-AI consulting firm; corroborates career summary.", "as_of": "2026-09-09" }
+        ]
+      },
+      {
+        "step": "seeker_bio",
+        "tool": "web_search",
+        "query": "\"Cliff Rosen\" sixdegrees CTO LinkedIn",
+        "results": [
+          { "title": "Cliff Rosen - Ironcliff Partners | LinkedIn", "url": "https://www.linkedin.com/in/cliff-rosen-54b3/", "used": true, "note": "LinkedIn URL, sixdegrees.com co-founding CTO Jan 1996 to Jan 2000, BA Economics UPenn, New York base.", "as_of": "2026-09-09" },
+          { "title": "SixDegrees.com (Wikipedia)", "url": "https://en.wikipedia.org/wiki/SixDegrees.com", "used": false, "note": "Background only; not needed for the record." }
+        ]
+      },
+      {
+        "step": "enumerate",
+        "tool": "web_search",
+        "query": "Apple AI leadership 2026 who runs Apple Intelligence Siri organization",
+        "results": [
+          { "title": "John Giannandrea to retire from Apple (Apple newsroom)", "url": "https://www.apple.com/newsroom/2025/12/john-giannandrea-to-retire-from-apple/", "used": true, "note": "Giannandrea stepped down Dec 2025, retiring spring 2026; org redistributed.", "as_of": "2025-12-01" },
+          { "title": "Apple's AI chief abruptly steps down (NBC)", "url": "https://www.nbcnews.com/business/business-news/apples-ai-chief-abruptly-steps-rcna246877", "used": true, "note": "Corroborates the restructure; remainder of Giannandrea's org shifted toward Sabih Khan and Eddy Cue.", "as_of": "2025-12-01" },
+          { "title": "WWDC 2026: Everything announced (TechCrunch)", "url": "https://techcrunch.com/2026/06/09/wwdc-2026-everything-announced-on-siri-ai-os-27-apple-intelligence-and-more/", "used": true, "note": "Siri AI unveiled June 2026 with Gemini models underneath; frames the agentic push.", "as_of": "2026-06-09" }
+        ]
+      },
+      {
+        "step": "enumerate",
+        "tool": "web_search",
+        "query": "Amar Subramanya Apple VP AI foundation models 2026",
+        "results": [
+          { "title": "John Giannandrea to retire from Apple (Business Wire release)", "url": "https://www.businesswire.com/news/home/20251201260097/en", "used": true, "note": "Apple's own statement of Subramanya's scope: Apple Foundation Models, ML research, AI Safety and Evaluation, reporting to Federighi.", "snippet": "Amar Subramanya ... will be leading critical areas, including Apple Foundation Models, ML research, and AI Safety and Evaluation", "as_of": "2025-12-01" },
+          { "title": "Four months after Google exit, Microsoft AI CVP Amar Subramanya defects to Apple (Neowin)", "url": "https://www.neowin.net/news/four-months-after-google-exit-microsoft-ai-cvp-amar-subramanya-defects-to-apple/", "used": true, "note": "Career history: 16 years Google (Gemini assistant engineering head), Microsoft CVP of AI.", "as_of": "2025-12-02" }
+        ]
+      },
+      {
+        "step": "enumerate",
+        "tool": "web_search",
+        "query": "Apple jobs \"agent\" orchestration LLM site:jobs.apple.com",
+        "results": [
+          { "title": "Senior Software Engineer - LLMs, Agent Systems, and Simulation Tooling", "url": "https://jobs.apple.com/en-ae/details/200607565/senior-software-engineer-llms-agent-systems-and-simulation-tooling", "used": false, "note": "Listing had closed by fetch time; superseded by the live search-page fetch below." },
+          { "title": "Software Engineer - LLM Systems, Generative AI Infrastructure &amp; Agentic Platforms", "url": "https://jobs.apple.com/en-us/details/200649842-0836/software-engineer-llm-systems-generative-ai-infrastructure-agentic-platforms", "used": false, "note": "Listing had closed by fetch time; evidence that agentic-platform roles recur." }
+        ]
+      },
+      {
+        "step": "enumerate",
+        "tool": "web_search",
+        "query": "Mike Rockwell Siri Apple 2026 organization Vision Pro",
+        "results": [
+          { "title": "Apple shuffles exec ranks in effort to improve Siri (Seeking Alpha)", "url": "https://seekingalpha.com/news/4422934-apple-shuffles-exec-ranks-in-effort-to-improve-siri-report", "used": true, "note": "Siri moved from Giannandrea to Rockwell (March 2025), reporting to Federighi; Rockwell brought visionOS software teams with him.", "as_of": "2025-03" },
+          { "title": "Vision Pro Creator Mike Rockwell Has Considered Leaving Apple (MacRumors)", "url": "https://www.macrumors.com/2026/04/22/vision-pro-creator-considered-leaving-apple/", "used": true, "note": "April 2026 report he weighed stepping back; feeds the currency caveat.", "as_of": "2026-04-22" }
+        ]
+      },
+      {
+        "step": "enumerate",
+        "tool": "web_search",
+        "query": "Apple \"Answers, Knowledge and Information\" team leader 2026 after Ke Yang",
+        "results": [
+          { "title": "Ke Yang, Apple's Head of ChatGPT-Like AI Search Effort, Was Poached by Meta (Daring Fireball)", "url": "https://daringfireball.net/linked/2025/10/22/yang-apple-meta", "used": true, "note": "Ke Yang left Oct 2025; AKI oversight shifted to Benoit Dupin (ML cloud infrastructure).", "as_of": "2025-10-22" },
+          { "title": "Apple's Answers team is a bigger deal than it might seem (9to5Mac)", "url": "https://9to5mac.com/2025/08/04/apples-answers-team-is-a-bigger-deal-than-it-might-seem/", "used": false, "note": "Background on AKI's remit; not load-bearing for ranking." }
+        ]
+      },
+      {
+        "step": "enumerate",
+        "tool": "web_search",
+        "query": "Kim Vorrath Sebastien Marineau-Mes Siri AI org 2026 Rockwell deputies",
+        "results": [
+          { "title": "Failure Has Many Fathers at Apple Right Now (Spyglass)", "url": "https://spyglass.org/apple-ai-fail/", "used": true, "note": "Marineau-Mes described as a top Federighi deputy running Intelligent Systems (hundreds of ML engineers).", "snippet": "runs a team called Intelligent Systems, which consists of hundreds of machine-learning engineers", "as_of": "2026" },
+          { "title": "Apple Enlists Veteran Software Executive to Help Fix AI and Siri (Bloomberg)", "url": "https://www.bloomberg.com/news/articles/2025-01-24/apple-enlists-company-veteran-kim-vorrath-to-help-fix-ai-and-siri", "used": true, "note": "Vorrath moved into the AI/Siri org as program-management fixer; placed in also_considered.", "as_of": "2025-01-24" },
+          { "title": "WWDC 2026: Live updates from Apple Park (Engadget)", "url": "https://www.engadget.com/2189169/apple-wwdc-2026-live-blog-siri-ai-ios-27/", "used": true, "note": "Federighi, Marineau-Mes, and Rockwell appeared together at WWDC 2026; confirms both VPs active in June 2026.", "as_of": "2026-06-08" }
+        ]
+      },
+      {
+        "step": "enumerate",
+        "tool": "site_fetch",
+        "query": "https://jobs.apple.com/en-us/search?search=agentic%20orchestration&amp;sort=relevance",
+        "results": [
+          { "title": "jobs.apple.com search: 20 live agentic/orchestration postings", "url": "https://jobs.apple.com/en-us/search?search=agentic%20orchestration", "used": true, "note": "The concrete apply lane: Software Engineer, Intelligence Orchestration, Proactive Intelligence (200670440-0836); Senior SWE Manager, Agentic Infrastructure (200671605-3337); ML Agent Engineer (200672464); Agent Sciences and Infrastructure Engineer, AIML (200673514); Sr Manager, Siri Agentic Evaluation (200673865-1251); Sr SWE Agentic Evaluation (200666976-0836); ML Systems Engineer, Siri Agent Modeling (200620661-0836); and others across Cupertino, Seattle, Cambridge, Austin.", "as_of": "2026-09-09" }
+        ]
+      },
+      {
+        "step": "decorate",
+        "tool": "web_search",
+        "query": "Mike Rockwell Apple LinkedIn profile",
+        "results": [
+          { "title": "Mike Rockwell - Cupertino, California | LinkedIn", "url": "https://www.linkedin.com/in/mirockwell/", "used": true, "note": "Public profile matching the Apple Vision Pro/Siri Rockwell (Cupertino).", "as_of": "2026-09-09" }
+        ]
+      },
+      {
+        "step": "decorate",
+        "tool": "web_search",
+        "query": "Amar Subramanya LinkedIn Apple",
+        "results": [
+          { "title": "Amar Subramanya - Apple | LinkedIn", "url": "https://www.linkedin.com/in/amar-subramanya-3642498a/", "used": true, "note": "Public profile listing Apple, Menlo Park, University of Washington; matches press bio.", "as_of": "2026-09-09" }
+        ]
+      },
+      {
+        "step": "decorate",
+        "tool": "site_fetch",
+        "query": "https://jobs.apple.com/en-us/details/200670440-0836/... and 200671605-3337/...",
+        "results": [
+          { "title": "Job detail pages (Intelligence Orchestration; Agentic Infrastructure)", "used": false, "note": "Detail pages render via JavaScript; body not retrievable by plain fetch. Titles, teams, and locations taken from the search results page instead." }
+        ]
+      },
+      {
+        "step": "verify",
+        "tool": "web_search",
+        "query": "Mike Rockwell Apple August 2026 Siri still leading",
+        "results": [
+          { "title": "Mike Rockwell may leave Apple after completing major Siri upgrade (MacObserver)", "url": "https://www.macobserver.com/news/mike-rockwell-may-leave-apple-after-completing-major-siri-upgrade/", "used": true, "note": "Latest reporting found: exit rumored, not confirmed; caveat recorded and confidence kept at high for current role.", "as_of": "2026" }
+        ]
+      },
+      {
+        "step": "verify",
+        "tool": "web_search",
+        "query": "Fresh-eyes subagent: refute Rockwell claim (departure, replacement after June 2026)",
+        "results": [
+          { "title": "Apple Cuts Jobs in Siri, Vision Pro Immersive Video and Gaming Teams (Bloomberg)", "url": "https://www.bloomberg.com/news/articles/2026-08-21/apple-cuts-jobs-in-siri-vision-pro-immersive-video-and-gaming-teams", "used": true, "note": "Most recent Rockwell-adjacent reporting (Aug 21, 2026): cuts in his teams, no departure or replacement reported. Claim holds with flight-risk caveat.", "as_of": "2026-08-21" },
+          { "title": "Vision Pro Creator Mike Rockwell Has Considered Leaving Apple (MacRumors)", "url": "https://www.macrumors.com/2026/04/22/vision-pro-creator-considered-leaving-apple/", "used": true, "note": "Considered leaving or an advisory role 'as soon as next year'; unlikely to walk before finishing the Siri overhaul (iOS 27).", "snippet": "has considered leaving the company or moving into an advisory role as soon as next year", "as_of": "2026-04-22" }
+        ]
+      },
+      {
+        "step": "verify",
+        "tool": "web_search",
+        "query": "Fresh-eyes subagent: refute Subramanya claim (left Apple / returned to Microsoft)",
+        "results": [
+          { "title": "John Giannandrea to retire from Apple (Apple newsroom)", "url": "https://www.apple.com/newsroom/2025/12/john-giannandrea-to-retire-from-apple/", "used": true, "note": "Apple's own release states his role and scope; no July-Sept 2026 departure reporting found. Claim holds.", "snippet": "Amar Subramanya has joined Apple as vice president of AI, reporting to Craig Federighi", "as_of": "2025-12-01" }
+        ]
+      },
+      {
+        "step": "verify",
+        "tool": "web_search",
+        "query": "Fresh-eyes subagent: confirm Marineau-Mes title and org name",
+        "results": [
+          { "title": "Apple partnering with Google and Nvidia for most advanced AI model (CNBC)", "url": "https://www.cnbc.com/2026/06/08/apple-google-nvidia-ai-chips.html", "used": true, "note": "Quoted as an Apple VP at WWDC 2026 discussing Private Cloud Compute; still at Apple. Formal title per profiles: VP of Intelligent System Experience Engineering; 'Intelligent Systems' is press shorthand.", "as_of": "2026-06-08" },
+          { "title": "Sebastian Marineau-Mes (Crunchbase)", "url": "https://www.crunchbase.com/person/sebastian-marineau-mes", "used": true, "note": "Corroborates VP title; org naming loose across sources.", "as_of": "2026-09-09" }
+        ]
+      },
+      {
+        "step": "verify",
+        "tool": "web_search",
+        "query": "Fresh-eyes subagent: refute Dupin AKI oversight and VP title",
+        "results": [
+          { "title": "Apple AI team loses another executive to Meta (AppleInsider)", "url": "https://appleinsider.com/articles/25/10/15/apple-ai-team-loses-another-executive-to-meta", "used": true, "note": "Confirms the Oct 2025 handoff of AKI to Dupin.", "as_of": "2025-10-15" },
+          { "title": "Apple shuffles AI leadership team in bid to fix Siri mess (The Register)", "url": "https://www.theregister.com/2025/12/02/apple_ai_chief/", "used": true, "note": "Dec 2025 restructure shifted search/knowledge responsibilities toward Sabih Khan and Eddy Cue; Dupin's AKI oversight likely transitional. Entry downgraded.", "as_of": "2025-12-02" },
+          { "title": "Benoit Dupin (Crunchbase)", "url": "https://www.crunchbase.com/person/benoit-dupin", "used": true, "note": "Lists Senior Director, not VP; title corrected in the record.", "as_of": "2026-09-09" }
+        ]
+      },
+      {
+        "step": "verify",
+        "tool": "linkedin",
+        "query": "Fresh-eyes subagent: check LinkedIn URLs for same-name collisions",
+        "results": [
+          { "title": "linkedin.com/in/mirockwell/ public preview", "url": "https://www.linkedin.com/in/mirockwell/", "used": true, "note": "Cupertino location matches the Apple exec; title login-walled; no collision signal.", "as_of": "2026-09-09" },
+          { "title": "linkedin.com/in/amar-subramanya-3642498a/ public preview", "url": "https://www.linkedin.com/in/amar-subramanya-3642498a/", "used": true, "note": "Menlo Park + University of Washington match his bio; headline still shows Microsoft (stale), caveat recorded.", "as_of": "2026-09-09" }
+        ]
+      }
+    ]
+  }
+}</pre>
+  </details>
+
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var toggle = document.getElementById('theme-toggle');
+  function setTheme(dark) {
+    root.classList.toggle('tc-dark', dark);
+    toggle.textContent = dark ? 'Light mode' : 'Dark mode';
+    try { localStorage.setItem('tc-theme', dark ? 'dark' : 'light'); } catch (e) {}
+  }
+  var saved = null;
+  try { saved = localStorage.getItem('tc-theme'); } catch (e) {}
+  setTheme(saved === 'dark'); // light is the default; dark only when chosen
+  toggle.addEventListener('click', function () {
+    setTheme(!root.classList.contains('tc-dark'));
+  });
+
+  function flash(btn) {
+    var old = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('ok');
+    setTimeout(function () { btn.textContent = old; btn.classList.remove('ok'); }, 1200);
+  }
+  function copyFallback(btn, text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+    if (ok) { flash(btn); }
+    else {
+      var old = btn.textContent;
+      btn.textContent = 'Copy failed';
+      setTimeout(function () { btn.textContent = old; }, 1500);
+    }
+  }
+  function copy(btn, text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () { flash(btn); },
+        function () { copyFallback(btn, text); }
+      );
+    } else { copyFallback(btn, text); }
+  }
+  function textOf(el) {
+    var clone = el.cloneNode(true);
+    clone.querySelectorAll('.btn, .toolbar, .entry-tools').forEach(function (x) { x.remove(); });
+    var host = document.createElement('div');
+    host.style.cssText = 'position:fixed;left:-99999px;top:0;width:720px;';
+    host.appendChild(clone);
+    document.body.appendChild(host);
+    var t = clone.innerText.replace(/\n{3,}/g, '\n\n').trim();
+    host.remove();
+    return t;
+  }
+  function contactOf(entry) {
+    function g(sel) { var n = entry.querySelector(sel); return n ? n.innerText.trim() : ''; }
+    var lines = [g('.name'), g('.title'), g('.loc')];
+    entry.querySelectorAll('.fact').forEach(function (f) {
+      var label = f.querySelector('.label'), val = f.querySelector('.value');
+      if (!label || !val) return;
+      var l = label.innerText.trim().toLowerCase(); // innerText is rendered text: CSS uppercases labels
+      if (l === 'linkedin') {
+        var a = val.querySelector('a');
+        lines.push('LinkedIn: ' + (a ? a.href : val.innerText.trim()));
+      } else if (l === 'email') {
+        lines.push('Email: ' + val.innerText.trim().replace(/\s+/g, ' '));
+      }
+    });
+    return lines.filter(Boolean).join('\n');
+  }
+  document.querySelectorAll('[data-copy-contact]').forEach(function (btn) {
+    btn.addEventListener('click', function () { copy(btn, contactOf(btn.closest('.entry'))); });
+  });
+  document.querySelectorAll('[data-copy-card]').forEach(function (btn) {
+    btn.addEventListener('click', function () { copy(btn, textOf(btn.closest('.entry'))); });
+  });
+  document.querySelectorAll('[data-copy-next]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var section = btn.closest('.section-label').nextElementSibling;
+      copy(btn, textOf(section));
+    });
+  });
+  var pageBtn = document.getElementById('copy-page');
+  pageBtn.addEventListener('click', function () { copy(pageBtn, textOf(document.querySelector('.wrap'))); });
+  var jsonBtn = document.getElementById('copy-json');
+  jsonBtn.addEventListener('click', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    copy(jsonBtn, document.querySelector('details.record pre').textContent);
+  });
+})();
+</script>

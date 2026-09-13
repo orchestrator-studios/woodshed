@@ -448,12 +448,19 @@ def render_html(state):
         "margin-bottom:10px'>Sessions"
         f"<span style='float:right;font-family:monospace;text-transform:none;letter-spacing:0;color:{muted}'>{iso(now())}</span></div>"
         f"<div style='display:flex;flex-wrap:wrap;gap:10px'>{''.join(cards)}</div>"
+        # events and work products side by side; columns wrap on narrow displays
+        "<div style='display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:16px'>"
+        "<div style='flex:1 1 340px;min-width:0'>"
         f"<div style='font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:{ink2};"
-        "margin:16px 0 4px'>Recent events</div>"
+        "margin:0 0 4px'>Recent events</div>"
         f"<ul style='margin:0;padding-left:18px;font-size:13px;list-style:none'>{events}</ul>"
+        "</div>"
+        "<div style='flex:1 1 340px;min-width:0'>"
         f"<div style='font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:{ink2};"
-        "margin:16px 0 4px'>Recent work products</div>"
+        "margin:0 0 4px'>Recent work products</div>"
         f"<ul style='margin:0;padding-left:18px;font-size:13px;list-style:none'>{products}</ul>"
+        "</div>"
+        "</div>"
         "</div>")
 
 

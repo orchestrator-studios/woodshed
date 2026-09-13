@@ -3,13 +3,11 @@
 Claude Code lifecycle hooks pipe their JSON payload here on stdin; this script
 forwards it as one signal to the BotBeam ledger service:
 
-    POST {base_url}/ledger/sessions/{session_id}/events
-    { "event": <hook name>, "cwd": ..., "machine": ..., "tool": {"name": ...} }
+    POST {base_url}/ledger/sessions/{session_id}/signals
+    { "signal": <hook name>, "cwd": ..., "machine": ..., "tool": {"name": ...} }
 
-PENDING RENAME (Book rev 19): the path becomes .../signals and the field
-becomes "signal" — hook signals are not record Events. Deploy-coordinated:
-flip this only once the service serves the new route, or session tracking
-goes dark. Until then the old spelling here is correct.
+A signal is not a record Event: it is a mechanical observation that updates
+columns on the session row and is never stored as a row of its own.
 
 Contract (The Ledger Book, Hooks panel): a sensor, not a judge. It classifies
 nothing — the mutating-tool list is service policy — holds no state beyond a
@@ -52,7 +50,7 @@ def main() -> None:
         cfg = json.load(f)
 
     body = {
-        "event": event,
+        "signal": event,
         "cwd": payload.get("cwd"),
         "machine": os.environ.get("COMPUTERNAME") or __import__("platform").node(),
     }
@@ -60,7 +58,7 @@ def main() -> None:
         body["tool"] = {"name": tool_name}
 
     req = urllib.request.Request(
-        f"{cfg['base_url']}/ledger/sessions/{sid}/events",
+        f"{cfg['base_url']}/ledger/sessions/{sid}/signals",
         data=json.dumps(body).encode(),
         headers={
             "Content-Type": "application/json",

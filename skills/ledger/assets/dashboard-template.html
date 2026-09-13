@@ -119,12 +119,17 @@
   .loops .chip { position: relative; top: 1px; }
   .loops .who { font-size: 12px; color: var(--ink-2); flex: none; min-width: 64px; }
 
-  table { border-collapse: collapse; width: 100%; background: var(--surface); border: 1px solid var(--ring); border-radius: 8px; overflow: hidden; }
-  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-2); text-align: left; font-weight: 600; }
-  th, td { padding: 9px 14px; border-bottom: 1px solid var(--hairline); font-size: 13px; }
-  tr:last-child td { border-bottom: none; }
-  td.d { font-family: "IBM Plex Mono", Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .empty-state { color: var(--muted); font-style: italic; }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 36px 20px; align-items: start; }
+  @media (max-width: 760px) { .duo { grid-template-columns: 1fr; } }
+  .feed { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .feed li { background: var(--surface); border: 1px solid var(--ring); border-radius: 6px; padding: 9px 13px;
+    display: flex; align-items: baseline; gap: 10px; font-size: 13.5px; line-height: 1.45; }
+  .feed .d { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 11.5px; color: var(--muted);
+    font-variant-numeric: tabular-nums; white-space: nowrap; flex: none; }
+  .feed .chip { position: relative; top: 1px; }
+  .feed .txt { flex: 1; min-width: 0; }
+  .feed .home { font-size: 12px; color: var(--muted); }
+  .empty-state { color: var(--muted); font-style: italic; font-size: 13.5px; }
   a { color: var(--accent-ink); }
 
   footer { border-top: 1px solid var(--hairline); padding-top: 14px; font-family: "IBM Plex Mono", Consolas, monospace; font-size: 11.5px; color: var(--muted); }
@@ -213,14 +218,22 @@
     </ul>
   </section>
 
-  <section>
-    <h2>Work products</h2>
-    <!-- DATA:ARTIFACTS -->
-    <table>
-      <tr><th>Date</th><th>Stream</th><th>Artifact</th><th>Home</th></tr>
-      <tr><td colspan="4" class="empty-state">No artifacts registered yet — records land here as work ships.</td></tr>
-    </table>
-  </section>
+  <div class="duo">
+    <section>
+      <h2>Recent events</h2>
+      <!-- DATA:EVENTS (journal events, newest first, ~7) -->
+      <ul class="feed">
+        <li class="empty-state">No events yet — the journal fills this as work is logged.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Work products</h2>
+      <!-- DATA:ARTIFACTS (registry rows, newest first; name links to its home) -->
+      <ul class="feed">
+        <li class="empty-state">Nothing registered yet — records land here as work ships.</li>
+      </ul>
+    </section>
+  </div>
 
   <footer>
     Maintained by the <code>ledger</code> skill &middot; regenerate with <code>/ledger review</code> &middot;
