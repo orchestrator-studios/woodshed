@@ -103,6 +103,23 @@ remains is the test round: exercise the plane for real, then decide it's done.
   a stream to filter the feed.
 - `LEDGER_ADMIN_RESET` is enabled in prod, to be removed after the test round.
 
+## The board is closed under reference — invariant 10, 2026-09-13
+
+Closing a stream must take its deliverables and its feed entries out of the
+view with it. `GET /ledger/board` and `GET /ledger/index` filter deliverables
+and events by their stream's state; rows are untouched and stay retrievable
+through `/ledger/events`, `/ledger/deliverables` and `/ledger/search`.
+
+Found by closing `meta` as a board test: the card vanished and its 3
+deliverables and 13 feed events stayed, each with a pill naming a stream the
+board no longer showed — and once the title stopped resolving, the pills fell
+back to the raw slug. The `meta` carve-out was one instance of this; the rule
+makes the whole class impossible, and the frontend needs no change, because
+nothing arrives whose stream did not.
+
+Service side is BotBeam's, in progress. `meta` is closed in prod meanwhile, so
+the board shows the unfixed state until it ships.
+
 ## There is no special stream
 
 `meta` is an ordinary stream. No stream is auto-created, unclosable, or
