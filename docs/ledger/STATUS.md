@@ -131,6 +131,19 @@ actor are new values, not new schema.
 
 **No legacy path.** The API takes `actor`; running sessions holding the old
 skill copy fail on their next log until restarted. That is a restart, not debt.
+`extra="forbid"` rejects `session_id` everywhere, tested.
+
+**The field is uniform; the permissions are not.** `board` may close a stream,
+reopen one, retire a deliverable, and close a leaked run — dashboard acts. It
+may **not open a run** (422): the board does not do the work, the run row stores
+the session, and the ⚡ is a join on sessions.
+
+**Built, not deployed.** BotBeam `b839962` + `e125e38`, 144/144, cut as
+**v2.0.0** — the wire contract breaks, so a major bump. Migration 007 rewrites
+the 16 event rows to `'session:' || session_id` and drops the column; the FK is
+`ledger_events_ibfk_2`, not the `_ibfk_1` default. Migration and deploy must
+land back-to-back with a brief record-plane window, and the prod DB write is
+**waiting on Cliff's word in BotBeam's session.**
 
 Superseded before it shipped: an earlier cut of this had two mutually exclusive
 fields and an `emitter_kind` enum with a CHECK constraint. BotBeam built it
