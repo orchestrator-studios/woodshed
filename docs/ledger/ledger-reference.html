@@ -1026,23 +1026,9 @@
           <tr><td class="mono c-data">stream_id</td><td class="mono">slug</td><td>the owning Stream's id</td></tr>
           <tr><td class="mono c-data">headline</td><td class="mono">string</td><td>what happened — one line, past tense</td></tr>
           <tr><td class="mono c-data">body</td><td class="mono">markdown[1..4]</td><td>bullets; links out to homes and commits</td></tr>
-          <tr><td class="mono c-data">emitter_kind</td><td class="mono">session | board</td><td><b>who acted.</b> Every event has exactly one emitter and there is no such thing as an authorless event — but an emitter is not always a Claude session. The BotBeam interface is the second place a user acts from, and it is named, not inferred from a blank field</td></tr>
-          <tr><td class="mono c-data">session_id</td><td class="mono">uuid | null</td><td>the emitting Session's id — required when <code>emitter_kind</code> is <code>session</code>, null when it is <code>board</code>. Session emission also writes that session's liveness (invariant 9); board emission does not, because the board has no liveness to write</td></tr>
+          <tr><td class="mono c-data">session_id</td><td class="mono">uuid</td><td>the emitting Session's id — <b>required, with no exceptions</b>: every event has exactly one emitter, including a stream's closure event, and emitting writes that session's liveness (invariant 9)</td></tr>
         </tbody>
       </table></div>
-      <div class="rule"><b>Storing the emitter.</b> <code>ledger_events</code> carries
-        <code>emitter_kind</code> (<code>'session' | 'board'</code>, NOT NULL) and a nullable
-        <code>session_id</code>. Migration backfills every existing row to <code>'session'</code>,
-        which is true of all of them. The check is a real constraint, not a convention:
-        <code>emitter_kind='session'</code> demands a <code>session_id</code> that resolves to one of
-        this user's sessions; <code>emitter_kind='board'</code> demands it be null. Reads return
-        <code>emitter_kind</code> alongside <code>session_id</code>, so the board picks a session
-        chip or a board chip by reading a field rather than by branching on a null.
-        <b>Why a column and not an absence:</b> a nullable <code>session_id</code> alone would encode
-        the newest concept in the model as a missing value — writable in one line, and unreadable a
-        month later, when a null means either &ldquo;the board did it&rdquo; or &ldquo;something went
-        wrong.&rdquo; The same reasoning retires deliverables and, in time, anything else the user
-        does from a surface rather than through an agent.</div>
       <h5 class="lbl">What qualifies as an event</h5>
       <p class="sub" style="margin:0">Deliverables shipped, decisions made, external communications
         sent, streams changing state, open loops created or closed. Routine lookups, intermediate
@@ -1412,16 +1398,11 @@
           closure event — one transaction.</p>
         <h5 class="lbl">Request body</h5>
         <span class="schema">{ <b>"reason"</b>: "work done" | "tracking moved elsewhere" | string,
-  <b>"session_id"</b>: uuid          <i>when a session closes it</i>
-  <b>"emitter"</b>: "board"          <i>when the user closes it from the BotBeam interface</i>
+  <b>"session_id"</b>: uuid   <i>required — the closure event has an emitter like any other event</i>
 }</span>
         <p class="qual" style="margin-top:10px">The closure event is an event, so it carries its
-        emitter (invariant 9). There is no such thing as an authorless event — but the emitter may
-        be the board rather than a session. <b>Exactly one form is valid:</b> a <code>session_id</code>
-        that resolves, or <code>"emitter": "board"</code> with no <code>session_id</code>. Both, or
-        neither, is a <code>400</code> — never a silent preference for one. The emitter is never
-        inferred from the caller's credential: the browser and every agent authenticate as the same
-        user, so inference would be a guess.</p>
+        emitter and applies that session's liveness in the same transaction (invariant 9). There is
+        no such thing as an authorless event.</p>
         <h5 class="lbl">Response — 200</h5>
         <span class="schema">{ <b>"stream"</b>: Stream, <b>"closure_event"</b>: Event }</span>
         <p class="rr"><b>errors</b> <code>409</code> already closed</p>
@@ -1890,8 +1871,7 @@
             <tr><td class="mono">10</td><td><b>A run is declared at both ends.</b> <code>started_at</code> is written by the open call and <code>ended_at</code> by the close call; no timer, sweep, or heuristic may end a run. Every run names exactly one deliverable. <span style="color:var(--muted)">(Rev 21 — this is invariant 2 applied to the one object that was still violating it.)</span></td><td>the ⚡ computed from a decaying <code>last_run_at</code>: dark during a ten-minute build, lit for two minutes after it finished</td></tr>
             <tr><td class="mono">5</td><td><b>Composite writes are atomic.</b> <code>POST /ledger/events</code> commits the event, the session write, and the stream update together or not at all.</td><td>event logged, stream and index never updated</td></tr>
             <tr><td class="mono">6</td><td><b>Attribution is a server rule.</b> Writes into the ledger service never re-attribute a session's stream.</td><td>sessions rebranded <code>ledger-meta</code> by their own journal writes</td></tr>
-            <tr><td class="mono">9</td><td><b>Emitting an event is a sign of life — when a session emits it.</b> <code>POST /ledger/events</code> writes the emitting session in the same transaction — <code>last_event_at</code>, <code>status="active"</code>, un-archiving if needed. The two planes are joined here and nowhere else; <code>turn_state</code> stays the hook plane's alone. Board-emitted events skip this clause and only this clause: the board is a surface, not a running thing, so it has no liveness to write. Everything else about an event is identical whoever emitted it.</td><td>a session working visibly in the record while its card sat stale on the board</td></tr>
-            <tr><td class="mono">11</td><td><b>Every event names its emitter, and an emitter is a place.</b> A session and the BotBeam interface are both places a user acts from, so both can emit; <code>emitter_kind</code> says which, explicitly. There is no authorless event and no emitter inferred from a blank field or from the caller's credential — browser and agents authenticate as the same user, so inference is a guess.</td><td>the board unable to close a stream at all, because closure logs an event and an event demanded a session id a web page cannot have</td></tr>
+            <tr><td class="mono">9</td><td><b>Emitting an event is a sign of life.</b> <code>POST /ledger/events</code> writes the emitting session in the same transaction — <code>last_event_at</code>, <code>status="active"</code>, un-archiving if needed. The two planes are joined here and nowhere else; <code>turn_state</code> stays the hook plane's alone.</td><td>a session working visibly in the record while its card sat stale on the board</td></tr>
             <tr><td class="mono">7</td><td><b>Relevance requires a prompt.</b> Sessions never prompted do not reach the board.</td><td>picker-ghost cards requiring manual archiving</td></tr>
             <tr><td class="mono">8</td><td><b>Judgment stays above the API.</b> The service never decides what is logworthy; the skill never decides what is valid.</td><td>responsibility smeared across layers, so neither enforced</td></tr>
             <tr><td class="mono">10</td><td><b>The board is closed under reference.</b> Everything on the board names a stream that is also on the board. <code>GET /ledger/board</code> and <code>GET /ledger/index</code> filter deliverables and events by their stream's state, so a closed stream takes its deliverables and its feed entries out of the view with it — rows are untouched and stay retrievable through <code>/ledger/events</code>, <code>/ledger/deliverables</code> and <code>/ledger/search</code>. Closing changes presentation and nothing else.</td><td>pills naming a stream the board withheld — clickable, filtering by a stream with no card to select, and falling back to the raw slug once the title stopped resolving</td></tr>

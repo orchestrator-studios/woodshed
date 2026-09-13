@@ -103,32 +103,6 @@ remains is the test round: exercise the plane for real, then decide it's done.
   a stream to filter the feed.
 - `LEDGER_ADMIN_RESET` is enabled in prod, to be removed after the test round.
 
-## The board can act — invariant 11, 2026-09-13 (designed, NOT built)
-
-Closing a stream logs an event, and an event demanded a `session_id`. A button
-on the dashboard is a web page with no session, so the board could not close a
-stream at all. The blocker is invariant 9 meeting its first non-session actor.
-
-**An emitter is a place a user acts from**, and there are two: a Claude session
-and the BotBeam interface. Both emit; `emitter_kind` says which, explicitly.
-
-Data level: `ledger_events` gains `emitter_kind` (`'session' | 'board'`, NOT
-NULL), `session_id` becomes nullable, and the migration backfills every
-existing row to `'session'`. A real constraint, not a convention — `session`
-demands a `session_id` that resolves, `board` demands null; both or neither is
-a 400. Requests carry `session_id` **or** `emitter: "board"`, never inferred
-from the caller's credential, since the browser and every agent authenticate as
-the same user. Reads return `emitter_kind` so the board picks its chip from a
-field rather than from a null. Board-emitted events skip the liveness write and
-only that — the board is a surface, not a running thing.
-
-Rejected: nullable `session_id` alone as the signal. It encodes the newest
-concept in the model as a missing value, where a null later means either "the
-board did it" or "something broke."
-
-Service side is BotBeam's. Close/reopen buttons are mine, once it deploys — and
-the same emitter unblocks deliverable retire/unretire from the board.
-
 ## The board is closed under reference — invariant 10, 2026-09-13
 
 Closing a stream must take its deliverables and its feed entries out of the
@@ -143,8 +117,9 @@ back to the raw slug. The `meta` carve-out was one instance of this; the rule
 makes the whole class impossible, and the frontend needs no change, because
 nothing arrives whose stream did not.
 
-Service side is BotBeam's, in progress. `meta` is closed in prod meanwhile, so
-the board shows the unfixed state until it ships.
+Shipped in BotBeam v1.11.1 and verified in prod. `POST /ledger/streams/{id}/reopen`
+followed in v1.12.0 — closing is reversible, and reopening brings the stream's
+deliverables and events back with it.
 
 ## There is no special stream
 
@@ -153,10 +128,9 @@ excluded from attribution, the board, or the index. Work on the ledger itself
 is a stream like any other, and if one loud stream crowds the index the answer
 is ranking or a user-controlled collapse — never a slug the code knows by name.
 
-Woodshed carries this in `SKILL.md` and the Book. The service still has the
-built-in-stream machinery to remove (`META_STREAM`, `_ensure_meta`, the
-never-closes guard, the attribution and index exclusions) — BotBeam's, in
-progress. The board no longer special-cases any slug (botbeam `437ec8a`).
+Woodshed carries this in `SKILL.md` and the Book; the service dropped the
+built-in-stream machinery in v1.11.0 and the board special-cases no slug
+(botbeam `437ec8a`).
 
 ## Built, NOT deployed — waiting on Cliff
 
