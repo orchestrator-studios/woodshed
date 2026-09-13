@@ -1,0 +1,86 @@
+{
+  "_comment": [
+    "The ledger skill's hook registration, spliced into ~/.claude/settings.json by tools/install_ledger.py.",
+    "Paths go through $HOME/.claude/skills/ledger, NOT the repo, so this block is identical on every machine.",
+    "That path is a junction to the clone; the installer creates it. shell=bash, so $HOME expands.",
+    "Details that matter and are easy to lose:",
+    "  - orientation.py is SYNCHRONOUS (no async flag): its stdout is injected into the new session's context.",
+    "    Making it async would silently discard the orientation. 15s timeout, since a session waits on it.",
+    "  - every session_event.py entry is async at 30s: nothing should ever wait on telemetry.",
+    "  - '2>/dev/null || true' guarantees a hook can never fail a session. It also hides breakage:",
+    "    if the board goes quiet, suspect the path here before suspecting the service.",
+    "  - PostToolUse carries no matcher (all tools). It is a pure heartbeat since rev 21; the script debounces it."
+  ],
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"$HOME/.claude/skills/ledger/scripts/orientation.py\" 2>/dev/null || true",
+          "shell": "bash",
+          "timeout": 15,
+          "statusMessage": "Loading work ledger index"
+        },
+        {
+          "type": "command",
+          "command": "python \"$HOME/.claude/skills/ledger/scripts/session_event.py\" 2>/dev/null || true",
+          "shell": "bash",
+          "timeout": 30,
+          "async": true
+        }
+      ]
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"$HOME/.claude/skills/ledger/scripts/session_event.py\" 2>/dev/null || true",
+          "shell": "bash",
+          "timeout": 30,
+          "async": true
+        }
+      ]
+    }
+  ],
+  "SessionEnd": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"$HOME/.claude/skills/ledger/scripts/session_event.py\" 2>/dev/null || true",
+          "shell": "bash",
+          "timeout": 30,
+          "async": true
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"$HOME/.claude/skills/ledger/scripts/session_event.py\" 2>/dev/null || true",
+          "shell": "bash",
+          "timeout": 30,
+          "async": true
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"$HOME/.claude/skills/ledger/scripts/session_event.py\" 2>/dev/null || true",
+          "shell": "bash",
+          "timeout": 30,
+          "async": true
+        }
+      ]
+    }
+  ]
+}

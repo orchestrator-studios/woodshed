@@ -1,9 +1,9 @@
 # Ledger — where we are, what we're driving towards
 
-Updated 2026-09-13 (rev 21 cut). Canonical design: `ledger-reference.html`
-(the Book, **rev 21**).
+Updated 2026-09-13 (rev 21 shipped end to end). Canonical design:
+`ledger-reference.html` (the Book, **rev 21**).
 
-## Rev 21 — runs and deliverables (specified, NOT built)
+## Rev 21 — runs and deliverables (SHIPPED, live in prod at v1.9.0)
 
 The whole previous notion of `run` is deleted: it was a ⚡ computed from a
 decaying `last_run_at` inside a 120s window, refreshed by `PostToolUse` for a
@@ -51,12 +51,21 @@ whatever turns it takes, so "waiting on you, still mid-run" is a real state.
 The two glyphs are orthogonal channels: the circle says whose move it is, the
 bolt says whether a deliverable is being worked.
 
-### Woodshed side of rev 21 — DONE
+### BotBeam side of rev 21 — DONE (v1.9.0, commits d7af555 + 588cbe9)
+
+`POST/GET /ledger/runs` + `/close`, `/ledger/deliverables` +
+`/retire` · `/unretire`. Migration 006 run on prod (two new tables,
+`last_run_at` dropped). 116/116 tests across four suites. The bolt is now a
+declared open run (`ended_at IS NULL`); circle and bolt render independently.
+Verified live with a real run (`run_5e1caad8f6384f60`).
+
+### Woodshed side of rev 21 — DONE (commit 92d5808, pushed)
 
 - `session_event.py`: tool payload dropped, debounce collapsed to a plain
   heartbeat, docstring rewritten. Smoke-tested live.
 - `SKILL.md`: runs/deliverables section is live, `run` added to the verb list,
-  frontmatter description updated. Synced to the global skill copy.
+  frontmatter description updated. Synced to the global skill copy
+  (`~/.claude/skills/ledger/SKILL.md`, byte-identical).
 
 ### Dead weight removed 2026-09-13
 
@@ -71,27 +80,38 @@ architecture was unimplemented.
 
 ## The goal
 
-Sessions and events fully operational end to end — hooks, skill, and the
-BotBeam API — with the new four-section dashboard. Then run a test round.
+Sessions, events, runs and deliverables fully operational end to end — hooks,
+skill, and the BotBeam API — with the four-section dashboard. **Reached.** What
+remains is the test round: exercise the plane for real, then decide it's done.
 
-## Live in prod now (BotBeam v1.8.2 — verified via /health 2026-09-13)
+## Live in prod now (BotBeam v1.9.0 — verified via /health 2026-09-13)
 
 - **Sessions**: hooks post signals to `/ledger/sessions/{id}/signals`. Stored
   status, three states (active | dormant | archived). Board shows Active as a
-  stable card grid, Inactive by recency.
+  stable card grid, Inactive by recency. Labels are **first-write-wins** — a
+  card no longer renames itself when the shell `cd`s to a subdirectory
+  (botbeam 47fd5d2; this was open decision 3, now closed).
 - **Events + streams**: `POST /ledger/events` (atomic: event + emitter liveness
   + stream create/update), `GET /ledger/events`, stream PUT/close/list,
   `/ledger/search`, `/ledger/index`, `/ledger/board`.
-- **Events store holds exactly one row** (`ev_b115c835`, orchestra v0.2.6 cut,
-  2026-09-13T00:38Z) — the baseline was zero after two junk events were
-  surgically deleted; the orchestra session has since logged one real event.
-- **Streams: one row**, `orchestra`, born inside that event.
-- **Four-section dashboard** (commit edbf8d3, shipped in v1.8.1 2026-09-13):
-  Active grid · Inactive (collapsible, persisted) · Streams | Events side by
-  side (5:7, stacks below 760px, feed capped 420px). Stream cards: title, state,
-  next action, staleness colour, open-loop count. Open tabs auto-reload on the
-  version change. Prod is now fully at Book rev 20 + the layout ruling.
+- **Runs + deliverables**: `POST/GET /ledger/runs`, `POST /ledger/runs/{id}/close`,
+  `GET /ledger/deliverables`, `POST /ledger/deliverables/{id}/retire · /unretire`.
+- **Four-section dashboard** (v1.8.1) with the stream visual language on top
+  (v1.8.2): Active grid · Inactive (collapsible, persisted) · Streams | Events
+  side by side. Each stream owns a stable hashed colour on its card edge, event
+  pills and session dots; hover an event to light its stream and session, click
+  a stream to filter the feed.
 - `LEDGER_ADMIN_RESET` is enabled in prod, to be removed after the test round.
+
+### Store contents as of 2026-09-13T02:48Z
+
+- **Streams (2)**: `meta`, `orchestra`.
+- **Events (7)**: `ev_b115c835` (orchestra v0.2.6) and six `meta` events
+  covering revs 18–21, the board layout and visual language, and the rev-21
+  ship. The baseline was zero after two junk events were surgically deleted.
+- **Deliverables (2)**: `dl_a190b6ff` "BotBeam ledger service"
+  (`C:\code\botbeam`, state "v1.9.0 in prod"), `dl_852b8241` "Ledger STATUS doc"
+  (this file).
 
 ## Built, NOT deployed — waiting on Cliff
 
@@ -100,14 +120,19 @@ BotBeam API — with the new four-section dashboard. Then run a test round.
 ## Open decisions for Cliff
 
 1. **Create the remaining two streams?** `nuc-perf-slowdown`, `orch-studio-site`,
-   with current state carried over by hand. `orchestra` already exists (born
-   inside the v0.2.6 event). Without the other two the Streams panel stays
+   with current state carried over by hand. Without them the Streams panel stays
    thin for the test round.
 2. Two render details BotBeam flagged: the open-loop count pill carries the
    full list in a hover tooltip; `meta` gets no stream card. Both look right.
-3. **Label first-write-wins** (parked): a session's label currently changes
-   mid-life when the shell `cd`s to a subdirectory. Workspace should refresh,
-   label should not. One-line change, post-round.
+3. **Is the test round done?** If so, `LEDGER_ADMIN_RESET` comes out of prod.
+
+## Known gaps (deferred, by choice)
+
+- **Deliverable ↔ event linkage** is deliberately unsettled. Do not assume one.
+- **Whether a closing run also writes an event** is deliberately unsettled.
+- **Crashed sessions** keep their last status and will leak an open run until a
+  repair mechanism is added. Manual recipe is in the skill: any session may
+  close any run, so a leaked run is closed as `abandoned` on resume.
 
 ## Woodshed side — done, nothing pending
 
@@ -120,18 +145,28 @@ actually deleted 2026-09-13 and verified gone. **No exposure to the `/ledger`
 tables**: that sweep wrote only v1 targets (local files and the old
 `ledger:session:*` lockboxes), never sessions/events/streams/runs, and every
 write in those tables is accounted for.
-Committed as `c41af15`; Book rev 20 edits since then are uncommitted.
+
+### How the woodshed side reaches other sessions
+
+Two different distribution paths, and only one of them is automatic:
+
+- **Hook scripts run from the repo.** `~/.claude/settings.json` points all five
+  hooks at `C:/code/woodshed/skills/ledger/scripts/session_event.py` (and
+  `orientation.py` on SessionStart) by absolute path. Editing those files
+  changes every session's behaviour on the next hook fire — no copy step.
+- **`SKILL.md` is a copy that must be synced.** Claude loads the skill from
+  `~/.claude/skills/ledger/SKILL.md`; the repo file is the source. After
+  editing the repo copy, copy it to the global path or the two drift.
+  Currently byte-identical (sha256 `fe005677…`, 14669 bytes).
+
+The global skill directory holds **only** `SKILL.md` — the duplicate `scripts/`
+was deleted in the rev-21 cleanup precisely so there is one live copy of the
+code and one of the prose.
 
 ## The hold — LIFTED 2026-09-13
 
-Cliff: "There's no hold now. We are testing." The held backlog is logged as
-`ev_00f17d25` on `meta` — Book revs 18–20, the skill rewrite, commit c41af15,
-the hooks move. The board build/deploy is BotBeam's to log from its own
-session; the emitting session should be the one that did the work.
-
-Ledger contents now: `orchestra` and `meta` streams; events `ev_b115c835`
-(orchestra v0.2.6) and `ev_00f17d25` (woodshed record plane), plus BotBeam's
-deploy event once it lands.
+Cliff: "There's no hold now. We are testing." The held backlog was logged as
+`ev_00f17d25` on `meta`.
 
 ## How the design settled (so it isn't relitigated)
 
@@ -139,12 +174,14 @@ deploy event once it lands.
   transition. Nothing is inferred from timestamps.
 - **`expired` and the whole sweep are retired.** Transcript existence is not a
   session state; Claude Code deletes transcripts on its own 30-day clock.
-- **Two feeds**: hooks (sessions, automatic) and the skill (events, judgment).
-  Hooks are NOT part of the skill.
+- **Two feeds**: hooks (sessions, automatic) and the skill (events, runs,
+  deliverables — judgment). Hooks are NOT part of the skill.
 - **Signals ≠ events**: hooks post signals (telemetry, not stored as rows);
   Claude posts events (record, immutable).
 - Emitting an event writes the emitting session's liveness — invariant 9, the
   only place the two planes touch.
 - Streams are born inside the event that needs them (`create_stream` rides in
-  `POST /ledger/events`) and **close only when Cliff says so**.
-- Work products are deferred. `~/claude-memory` is abandoned, not migrated.
+  `POST /ledger/events`); deliverables are born inside the run that needs them
+  (`create_deliverable` rides in `POST /ledger/runs`). Both **close only when
+  Cliff says so**.
+- `~/claude-memory` is abandoned, not migrated.

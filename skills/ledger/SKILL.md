@@ -266,15 +266,52 @@ You never maintain it and never write it.
 
 Never post session state by hand, and never render or beam a board yourself.
 
-## Setup (once per machine — offer if not wired)
+## Where this skill lives — read before editing it
 
-1. **CLAUDE.md pointer** (`~/.claude/CLAUDE.md`): log significant work via this
-   skill; consult the ledger for "what's going on."
-2. **Hooks** (`~/.claude/settings.json`): SessionStart (fetch
-   `GET {base}/ledger/index` for orientation, plus the transmitter),
-   UserPromptSubmit, Stop, SessionEnd, PostToolUse (no matcher — all tools; the
-   service classifies) →
-   `python "C:/code/woodshed/skills/ledger/scripts/session_event.py"`, all
-   `"shell": "bash"`, `"async": true`.
-3. **Credentials**: `~/.config/orchestra/botbeam.json` — `base_url` + agent
-   `token`.
+**Source: `C:\code\woodshed\skills\ledger`. Always edit there.**
+`~/.claude/skills/ledger` is a **junction** to that directory, not a copy — one
+set of files, two paths — so an edit in the repo is live for the next new
+session in every workspace, with nothing to sync. Commit the repo.
+
+That covers `SKILL.md` and both scripts. Four things are *not* in the repo and
+must be installed per machine: the junction itself, the hook registration in
+`~/.claude/settings.json`, `~/.config/orchestra/botbeam.json`, and the standing
+duty in `~/.claude/CLAUDE.md`.
+
+```
+python tools/install_ledger.py            # install or repair, idempotent
+python tools/install_ledger.py --verify   # report only, changes nothing
+```
+
+The installer sources the first, second and fourth from
+`skills/ledger/install/` and shapes the third from a template.
+
+**When the hook plane fails, it says so.** Hooks end in `|| true` and both
+scripts swallow their exceptions — they must never block a session — so a
+broken transmitter would otherwise be indistinguishable from a quiet day, and
+"Claude didn't log it" indistinguishable from "the plumbing dropped it". Every
+swallow therefore writes one line to `%TEMP%\ledger-hook\errors.log` first
+(`scripts/hooklog.py`), and it is read back in the two places anyone looks:
+
+- **`orientation.py` prints a warning into the next session's context** if
+  anything failed in the last 24h. That is the whole point — the alarm reaches
+  a human and a session unprompted, without either going to look.
+- **`install_ledger.py --verify`** reports the count and the last few lines.
+
+If you see that warning, fix the plumbing before trusting anything the board
+does or doesn't show.
+
+**Deploy order is service first, then skill.** They are a contract: the service
+tolerates a skill that doesn't use its newest endpoints, but a skill calling
+endpoints the service lacks 404s into the same silence. Check `GET {base}/health`
+before shipping a protocol change here.
+
+### What the install kit holds
+
+- `install/hooks.json` — the five events, pathed through
+  `$HOME/.claude/skills/ledger/scripts/` so the block is identical on every
+  machine. **Orientation is synchronous** (its stdout is injected into the new
+  session); every transmitter entry is `async`. Getting that backwards silently
+  discards the orientation.
+- `install/claude-md.md` — the standing-duty stanza.
+- `install/botbeam.example.json` — credential shape; the token is never in git.

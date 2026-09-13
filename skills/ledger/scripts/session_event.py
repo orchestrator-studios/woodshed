@@ -34,16 +34,22 @@ import sys
 import time
 import urllib.request
 
+import hooklog
+
 DEBOUNCE_SECS = 60          # heartbeat cadence; no longer tied to any service window
 TIMEOUT_SECS = 10           # generous — hooks run async, so nothing waits on us
 
+_ctx = "?"                  # best-effort label for the failure log
+
 
 def main() -> None:
+    global _ctx
     payload = json.load(sys.stdin)
     sid = payload.get("session_id")
     event = payload.get("hook_event_name")
     if not sid or not event:
         return
+    _ctx = "%s/%s" % (event, sid[:8])
 
     if event == "PostToolUse" and _debounced(sid):
         return
@@ -98,6 +104,9 @@ def _stamp(sid: str) -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception:
-        pass  # a hook must never block or noise a session
+    except Exception as exc:
+        # Still silent to the session — a hook must never block or noise one.
+        # But no longer silent to us: orientation.py surfaces this into the
+        # next session, and install_ledger.py --verify reports it.
+        hooklog.log(_ctx, exc)
     sys.exit(0)
