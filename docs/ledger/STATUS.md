@@ -103,6 +103,32 @@ remains is the test round: exercise the plane for real, then decide it's done.
   a stream to filter the feed.
 - `LEDGER_ADMIN_RESET` is enabled in prod, to be removed after the test round.
 
+## The board can act — invariant 11, 2026-09-13 (designed, NOT built)
+
+Closing a stream logs an event, and an event demanded a `session_id`. A button
+on the dashboard is a web page with no session, so the board could not close a
+stream at all. The blocker is invariant 9 meeting its first non-session actor.
+
+**An emitter is a place a user acts from**, and there are two: a Claude session
+and the BotBeam interface. Both emit; `emitter_kind` says which, explicitly.
+
+Data level: `ledger_events` gains `emitter_kind` (`'session' | 'board'`, NOT
+NULL), `session_id` becomes nullable, and the migration backfills every
+existing row to `'session'`. A real constraint, not a convention — `session`
+demands a `session_id` that resolves, `board` demands null; both or neither is
+a 400. Requests carry `session_id` **or** `emitter: "board"`, never inferred
+from the caller's credential, since the browser and every agent authenticate as
+the same user. Reads return `emitter_kind` so the board picks its chip from a
+field rather than from a null. Board-emitted events skip the liveness write and
+only that — the board is a surface, not a running thing.
+
+Rejected: nullable `session_id` alone as the signal. It encodes the newest
+concept in the model as a missing value, where a null later means either "the
+board did it" or "something broke."
+
+Service side is BotBeam's. Close/reopen buttons are mine, once it deploys — and
+the same emitter unblocks deliverable retire/unretire from the board.
+
 ## The board is closed under reference — invariant 10, 2026-09-13
 
 Closing a stream must take its deliverables and its feed entries out of the
