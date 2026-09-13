@@ -154,7 +154,7 @@
   <p class="lede">The single reference for the ledger: what it does, the layers it is built from, its
     objects and their lifecycles, and the <code>/ledger</code> API. One system of record — the BotBeam
     ledger service. Every schema and state transition is enforced in service code.</p>
-  <p class="stamp">rev 20 · 2026-09-13 · <span class="target">LIVE — sessions and record planes both deployed (BotBeam v1.7.0)</span></p>
+  <p class="stamp">rev 21 · 2026-09-13 · <span class="target">Sessions and record planes LIVE (BotBeam v1.8.2) · runs + deliverables SPECIFIED, not yet built</span></p>
 </header>
 
 <div class="layout">
@@ -173,7 +173,8 @@
     <a href="#o-session" data-target="o-session" class="sub">Session</a>
     <a href="#o-event" data-target="o-event" class="sub">Event</a>
     <a href="#o-stream" data-target="o-stream" class="sub">Stream</a>
-    <a href="#o-product" data-target="o-product" class="sub">Work product</a>
+    <a href="#o-deliverable" data-target="o-deliverable" class="sub">Deliverable</a>
+    <a href="#o-run" data-target="o-run" class="sub">Run</a>
 
     <div class="grp">Ledger API</div>
     <a href="#api" data-target="api">All endpoints</a>
@@ -181,7 +182,8 @@
     <a href="#api-events" data-target="api-events" class="sub"><span class="k">/ledger/events</span></a>
     <a href="#api-streams" data-target="api-streams" class="sub"><span class="k">/ledger/streams</span></a>
     <a href="#api-sessions" data-target="api-sessions" class="sub"><span class="k">/ledger/sessions</span></a>
-    <a href="#api-products" data-target="api-products" class="sub"><span class="k">/ledger/products</span></a>
+    <a href="#api-deliverables" data-target="api-deliverables" class="sub"><span class="k">/ledger/deliverables</span></a>
+    <a href="#api-runs" data-target="api-runs" class="sub"><span class="k">/ledger/runs</span></a>
     <a href="#api-search" data-target="api-search" class="sub"><span class="k">/ledger/search</span></a>
     <a href="#api-views" data-target="api-views" class="sub"><span class="k">/ledger/index · /board</span></a>
     <a href="#api-conv" data-target="api-conv" class="sub">Conventions</a>
@@ -286,7 +288,7 @@
             <rect x="396" y="330" width="208" height="32" rx="6" fill="var(--data-wash)" stroke="var(--data)"/>
             <text x="406" y="351" font-size="11" fill="var(--data-ink)" font-family="IBM Plex Mono, monospace">telemetry — sessions</text>
             <rect x="396" y="372" width="208" height="32" rx="6" fill="var(--client-wash)" stroke="var(--client)"/>
-            <text x="406" y="393" font-size="10.5" fill="var(--client-ink)" font-family="IBM Plex Mono, monospace">record — events·streams·products</text>
+            <text x="406" y="393" font-size="10" fill="var(--client-ink)" font-family="IBM Plex Mono, monospace">record — events·streams·deliverables·runs</text>
 
             <!-- plane 1 in: telemetry (blue) -->
             <g fill="none" stroke="var(--data)" stroke-width="1.6">
@@ -312,8 +314,8 @@
             <text x="692" y="428" font-size="11.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">board · recall</text>
           </svg>
           <figcaption>Every cluster emits two kinds of data: blue telemetry — the sessions' own
-            lifecycle, automatic — and green logged work — the events, stream updates, and products
-            their activity throws off, admitted by judgment. One service holds both planes. The board
+            lifecycle, automatic — and green logged work — the events, stream updates, and runs on
+            deliverables their activity throws off, admitted by judgment. One service holds both planes. The board
             you watch re-collects the very session marks drawn in the clusters — the same six dots,
             gathered into one frame — with the record behind them.</figcaption>
         </figure>
@@ -343,36 +345,37 @@
             <tbody>
               <tr><td class="f"><a href="#o-event">Event</a></td><td>what happened — immutable, one line + bullets, belongs to one stream</td></tr>
               <tr><td class="f"><a href="#o-stream">Stream</a></td><td>a thread of work under management — state, next action, open loops</td></tr>
-              <tr style="opacity:0.6"><td class="f"><a href="#o-product">Work product</a></td><td>what was made — a name plus exactly one home; payload stays at the home <b>(deferred)</b></td></tr>
+              <tr><td class="f"><a href="#o-deliverable">Deliverable</a></td><td>what was made — a name plus exactly one home; persists and is advanced over its life</td></tr>
+              <tr><td class="f"><a href="#o-run">Run</a></td><td>a bounded stretch of work on one deliverable — declared open, declared closed</td></tr>
             </tbody>
           </table>
           <p style="margin-top:8px">Answers: <b>what has been done, what's in flight, what's
             next?</b> Its surfaces are the orientation, recall, and the board's record columns.</p>
         </div>
       </div>
-      <p class="sub" style="margin:14px 0 0;font-size:13.5px">These four objects — Session; Event,
-        Stream, Work product — plus the <a href="#o-workspace">Workspace</a> a session runs in, are
-        the system's <b>entire vocabulary</b>. Every panel in this book moves those five things and
-        nothing else. Plane one emits plane two: a session's activity is where every event, product,
-        and stream update comes from, and attribution stitches them — every event carries its
-        session, every product its provenance, every session at most one stream.</p>
+      <p class="sub" style="margin:14px 0 0;font-size:13.5px">These five objects — Session; Event,
+        Stream, Deliverable, Run — plus the <a href="#o-workspace">Workspace</a> a session runs in,
+        are the system's <b>entire vocabulary</b>. Every panel in this book moves those six things and
+        nothing else. Plane one emits plane two: a session's activity is where every event, run, and
+        stream update comes from, and attribution stitches them — every event carries its session,
+        every run its session and its deliverable, every session at most one stream.</p>
 
       <h5 class="lbl">The seven behaviors <span>— what each plane gets, and what spans both</span></h5>
       <ol class="does">
         <li><span class="og tel">telemetry</span> <b>Tracks sessions.</b> Every Claude Code session's
-          lifecycle — active, dormant, archived; waiting, processing, run — declared by hook
+          lifecycle — active, dormant, archived; waiting, processing — declared by hook
           signals and API calls, never hand-maintained, never inferred.</li>
         <li><span class="og rec">record</span> <b>Records events.</b> Immutable, timestamped statements
           of what happened — a ship, a decision, a send, a state change — each belonging to exactly
           one stream.</li>
         <li><span class="og rec">record</span> <b>Maintains streams.</b> One management record per
           thread of work: current state, the single next action, open loops, staleness.</li>
-        <li style="opacity:0.6"><span class="og rec">record</span> <b>Registers work products.</b>
-          Each product is a name plus exactly one home (repo, Drive, sheet, published page). The
-          ledger stores the record; the payload stays at its home. <b>Deferred — not this
-          phase.</b></li>
+        <li><span class="og rec">record</span> <b>Registers deliverables and the runs that make
+          them.</b> Each deliverable is a name plus exactly one home (repo, Drive, sheet, published
+          page); the ledger stores the record, the payload stays at its home. Each run is a bounded
+          stretch of work against one deliverable, declared open and declared closed.</li>
         <li><span class="og rec">record</span> <b>Answers recall.</b> Queries across events, streams,
-          and products return dates, links, and current state.</li>
+          and deliverables return dates, links, and current state.</li>
         <li><span class="og">both</span> <b>Serves its own views.</b> The board data structure
           (telemetry, enriched by the record) that the BotBeam view renders, and the session-start
           orientation (the record) — projections of the one store; no client computes a view.</li>
@@ -427,8 +430,9 @@
             <tr><td>you launch <code>claude</code></td><td class="mono c-client">SessionStart hook</td><td><span class="og tel">1</span></td><td class="mono">session row created · status=active · turn_state=waiting</td><td>nothing yet — never prompted</td></tr>
             <tr><td>the same hook, second duty</td><td class="mono c-svc">GET /ledger/index</td><td><span class="og tel">1</span></td><td class="mono">— (a read)</td><td>orientation injected into the new session's context</td></tr>
             <tr><td>you type a prompt</td><td class="mono c-client">UserPromptSubmit hook</td><td><span class="og tel">1</span></td><td class="mono">turn_state=processing · ever_prompted=true</td><td><b>a card appears</b>, solid green</td></tr>
-            <tr><td>Claude edits a file</td><td class="mono c-client">PostToolUse hook</td><td><span class="og tel">1</span></td><td class="mono">last_run_at=now <span style="color:var(--muted)">(debounced 60s)</span></td><td>⚡ on the card</td></tr>
-            <tr><td>…more tool calls…</td><td class="mono c-client">PostToolUse, debounced</td><td><span class="og tel">1</span></td><td class="mono">mostly nothing — a burst carries no new fact</td><td>⚡ stays lit</td></tr>
+            <tr><td><b>Claude starts a bounded piece of work</b></td><td class="mono c-svc">POST /ledger/runs</td><td><span class="og rec">3</span></td><td class="mono">run row opened · deliverable created or matched · session status=active</td><td>⚡ on the card, with the intent and a running clock</td></tr>
+            <tr><td>…it works…</td><td class="mono"><i>nothing fires</i></td><td>—</td><td class="mono">nothing — the run is already declared open</td><td>⚡ stays lit, clock climbing</td></tr>
+            <tr><td>the work ends</td><td class="mono c-svc">POST /ledger/runs/{id}/close</td><td><span class="og rec">3</span></td><td class="mono">ended_at=now · outcome=closed|abandoned · deliverable state updated on close</td><td>⚡ goes out</td></tr>
             <tr><td><b>the work ships</b></td><td class="mono c-svc">POST /ledger/events</td><td><span class="og rec">3</span></td><td class="mono">event row appended · stream updated · session status=active, last_event_at=now</td><td><b>a line in the events feed</b></td></tr>
             <tr><td>Claude finishes the turn</td><td class="mono c-client">Stop hook</td><td><span class="og tel">1</span></td><td class="mono">turn_state=waiting · last_stop_at=now</td><td>card goes to a hollow ring — your move</td></tr>
             <tr><td>you exit cleanly</td><td class="mono c-client">SessionEnd hook</td><td><span class="og tel">1</span></td><td class="mono">status=dormant · ended_at=now</td><td>card goes gray, moves to Inactive</td></tr>
@@ -582,7 +586,7 @@
       <div class="figwrap">
         <figure>
           <svg class="d" viewBox="0 0 980 330" style="min-width:720px" role="img"
-            aria-label="State diagram. Sessions become active on start. While active they cycle waiting to processing on prompt, processing to waiting on stop, processing to run on mutation. Active becomes dormant on SessionEnd; a resume reactivates it. Dormant and archived interconvert by archive and unarchive calls. Any signal, or logging an event, returns an archived session to active. There are three states and no fourth.">
+            aria-label="State diagram. Sessions become active on start. While active they cycle waiting to processing on prompt and processing to waiting on stop. Active becomes dormant on SessionEnd; a resume reactivates it. Dormant and archived interconvert by archive and unarchive calls. Any signal, or logging an event, returns an archived session to active. There are three states and no fourth.">
             <defs>
               <marker id="lf" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
@@ -595,20 +599,15 @@
               <text x="123" y="137" text-anchor="middle" font-size="13" fill="var(--ink)">waiting</text>
               <rect x="230" y="110" width="118" height="44" rx="8" fill="var(--surface)" stroke="var(--hairline-2)"/>
               <text x="289" y="137" text-anchor="middle" font-size="13" fill="var(--ink)">processing</text>
-              <rect x="230" y="196" width="118" height="44" rx="8" fill="var(--surface)" stroke="var(--svc)" stroke-width="1.6"/>
-              <text x="289" y="223" text-anchor="middle" font-size="13" fill="var(--svc-ink)">run ⚡</text>
             </g>
             <g fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M176 122 C196 118 208 118 228 122" marker-end="url(#lf)"/>
               <path d="M228 144 C208 148 196 148 178 144" marker-end="url(#lf)"/>
-              <path d="M289 156 L289 194" marker-end="url(#lf)"/>
-              <path d="M232 218 C160 218 128 186 123 158" marker-end="url(#lf)"/>
             </g>
             <g font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">
               <text x="202" y="110" text-anchor="middle">prompt</text>
               <text x="202" y="162" text-anchor="middle">stop</text>
-              <text x="297" y="180">mutation</text>
-              <text x="150" y="196">stop</text>
+              <text x="209" y="216" text-anchor="middle" fill="var(--svc-ink)">⚡ = an open run — a record-plane fact, not a session state</text>
             </g>
             <rect x="530" y="80" width="130" height="48" rx="9" fill="var(--surface)" stroke="var(--hairline-2)" stroke-width="1.5"/>
             <text x="595" y="109" text-anchor="middle" font-size="13.5" fill="var(--ink)">dormant</text>
@@ -631,7 +630,11 @@
               <text x="368" y="300" fill="var(--client-ink)">any signal, or logging an event, writes active</text>
             </g>
           </svg>
-          <figcaption>The compound state is active, containing waiting ⇄ processing ⊇ run. Every
+          <figcaption>The compound state is active, containing waiting ⇄ processing. <b>Rev 21
+            removed <code>run</code> from this diagram</b> — a run is not a phase of a session's turn,
+            it is a record-plane object with its own lifecycle (see <a href="#o-run">Run</a>). The ⚡
+            on a card means the session has an open run; it is read from the runs table, not from a
+            session column. Every
             arrow is a write: the signal or call that causes a transition stores the new status.
             The dashed green returns are declared recoveries — any sign of life writes
             <code>status="active"</code>, which is what un-archives and un-expires. A crashed
@@ -653,7 +656,6 @@
             <tr><td class="mono">→ active</td><td>launch or resume</td><td class="mono c-client">event: SessionStart</td><td class="mono">status="active" · row created if new: workspace_id · machine · label · first_seen=now · turn_state="waiting"</td></tr>
             <tr><td class="mono">→ active</td><td>the session logs an event</td><td class="mono c-svc">POST /ledger/events</td><td class="mono">the universal writes, in the same transaction as the event <span style="color:var(--muted)">— invariant 9; turn_state untouched</span></td></tr>
             <tr><td class="mono">waiting → processing</td><td>a prompt is submitted</td><td class="mono c-client">event: UserPromptSubmit</td><td class="mono">turn_state="processing" · last_prompt_at=now · ever_prompted=true</td></tr>
-            <tr><td class="mono">processing → run</td><td>Claude mutates something</td><td class="mono c-client">event: PostToolUse (mutating tool)</td><td class="mono">last_run_at=now <span style="color:var(--muted)">— ⚡ shows while now − last_run_at ≤ run window</span></td></tr>
             <tr><td class="mono">processing → waiting</td><td>the turn finishes</td><td class="mono c-client">event: Stop</td><td class="mono">turn_state="waiting" · last_stop_at=now</td></tr>
             <tr><td class="mono">active → dormant</td><td>clean exit</td><td class="mono c-client">event: SessionEnd</td><td class="mono">status="dormant" · ended_at=now · turn_state="waiting"</td></tr>
             <tr><td class="mono">active → <i>(stale)</i></td><td>crash</td><td class="mono c-client"><i>nothing</i></td><td class="mono">no write — the row keeps status="active"; a future repair mechanism will write status → "dormant" and stale turn_state="processing" → "waiting" <span style="color:var(--muted)">(the crashed-session cleanup — DEFERRED, out of scope for now)</span></td></tr>
@@ -683,18 +685,28 @@
         <thead><tr><th>Glyph</th><th>State</th><th>Means</th><th>Your move</th></tr></thead>
         <tbody>
           <tr><td><svg width="18" height="14"><circle cx="8" cy="7" r="5.5" fill="#2ecc55"/></svg></td><td class="mono c-client">processing</td><td>Claude is mid-turn</td><td>none — it's working</td></tr>
-          <tr><td><svg width="18" height="14"><circle cx="8" cy="7" r="5.5" fill="#2ecc55"/></svg> ⚡</td><td class="mono c-client">run</td><td>mid-turn and it changed something just now</td><td>none — it's mutating</td></tr>
+          <tr><td><svg width="18" height="14"><circle cx="8" cy="7" r="5.5" fill="#2ecc55"/></svg> ⚡</td><td class="mono c-svc">open run</td><td>working on a named deliverable — the card shows which, and for how long</td><td>none — it's making something</td></tr>
           <tr><td><svg width="18" height="14"><circle cx="8" cy="7" r="5" fill="none" stroke="#2ecc55" stroke-width="2"/></svg></td><td class="mono c-client">waiting</td><td>the turn is finished</td><td>yours — it's waiting on you</td></tr>
+          <tr><td><svg width="18" height="14"><circle cx="8" cy="7" r="5" fill="none" stroke="#2ecc55" stroke-width="2"/></svg> ⚡</td><td class="mono c-svc">waiting + open run</td><td><b>work parked mid-run</b> — a run is still open but the turn handed back to you</td><td>yours — answer, and the run resumes</td></tr>
           <tr><td><svg width="18" height="14"><circle cx="8" cy="7" r="5.5" fill="#4a4d47"/></svg></td><td class="mono">dormant</td><td>silent — exited, crashed, or idle; unknowable and equivalent, all resumable</td><td>resume it, or archive it away</td></tr>
         </tbody>
       </table></div>
 
-      <h5 class="lbl">Rule 3 — the only timing in the system</h5>
-      <div class="rule" style="margin-top:0"><b>One window.</b> The ⚡ goes out after the
-        <b>run window</b> — that long after the last mutation. Nothing else in the system ages: a
-        card goes gray only when its session declares dormant (clean exit, or unarchive). A crashed
-        session stays green until a repair mechanism is added — the one known lie on the board,
-        accepted for now (deferred).</div>
+      <div class="rule client" style="margin-top:14px"><b>The bolt is orthogonal to the turn glyph —
+        rev 21 ruling.</b> The old <code>run</code> was a sub-state of <code>processing</code>, so
+        ring+⚡ was impossible by construction. It is not only possible now, it is <b>common</b>: a
+        run spans whatever turns it takes, and Claude stopping to ask you something does not end the
+        work. Render the two channels independently — the circle answers <em>whose move is it</em>,
+        the bolt answers <em>is a deliverable being worked</em>. All four combinations are legal and
+        each means something.</div>
+
+      <h5 class="lbl">Rule 3 — nothing on this board ages</h5>
+      <div class="rule" style="margin-top:0"><b>No windows. Rev 21 deleted the last one.</b> The ⚡
+        is lit by an <b>open run</b> and goes out when that run is <b>declared</b> closed or
+        abandoned — never on a timer. Every glyph on the board now traces to a stored, declared fact.
+        A card goes gray only when its session declares dormant (clean exit, or unarchive). A crashed
+        session stays green, and a crashed session's run stays open, until a repair mechanism is
+        added — the one known lie on the board, accepted for now (deferred).</div>
 
       <h5 class="lbl">Cornering the transitions <span>— every change the board can show, one cause each</span></h5>
       <div class="tablescroll"><table class="grid">
@@ -702,8 +714,8 @@
         <tbody>
           <tr><td>a new card appears</td><td>a session got its first prompt</td><td class="mono">ever_prompted flips true</td></tr>
           <tr><td>ring → solid green</td><td>a prompt was submitted</td><td class="mono">turn_state → processing</td></tr>
-          <tr><td>green gains ⚡</td><td>it mutated something</td><td class="mono">last_run_at within run window</td></tr>
-          <tr><td>⚡ goes out, still green</td><td>still working; nothing mutated lately</td><td class="mono">run window elapsed</td></tr>
+          <tr><td>green gains ⚡</td><td>it opened a run on a deliverable</td><td class="mono">POST /ledger/runs — a declared open</td></tr>
+          <tr><td>⚡ goes out, still green</td><td>the run closed or was abandoned</td><td class="mono">POST /ledger/runs/{id}/close — declared</td></tr>
           <tr><td>solid green → ring</td><td>the turn finished — your move</td><td class="mono">turn_state → waiting</td></tr>
           <tr><td>anything → gray</td><td>it exited cleanly (or you unarchived it)</td><td class="mono">status → dormant — a written transition</td></tr>
           <tr><td>gray → green</td><td>it was resumed and prompted</td><td class="mono">new prompt</td></tr>
@@ -723,7 +735,7 @@
           <tr><td class="mono c-data">status</td><td>every signal and call — the transition table</td><td>green vs gray vs listed at all — stored, not inferred</td></tr>
           <tr><td class="mono c-data">turn_state</td><td>UserPromptSubmit → processing · Stop → waiting</td><td>solid vs ring — stored, not inferred</td></tr>
           <tr><td class="mono c-data">last_event_at</td><td>every signal</td><td>recency — ordering the inactive section</td></tr>
-          <tr><td class="mono c-data">last_run_at</td><td>PostToolUse — mutating tools</td><td>the ⚡</td></tr>
+          <tr><td class="mono c-svc">an open run</td><td>POST /ledger/runs — Claude, declaring</td><td>the ⚡, its deliverable name, and elapsed <span style="color:var(--muted)">— a record-plane row, not a session column</span></td></tr>
           <tr><td class="mono c-data">ended_at</td><td>SessionEnd</td><td>clean-close time — a fact; status carries the state</td></tr>
           <tr><td class="mono c-data">ever_prompted</td><td>first prompt</td><td>Rule 1's "ever prompted"</td></tr>
           <tr><td class="mono c-data">archived_at</td><td>archive call — you</td><td>when you last archived it — a fact; status carries the state</td></tr>
@@ -734,8 +746,10 @@
     <!-- ================= STATUS ================= -->
     <section class="panel" id="status" aria-label="Status and migration" hidden>
       <h2>Status &amp; migration</h2>
-      <p class="sub">This book is the target. The running implementation (v1) is the local-folder
-        system it replaces. Work is tracked in <code>skills/ledger/design/session-state.md</code>.</p>
+      <p class="sub">This book is the design; <code>docs/ledger/STATUS.md</code> is the situation —
+        what is deployed, what is specified but unbuilt, and the open decisions. The v1 local-folder
+        system this replaced is gone: <code>~/claude-memory</code> was abandoned outright and
+        <code>board.py</code> is deleted.</p>
       <div class="tablescroll">
         <table class="grid">
           <thead><tr><th>Concern</th><th>v1 — running today</th><th>Target — this book</th></tr></thead>
@@ -757,7 +771,7 @@
             <tr><td class="mono">1</td><td>Ledger API in BotBeam: store, <code>/ledger</code> endpoints, session state machine</td><td>foundation for all clients</td></tr>
             <tr><td class="mono">2</td><td>Hooks post to <code>/ledger/sessions/{id}/signals</code>; the local store retired</td><td>latched statuses and ghost cards eliminated</td></tr>
             <tr><td class="mono">3</td><td><b>this phase:</b> <code>POST /ledger/events</code> + streams + <code>GET /ledger/index</code>; SKILL.md verbs rewritten as API calls; <code>~/claude-memory</code> abandoned outright (no import)</td><td>the record plane comes online; file drift and logging re-attribution eliminated</td></tr>
-            <tr><td class="mono">4</td><td>Work products: registry, <code>product</code> block accepted, board column <span style="color:var(--muted)">— deferred to a later phase by decision</span></td><td>the record plane complete</td></tr>
+            <tr><td class="mono">4</td><td><b>rev 21:</b> runs + deliverables — two tables, <code>POST /ledger/runs</code> · <code>/close</code> · <code>GET /ledger/runs</code> · <code>GET /ledger/deliverables</code>, the old <code>run</code> computation and <code>last_run_at</code> deleted, board ⚡ re-sourced from open runs <span style="color:var(--muted)">— specified, not yet built</span></td><td>the record plane complete; the last inferred state eliminated</td></tr>
           </tbody>
         </table>
       </div>
@@ -769,21 +783,28 @@
     <!-- ================= AT A GLANCE ================= -->
     <section class="panel" id="glance" aria-label="Objects at a glance" hidden>
       <h2>Objects at a glance</h2>
-      <p class="sub">The system's entire vocabulary: five objects. Workspace and Session originate in
+      <p class="sub">The system's entire vocabulary: six objects. Workspace and Session originate in
         Claude Code (the service annotates the Session — that annotation <em>is</em> the telemetry
-        plane); Event, Stream, and Work product are the ledger's own — together they <em>are</em> the
-        work record. Session status and turn state are stored, declared by the signals and calls
-        that cause them; the only computed fields are display windows and filters (run bolt,
-        relevance, staleness, attribution).</p>
+        plane); Event, Stream, Deliverable, and Run are the ledger's own — together they <em>are</em>
+        the work record. Session status and turn state are stored, declared by the signals and calls
+        that cause them; the only computed fields are filters and display rollups (relevance,
+        staleness, attribution, elapsed).</p>
+      <div class="rule client" style="margin:0 0 18px"><b>Rev 21 — the two nouns of making.</b> A
+        <b>Deliverable</b> is a thing that was made; it persists and is advanced over its life. A
+        <b>Run</b> is a bounded stretch of work against exactly one deliverable, declared open when
+        the work starts and closed when it ends. The old <code>run</code> — a bolt computed from a
+        decaying <code>last_run_at</code> timestamp — <b>is deleted</b>: it inferred a lifecycle
+        state from a clock, which is precisely what invariant 2 forbids.</div>
       <div class="tablescroll">
         <table class="grid">
           <thead><tr><th>Object</th><th>Origin</th><th>Plane</th><th>What it is</th><th>Status</th><th>Related to</th></tr></thead>
           <tbody>
             <tr><td class="c-data mono"><a href="#o-workspace">Workspace</a></td><td><span class="og cc">CC</span></td><td><span class="og">context</span></td><td>directory Claude launches in</td><td>active iff any session active</td><td>has many sessions</td></tr>
-            <tr><td class="c-data mono"><a href="#o-session">Session</a></td><td><span class="og cc">CC</span> <span class="og svc">annotated</span></td><td><span class="og tel">telemetry</span></td><td>persistent conversation, resumable</td><td>active → dormant ⇄ archived · active: waiting/processing/run</td><td>one workspace; ≤1 attributed stream; emits events; produces products</td></tr>
+            <tr><td class="c-data mono"><a href="#o-session">Session</a></td><td><span class="og cc">CC</span> <span class="og svc">annotated</span></td><td><span class="og tel">telemetry</span></td><td>persistent conversation, resumable</td><td>active → dormant ⇄ archived · active: waiting/processing</td><td>one workspace; ≤1 attributed stream; emits events; opens runs</td></tr>
             <tr><td class="c-data mono"><a href="#o-event">Event</a></td><td><span class="og svc">ledger</span></td><td><span class="og rec">record</span></td><td>something that happened</td><td>immutable</td><td>one stream; one emitting session</td></tr>
-            <tr><td class="c-data mono"><a href="#o-stream">Stream</a></td><td><span class="og svc">ledger</span></td><td><span class="og rec">record</span></td><td>thread of work under management</td><td>active → closed</td><td>many events, products, attributed sessions</td></tr>
-            <tr style="opacity:0.55"><td class="c-data mono"><a href="#o-product">Work product</a></td><td><span class="og svc">ledger</span></td><td><span class="og rec">record</span></td><td>something made — record + link; payload at its home <b>· deferred</b></td><td>registered</td><td>one stream; one session; one home</td></tr>
+            <tr><td class="c-data mono"><a href="#o-stream">Stream</a></td><td><span class="og svc">ledger</span></td><td><span class="og rec">record</span></td><td>thread of work under management</td><td>active → closed</td><td>many events, deliverables, attributed sessions</td></tr>
+            <tr><td class="c-data mono"><a href="#o-deliverable">Deliverable</a></td><td><span class="og svc">ledger</span></td><td><span class="og rec">record</span></td><td>something made — record + link; payload at its home</td><td>live → retired</td><td>one stream; one home; many runs over its life</td></tr>
+            <tr><td class="c-data mono"><a href="#o-run">Run</a></td><td><span class="og svc">ledger</span></td><td><span class="og rec">record</span></td><td>a bounded stretch of work on one deliverable</td><td>open → closed ∣ abandoned</td><td>exactly one deliverable; one session</td></tr>
           </tbody>
         </table>
       </div>
@@ -798,7 +819,7 @@
       <div class="figwrap">
         <figure>
           <svg class="d" viewBox="0 0 960 460" style="min-width:700px" role="img"
-            aria-label="Entity relationship diagram. A workspace has many sessions. A session emits many events and produces many work products; each event and each product carries exactly one session. A stream owns many events and many work products; each belongs to exactly one stream. A session's board attribution is at most one stream, and a stream has many attributed sessions — attribution, not ownership, drawn dotted. The full working relationship between sessions and streams is many-to-many, carried through events and products.">
+            aria-label="Entity relationship diagram. A workspace has many sessions. A session emits many events and opens many runs; each event and each run carries exactly one session. Every run targets exactly one deliverable, and a deliverable is advanced by many runs over its life. A stream owns many events and many deliverables; each belongs to exactly one stream. A session's board attribution is at most one stream, and a stream has many attributed sessions — attribution, not ownership, drawn dotted. The full working relationship between sessions and streams is many-to-many, carried through events and deliverables.">
             <!-- entities -->
             <rect x="40" y="185" width="150" height="90" rx="10" fill="var(--surface)" stroke="var(--hairline-2)" stroke-width="1.6"/>
             <text x="115" y="220" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--ink)">Workspace</text>
@@ -819,16 +840,22 @@
             <text x="825" y="256" text-anchor="middle" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">the container</text>
 
             <rect x="520" y="330" width="170" height="96" rx="10" fill="var(--client-wash)" stroke="var(--client)" stroke-width="1.8"/>
-            <text x="605" y="362" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--ink)">Work product</text>
+            <text x="605" y="362" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--ink)">Deliverable</text>
             <text x="605" y="384" text-anchor="middle" font-size="11" fill="var(--client-ink)" font-family="IBM Plex Mono, monospace">name · record</text>
             <text x="605" y="404" text-anchor="middle" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">home: exactly 1 (external)</text>
+
+            <rect x="272" y="330" width="160" height="96" rx="10" fill="var(--svc-wash, var(--surface))" stroke="var(--svc)" stroke-width="1.8"/>
+            <text x="352" y="362" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--ink)">Run</text>
+            <text x="352" y="384" text-anchor="middle" font-size="11" fill="var(--svc-ink)" font-family="IBM Plex Mono, monospace">open → closed</text>
+            <text x="352" y="404" text-anchor="middle" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">declared both ends</text>
 
             <!-- ownership edges (solid) -->
             <g stroke="currentColor" stroke-width="1.6" fill="none">
               <line x1="190" y1="230" x2="280" y2="230"/>
               <line x1="430" y1="182" x2="528" y2="112"/>
               <line x1="740" y1="182" x2="690" y2="112"/>
-              <line x1="430" y1="278" x2="528" y2="348"/>
+              <line x1="352" y1="280" x2="352" y2="330"/>
+              <line x1="432" y1="378" x2="520" y2="378"/>
               <line x1="740" y1="278" x2="690" y2="348"/>
             </g>
             <!-- attribution edge (dotted) -->
@@ -839,7 +866,8 @@
               <text x="235" y="220" text-anchor="middle">has</text>
               <text x="448" y="140">emits</text>
               <text x="700" y="140" text-anchor="end">owns</text>
-              <text x="436" y="330">produces</text>
+              <text x="362" y="308">opens</text>
+              <text x="476" y="370" text-anchor="middle">advances</text>
               <text x="712" y="330" text-anchor="end">owns</text>
               <text x="595" y="218" text-anchor="middle">board attribution (not ownership)</text>
             </g>
@@ -852,8 +880,10 @@
               <text x="514" y="122" text-anchor="end">∗</text>
               <text x="732" y="176" text-anchor="end">1</text>
               <text x="698" y="122">∗</text>
-              <text x="438" y="294">1</text>
-              <text x="514" y="342" text-anchor="end">∗</text>
+              <text x="340" y="298" text-anchor="end">1</text>
+              <text x="340" y="324" text-anchor="end">∗</text>
+              <text x="440" y="370">∗</text>
+              <text x="512" y="370" text-anchor="end">1</text>
               <text x="732" y="294" text-anchor="end">1</text>
               <text x="698" y="342">∗</text>
               <text x="462" y="248">∗</text>
@@ -862,14 +892,16 @@
           </svg>
           <figcaption>Each number is the count of the <em>nearer</em> object per one of the farther
             object — so Workspace <span class="mono">1 — ∗</span> Session reads &ldquo;one workspace
-            has many sessions.&rdquo; Every event and every product belongs to exactly <b>one
-            stream</b> and carries exactly <b>one session</b> of provenance. Sessions and streams have
+            has many sessions.&rdquo; Every event and every deliverable belongs to exactly <b>one
+            stream</b>. Provenance for making now flows through the <b>Run</b>: a session opens many
+            runs, each run targets exactly <b>one deliverable</b>, and a deliverable is advanced by
+            <b>many runs</b> over its life — which is the whole point of the noun, since an event is a
+            point in time and cannot carry a thing's identity forward. Sessions and streams have
             <b>two distinct relationships</b>: the dotted link is <em>board attribution</em> — at most
             one stream per session, many sessions per stream — while the full <em>working</em>
             relationship is many-to-many and needs no link of its own: it flows through the diamond's
-            side paths, because each of a session's events and products names its own stream. A
-            product's home is exactly one, and external — the payload never lives in the
-            ledger.</figcaption>
+            side paths. A deliverable's home is exactly one, and external — the payload never lives in
+            the ledger.</figcaption>
         </figure>
       </div>
     </section>
@@ -916,7 +948,6 @@
           <tr><td class="mono c-data">status</td><td class="mono">active | dormant | archived</td><td>every signal · <b>event emission</b> · archive calls</td><td><b>stored status</b>: any signal but SessionEnd writes active; SessionEnd and unarchive write dormant; archive writes archived. Three states, no fourth. A crash leaves it stale until a repair mechanism is added (deferred)</td></tr>
           <tr><td class="mono c-data">turn_state</td><td class="mono">waiting | processing</td><td>prompt / Stop</td><td><b>stored status</b>: UserPromptSubmit sets processing, Stop (and SessionEnd) sets waiting — declared by signals, never inferred. Crashed-session cleanup is a separate mechanism (deferred)</td></tr>
           <tr><td class="mono c-data">last_prompt_at · last_stop_at</td><td class="mono">timestamp?</td><td>prompt / turn end</td><td>recency facts; do not drive state</td></tr>
-          <tr><td class="mono c-data">last_run_at</td><td class="mono">timestamp?</td><td>mutating tool</td><td>drives the run bolt while within the run window</td></tr>
           <tr><td class="mono c-data">ended_at</td><td class="mono">timestamp?</td><td>SessionEnd</td><td>clean-close time — a fact; status carries the state</td></tr>
           <tr><td class="mono c-data">ever_prompted</td><td class="mono">bool</td><td>first prompt</td><td>relevance gate — filters launch/picker ghosts</td></tr>
           <tr><td class="mono c-data">archived_at</td><td class="mono">timestamp?</td><td>archive call</td><td>when the user last archived it — a fact; status carries the state</td></tr>
@@ -926,9 +957,10 @@
       <div class="tablescroll"><table class="grid">
         <thead><tr><th>Field</th><th>Rule</th></tr></thead>
         <tbody>
-          <tr><td class="mono c-svc">activity — waiting / processing / run</td><td>while <code>status="active"</code>: activity <em>is</em> the stored <code>turn_state</code>; run = processing with <code>last_run_at</code> inside the run window. A non-active session reports no activity</td></tr>
+          <tr><td class="mono c-svc">activity — waiting / processing</td><td>while <code>status="active"</code>: activity <em>is</em> the stored <code>turn_state</code>, with no further computation. A non-active session reports no activity. <span style="color:var(--muted)">(Rev 21 removed the third value, <code>run</code>, and the window it was computed from.)</span></td></tr>
+          <tr><td class="mono c-svc">open_run</td><td>the session's run with <code>ended_at</code> null, if any — <code>intent</code>, <code>deliverable_id</code> + <code>deliverable_name</code>, <code>started_at</code>, <code>elapsed_s</code>. A <b>join</b>, not a computation: the underlying fact is stored and declared. <b>Orthogonal to <code>turn_state</code></b> — see the ring+⚡ ruling on the cheat sheet</td></tr>
           <tr><td class="mono c-svc">relevant</td><td><code>ever_prompted</code> and <code>status</code> is not archived; only relevant sessions appear on the board</td></tr>
-          <tr><td class="mono c-svc">stream_id</td><td>attribution rule: the stream of the session's most recent non-<code>meta</code> event or product; else the most recently updated active stream whose <code>working_paths</code> contain the workspace; else none. Never stored, so nothing can rebrand it</td></tr>
+          <tr><td class="mono c-svc">stream_id</td><td>attribution rule: the stream of the session's most recent non-<code>meta</code> event or deliverable; else the most recently updated active stream whose <code>working_paths</code> contain the workspace; else none. Never stored, so nothing can rebrand it</td></tr>
         </tbody>
       </table></div>
     </section>
@@ -962,11 +994,11 @@
         has gone quiet — staleness is reported, never acted on. Slugs are permanent: events
         reference them, so a rename orphans history.</div>
       <h5 class="lbl">Relationships</h5>
-      <p class="sub" style="margin:0">Has many <b>events</b> and <b>work products</b>. <b>Sessions</b>
+      <p class="sub" style="margin:0">Has many <b>events</b> and <b>deliverables</b>. <b>Sessions</b>
         are attributed by the service's rule, ≤1 per session; writes into the ledger service itself
         never re-attribute (rules out the v1 failure where a session's own journal write rebranded
         it <code>ledger-meta</code>). Attribution is only the board's label — a session's events and
-        products may span any number of streams, so the working relationship is many-to-many.</p>
+        deliverables may span any number of streams, so the working relationship is many-to-many.</p>
       <div class="rule"><b>The meta stream.</b> <code>meta</code> is a permanent built-in stream for
         ledger-system work: it satisfies &ldquo;every event has exactly one stream,&rdquo; never
         closes, never attributes sessions, and stays out of the working index.</div>
@@ -977,9 +1009,15 @@
       <h2>Event <span class="og svc">ledger</span> <span class="og rec">record</span></h2>
       <p class="sub">Something that happened: a decision, a ship, a send, a state change. Events are
         append-only — never edited, never deleted. Carrying both <code>session_id</code> and
-        <code>stream_id</code>, events (with work products) are also the <b>join records</b> of the
+        <code>stream_id</code>, events (with deliverables) are also the <b>join records</b> of the
         session↔stream many-to-many: the streams a session worked are the distinct
-        <code>stream_id</code>s of its events and products, and vice versa.</p>
+        <code>stream_id</code>s of its events and deliverables, and vice versa.</p>
+      <div class="rule" style="margin-top:0"><b>An event is a point; it has no in-flight phase.</b>
+        Most events are recognised only at the moment they happen — a decision lands, a message goes
+        out — so there is no earlier moment at which one could be declared. That asymmetry is why
+        events are a single call and <a href="#o-run">runs</a> are two. <b>Events do not require a
+        run, and a run is not an event.</b> How a deliverable's advancement is announced in the event
+        feed is <b>open</b> — see the <a href="#o-deliverable">Deliverable</a> panel.</div>
       <div class="tablescroll"><table class="grid">
         <thead><tr><th>Property</th><th>Type</th><th>Meaning</th></tr></thead>
         <tbody>
@@ -1000,27 +1038,94 @@
         (invariant 9).</p>
     </section>
 
-    <!-- ================= WORK PRODUCT ================= -->
-    <section class="panel" id="o-product" aria-label="Work product" hidden>
-      <h2>Work product <span class="og svc">ledger</span> <span class="og rec">record</span></h2>
-      <div class="rule warn" style="margin:0 0 18px"><b>Deferred — not implemented this phase.</b>
-        The record plane ships as events + streams; work products come later. Until then a
-        <code>product</code> block on <a href="#ep-events-post">POST /ledger/events</a> is rejected
-        422, and the board carries no products column. The design below stands as specified.</div>
+    <!-- ================= DELIVERABLE ================= -->
+    <section class="panel" id="o-deliverable" aria-label="Deliverable" hidden>
+      <h2>Deliverable <span class="og svc">ledger</span> <span class="og rec">record</span></h2>
+      <div class="rule client" style="margin:0 0 18px"><b>Rev 21 — un-deferred and renamed.</b>
+        Formerly &ldquo;work product,&rdquo; deferred since rev 18. The name was wrong and the
+        concept was doing nothing. It returns because <a href="#o-run">runs</a> need something to be
+        runs <em>of</em>. <b>Not called &ldquo;artifact&rdquo;</b> — that word is spoken for three
+        times over (claude.ai Artifacts, the orchestra <code>artifacts</code> skill, the Artifact
+        Tracker), and ambiguity here would be expensive.</div>
       <p class="sub">A thing that was made. The ledger stores the record; the payload lives at its
         home. Content is never copied into the ledger.</p>
+      <p class="sub"><b>A deliverable persists and is advanced.</b> This is the whole reason it is a
+        noun rather than a property of an event: the Ledger Book is <em>one</em> deliverable at revs
+        18 → 19 → 20 → 21, not four unrelated events. An event is a point in time and cannot carry a
+        thing's identity forward across the work that shapes it. A deliverable can.</p>
       <div class="tablescroll"><table class="grid">
         <thead><tr><th>Property</th><th>Type</th><th>Meaning</th></tr></thead>
         <tbody>
-          <tr><td class="mono c-data">id · at</td><td class="mono">id · timestamp</td><td>identity</td></tr>
-          <tr><td class="mono c-data">name</td><td class="mono">string</td><td>what it is</td></tr>
-          <tr><td class="mono c-data">home</td><td class="mono">url ∣ path</td><td>canonical location — exactly one; a homeless product is a defect to fix, not a state to keep</td></tr>
-          <tr><td class="mono c-data">stream_id · session_id · event_id</td><td class="mono">slug · uuid · id</td><td>the owning Stream; provenance — producing Session and announcing Event, both required (products will exist only via <code>POST /ledger/events</code>)</td></tr>
+          <tr><td class="mono c-data">id · at</td><td class="mono">id · timestamp</td><td>identity; first registration time</td></tr>
+          <tr><td class="mono c-data">name</td><td class="mono">string</td><td>what it is — stable across its life</td></tr>
+          <tr><td class="mono c-data">home</td><td class="mono">url ∣ path</td><td>canonical location — exactly one; a homeless deliverable is a defect to fix, not a state to keep</td></tr>
+          <tr><td class="mono c-data">state</td><td class="mono">string?</td><td>where it currently stands — free text, e.g. <code>rev 21</code>, <code>v1.8.2</code>. <b>Mutable by design</b>; rewritten whole by each closing run</td></tr>
+          <tr><td class="mono c-data">status</td><td class="mono">live | retired</td><td>declared by <a href="#ep-deliverables-retire">POST …/retire</a> · <code>/unretire</code> — <b>the user's call, never Claude's</b>, exactly like archiving a session or closing a stream. Retired means no longer worked; it is never deleted. <span style="color:var(--muted)">(Rev 21 review: this field originally shipped with no writer at all — a stored status nothing could transition, which is the precise failure invariant 2 exists to prevent.)</span></td></tr>
+          <tr><td class="mono c-data">stream_id</td><td class="mono">slug</td><td>the owning Stream — exactly one</td></tr>
+          <tr><td class="mono c-data">last_run_id · updated</td><td class="mono">id · timestamp</td><td>the run that last advanced it, and when</td></tr>
         </tbody>
       </table></div>
+      <div class="rule"><b>Mutability, and why it is not a contradiction.</b> Events are immutable
+        (invariant 3) and a deliverable is mutable. That is the point of splitting them: the
+        <em>record of what happened</em> never changes, while the <em>thing that was made</em> is
+        supposed to. An earlier draft tried to give an event two moments — open and close — which
+        forced a carve-out in immutability. Moving the mutation onto a noun that was always going to
+        change removes the conflict entirely rather than negotiating with it.</div>
       <div class="rule"><b>Home policy.</b> Landed somewhere real → register the link. Email sent →
-        the event is the record; the mail system holds the payload. Inline-only product → it gets a
-        home first (e.g. Drive <code>Claude-Memory-Artifacts</code>), then a registration.</div>
+        the event is the record; the mail system holds the payload. Inline-only deliverable → it gets
+        a home first, then a registration. Per standing doctrine the home is the file in its owning
+        repo; a published link is an extra, never the source.</div>
+      <div class="rule warn"><b>Open — deliverable ↔ event.</b> Deliverables are owned by streams and
+        advanced by runs; how (and whether) each advance also writes an event in the feed is
+        <b>deliberately unsettled</b> as of rev 21. The expectation is that it falls out once runs are
+        real. Until it is decided, nothing in the service should assume a one-to-one between a closing
+        run and an event.</div>
+    </section>
+
+    <!-- ================= RUN ================= -->
+    <section class="panel" id="o-run" aria-label="Run" hidden>
+      <h2>Run <span class="og svc">ledger</span> <span class="og rec">record</span></h2>
+      <div class="rule client" style="margin:0 0 18px"><b>Rev 21 — replaces the old run entirely.</b>
+        Through rev 20, <code>run</code> was a display state computed from <code>last_run_at</code>
+        inside a 120-second window, refreshed by <code>PostToolUse</code> for a hard-coded list of
+        mutating tools. That is deleted. It violated invariant 2 by inferring a state from a clock,
+        and it was <b>inverted for the case it existed to show</b>: <code>PostToolUse</code> fires on
+        tool <em>completion</em>, so a ten-minute build emitted no signal while it ran and lit the
+        bolt only after it finished.</div>
+      <p class="sub">A bounded stretch of work against exactly one <a href="#o-deliverable">
+        deliverable</a>. Declared open when the work starts, declared closed when it ends. Both ends
+        are written by Claude — nothing is sampled, timed out, or inferred.</p>
+      <div class="tablescroll"><table class="grid">
+        <thead><tr><th>Property</th><th>Type</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono c-data">id</td><td class="mono">id</td><td>identity</td></tr>
+          <tr><td class="mono c-data">deliverable_id</td><td class="mono">id</td><td><b>exactly one, required</b> — a run with nothing to make is not a run</td></tr>
+          <tr><td class="mono c-data">session_id</td><td class="mono">uuid</td><td>the session doing the work — required; opening a run is a sign of life (invariant 9 extends)</td></tr>
+          <tr><td class="mono c-data">intent</td><td class="mono">string</td><td>what this stretch of work is, in words, written at open — e.g. <code>cutting rev 21</code>. This is what the card displays</td></tr>
+          <tr><td class="mono c-data">started_at · ended_at</td><td class="mono">timestamp · timestamp?</td><td>server-stamped at open and at close. <code>ended_at</code> null <em>is</em> the definition of an open run</td></tr>
+          <tr><td class="mono c-data">outcome</td><td class="mono">closed | abandoned</td><td>written at close. <code>abandoned</code> is a first-class ending, not a failure</td></tr>
+        </tbody>
+      </table></div>
+      <h5 class="lbl">Intent, not scope</h5>
+      <div class="rule" style="margin-top:0">A run declares <b>what the work is</b>, not how big it
+        is or what it will produce. Scope routinely changes mid-run — a one-line fix becomes a test
+        rewrite and two commits — and that does not make the declaration wrong. The service must
+        never ask for a prediction of duration or of how many events will follow.</div>
+      <h5 class="lbl">Why two calls, when an event is one</h5>
+      <div class="rule" style="margin-top:0">Because the knowledge is asymmetric. Claude <b>does</b>
+        know, in advance, that it is starting a bounded piece of work on a known thing — so a run can
+        be declared at its front edge. Claude <b>does not</b> know in advance that a decision is about
+        to be made or a message about to be sent; those are recognised only as they happen. Runs
+        therefore get an open and a close; events stay a single call. No forward phase is forced onto
+        objects that do not have one.</div>
+      <h5 class="lbl">Endings</h5>
+      <p class="sub" style="margin:0">A run ends in exactly one of two declared ways —
+        <b>closed</b> (the deliverable advanced; the close carries its new <code>state</code>) or
+        <b>abandoned</b> (the work went nowhere; the deliverable is untouched). There is no third
+        ending and, deliberately, <b>no timeout</b> — a timeout would reintroduce exactly the
+        inference rev 21 deletes. A session that crashes mid-run leaks an open run, which is the same
+        known gap as a crashed session holding <code>status="active"</code>, repaired by the same
+        future mechanism.</p>
     </section>
 
     <!-- ================= API: ALL ENDPOINTS ================= -->
@@ -1041,8 +1146,12 @@
             <tr><td class="mono c-svc"><a href="#ep-streams-close"><span class="m post">POST</span> /ledger/streams/{id}/close</a></td><td><span class="og rec">record</span></td><td>Closes a stream, removes it from attribution and the index, and logs the closure event.</td></tr>
             <tr><td class="mono c-svc"><a href="#ep-streams-get"><span class="m get">GET</span> /ledger/streams</a></td><td><span class="og rec">record</span></td><td>Lists streams with derived staleness.</td></tr>
             <tr><td class="mono c-svc"><a href="#ep-events-get"><span class="m get">GET</span> /ledger/events</a></td><td><span class="og rec">record</span></td><td>Lists events newest-first; filterable by stream and time.</td></tr>
-            <tr><td class="mono c-svc" style="opacity:0.55"><a href="#ep-products-get"><span class="m get">GET</span> /ledger/products</a></td><td><span class="og rec">record</span></td><td>Lists the work-product registry with provenance. <b>Not this phase</b> — products are deferred.</td></tr>
-            <tr><td class="mono c-svc"><a href="#ep-search"><span class="m get">GET</span> /ledger/search</a></td><td><span class="og rec">record</span></td><td>Searches events, streams, and products for a query. This is <code>recall</code>'s endpoint.</td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-runs-post"><span class="m post">POST</span> /ledger/runs</a></td><td><span class="og rec">record</span></td><td>Opens a run on one deliverable — creating the deliverable in the same call when it is new — and writes the opening session's liveness. <b>Rev 21, not yet built.</b></td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-runs-close"><span class="m post">POST</span> /ledger/runs/{id}/close</a></td><td><span class="og rec">record</span></td><td>Closes or abandons an open run; a close carries the deliverable's new state. <b>Rev 21, not yet built.</b></td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-runs-get"><span class="m get">GET</span> /ledger/runs</a></td><td><span class="og rec">record</span></td><td>Lists runs with elapsed; <code>?open=true</code> is what the board reads for the ⚡. <b>Rev 21, not yet built.</b></td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-deliverables-get"><span class="m get">GET</span> /ledger/deliverables</a></td><td><span class="og rec">record</span></td><td>Lists deliverables with home, state, and last run. <b>Rev 21, not yet built.</b></td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-deliverables-retire"><span class="m post">POST</span> /ledger/deliverables/{id}/retire · /unretire</a></td><td><span class="og rec">record</span></td><td>Declares a deliverable no longer worked, or restores it — the user's call, never Claude's. <b>Rev 21, not yet built.</b></td></tr>
+            <tr><td class="mono c-svc"><a href="#ep-search"><span class="m get">GET</span> /ledger/search</a></td><td><span class="og rec">record</span></td><td>Searches events, streams, and deliverables for a query. This is <code>recall</code>'s endpoint.</td></tr>
             <tr><td class="mono c-svc"><a href="#ep-index"><span class="m get">GET</span> /ledger/index</a></td><td><span class="og">both</span></td><td>Returns the one-screen orientation snapshot; injected at session start.</td></tr>
             <tr><td class="mono c-svc"><a href="#ep-board"><span class="m get">GET</span> /ledger/board</a></td><td><span class="og">both</span></td><td>Returns the data structure the BotBeam board view is built from.</td></tr>
           </tbody>
@@ -1076,10 +1185,15 @@
   <b>"first_seen"</b>: ts, <b>"last_event_at"</b>: ts,
   <b>"status"</b>: "active"|"dormant"|"archived",            <i>stored — declared by signals and archive calls</i>
   <b>"turn_state"</b>: "waiting"|"processing",                <i>stored — set by prompt/Stop signals</i>
-  <b>"last_prompt_at"</b>: ts|null, <b>"last_stop_at"</b>: ts|null, <b>"last_run_at"</b>: ts|null, <b>"ended_at"</b>: ts|null,
+  <b>"last_prompt_at"</b>: ts|null, <b>"last_stop_at"</b>: ts|null, <b>"ended_at"</b>: ts|null,
   <b>"ever_prompted"</b>: bool, <b>"archived_at"</b>: ts|null,
   <b>"stream_id"</b>: slug|null,                             <i>computed — the attribution rule</i>
-  <b>"activity"</b>: "waiting"|"processing"|"run"|null,      <i>computed — turn_state + run window; active only</i>
+  <b>"activity"</b>: "waiting"|"processing"|null,            <i>computed — is the stored turn_state; active only</i>
+  <b>"open_run"</b>: {                                       <i>joined — the ⚡; null when no run is open</i>
+    <b>"id"</b>: "run_…", <b>"intent"</b>: "cutting rev 21",
+    <b>"deliverable_id"</b>: "dl_…", <b>"deliverable_name"</b>: "The Ledger Book",   <i>id for click-through, name for display</i>
+    <b>"started_at"</b>: ts, <b>"elapsed_s"</b>: int                  <i>started_at is load-bearing; elapsed_s is convenience</i>
+  }|null,
   <b>"relevant"</b>: bool                                    <i>computed — the board filter</i>
 }</span>
 
@@ -1099,10 +1213,24 @@
   <b>"session_id"</b>: uuid                                  <i>the emitter — writing it is part of the same transaction</i>
 }</span>
 
-      <h5 class="lbl">Work product <span>— deferred; specified, not implemented this phase</span></h5>
+      <h5 class="lbl">Deliverable <span>— rev 21; specified, not yet built</span></h5>
       <span class="schema">{
-  <b>"id"</b>: "wp_…", <b>"at"</b>: ts, <b>"name"</b>: "…", <b>"home"</b>: url|path,
-  <b>"stream_id"</b>: slug, <b>"session_id"</b>: uuid, <b>"event_id"</b>: "ev_…"
+  <b>"id"</b>: "dl_…", <b>"at"</b>: ts, <b>"name"</b>: "…", <b>"home"</b>: url|path,
+  <b>"state"</b>: "rev 21"|null,                              <i>mutable by design — rewritten by each closing run</i>
+  <b>"status"</b>: "live"|"retired",                          <i>stored — declared</i>
+  <b>"stream_id"</b>: slug,
+  <b>"last_run_id"</b>: "run_…"|null, <b>"updated"</b>: ts
+}</span>
+
+      <h5 class="lbl">Run <span>— rev 21; specified, not yet built</span></h5>
+      <span class="schema">{
+  <b>"id"</b>: "run_…",
+  <b>"deliverable_id"</b>: "dl_…",                            <i>exactly one, required</i>
+  <b>"session_id"</b>: uuid,                                  <i>the worker — opening is a sign of life</i>
+  <b>"intent"</b>: "cutting rev 21",                          <i>what the work is — not its scope</i>
+  <b>"started_at"</b>: ts, <b>"ended_at"</b>: ts|null,               <i>ended_at null IS an open run</i>
+  <b>"outcome"</b>: "closed"|"abandoned"|null,                <i>null while open</i>
+  <b>"elapsed_s"</b>: int                                     <i>derived for display — now−started, or ended−started</i>
 }</span>
     </section>
 
@@ -1112,8 +1240,8 @@
         <div class="spec-head">
           <span class="ep"><span class="meth">POST</span>/ledger/events</span>
         </div>
-        <p class="what" id="ep-log">Records one event and its consequences — the emitting session's liveness, an
-          optional stream update, and (later) a product registration — in one atomic transaction.</p>
+        <p class="what" id="ep-log">Records one event and its consequences — the emitting session's liveness and an
+          optional stream update — in one atomic transaction.</p>
         <p class="qual">The only way an event comes into existence. All parts commit together or
           nothing commits. Index and board are recomputed by the service; clients never maintain
           views. <b>Named for its object:</b> this is the write half of <code>/ledger/events</code>,
@@ -1126,11 +1254,6 @@
   <b>"headline"</b>: "Dust cleaning fixed the clamp",
   <b>"body"</b>:     ["3000–3600 MHz under load (was ~500)", "…"],   <i>1–4 markdown strings</i>
   <b>"session_id"</b>: "b1c482f7-…",             <i>required — the emitting Session's id</i>
-
-  <b>"product"</b>: {                            <i>NOT YET IMPLEMENTED — rejected 422 this phase</i>
-    "name": "cpu-log collector v2",
-    "home": "C:\\Users\\cliff\\perf-monitor"     <i>url or path — exactly one home</i>
-  },
 
   <b>"stream_update"</b>: {                      <i>optional — new management state</i>
     "state":       "Fixed by dust clean; verifying overnight.",
@@ -1149,7 +1272,7 @@
             <tr><td class="f">events</td><td>appends the immutable event, server-stamped</td></tr>
             <tr><td class="f">sessions</td><td><b>writes the emitting session</b> — the full universal writes, exactly as a hook signal does: <code>last_event_at = now</code>, <code>status = "active"</code>, <code>archived_at = null</code>. Emitting an event <em>is</em> a sign of life. <code>turn_state</code> is NOT touched — that is the hook plane's alone</td></tr>
             <tr><td class="f">streams</td><td>applies <code>stream_update</code>; bumps <code>updated</code>; creates on <code>create_stream</code></td></tr>
-            <tr><td class="f">products</td><td><span style="color:var(--muted)">not this phase — a <code>product</code> block is rejected 422</span></td></tr>
+            <tr><td class="f">deliverables</td><td><span style="color:var(--muted)">untouched — deliverables are written by <a href="#ep-runs-post">POST /ledger/runs</a> and run close, never by event emission. Whether a closing run also writes an event here is the open question on the <a href="#o-deliverable">Deliverable</a> panel</span></td></tr>
             <tr><td class="f">views</td><td>index and board recomputed</td></tr>
           </tbody>
         </table>
@@ -1159,7 +1282,7 @@
   <b>"session"</b>: Session,           <i>the emitter, post-write — status/last_event_at current</i>
   <b>"stream"</b>:  Stream             <i>post-transaction, staleness recomputed</i>
 }</span>
-        <p class="rr"><b>errors</b> <code>404</code> unknown <code>stream_id</code> without <code>create_stream</code> · <code>422</code> missing <code>session_id</code> · body over 4 bullets · multi-line headline · <code>product</code> block (not yet implemented)</p>
+        <p class="rr"><b>errors</b> <code>404</code> unknown <code>stream_id</code> without <code>create_stream</code> · <code>422</code> missing <code>session_id</code> · body over 4 bullets · multi-line headline</p>
       </article>
 
       <article class="spec" id="ep-events-get">
@@ -1187,8 +1310,11 @@
         <div class="spec-head"><span class="ep"><span class="meth">POST</span>/ledger/sessions/{id}/signals</span></div>
         <p class="what">Applies one lifecycle signal — writing the status it declares — and returns the session.</p>
         <p class="qual">Called by the five Claude Code hooks. Hooks transmit every signal
-          unclassified; the mutating-tool list (run vs read) is service policy.
-          <b>These are signals, not Events:</b> a lifecycle signal is not one of the five objects and
+          unclassified. <span style="color:var(--muted)">(Rev 21: the service no longer classifies
+          tools either — the mutating-tool list is deleted along with the computed <code>run</code>,
+          so <code>PostToolUse</code> now carries liveness and nothing more. Whether it still earns
+          its keep is an open question.)</span>
+          <b>These are signals, not Events:</b> a lifecycle signal is not one of the six objects and
           never reaches the record plane. <span style="color:var(--muted)">(Was
           <code>…/events</code> through rev 18 — renamed at rev 19 to end the collision with the
           record plane's Event.)</span></p>
@@ -1196,13 +1322,16 @@
         <span class="schema">{
   <b>"signal"</b>: "SessionStart" | "UserPromptSubmit" | "Stop" | "SessionEnd" | "PostToolUse",
   <b>"cwd"</b>:   "C:\\code\\woodshed",
-  <b>"machine"</b>: "cmr-nuc",
-  <b>"tool"</b>:  { "name": "Edit", "input": { "file_path": "…", "command": "…" } }   <i>PostToolUse only</i>
+  <b>"machine"</b>: "cmr-nuc"
 }</span>
+        <p class="qual" style="margin-top:10px"><span style="color:var(--muted)">Rev 21 dropped the
+          <code>tool</code> block. It fed the mutating-tool classification behind the old ⚡; with
+          that gone, <code>PostToolUse</code> is a bare heartbeat and the payload has no
+          consumer.</span></p>
         <h5 class="lbl">Effects</h5>
         <p class="qual" style="margin-top:0">Writes the declared statuses and facts listed on the
           Session panel (<code>status</code>, <code>turn_state</code>, <code>last_event_at</code>,
-          <code>last_prompt_at</code>, <code>last_stop_at</code>, <code>last_run_at</code>,
+          <code>last_prompt_at</code>, <code>last_stop_at</code>,
           <code>ended_at</code>, <code>ever_prompted</code>) per the lifecycle transition table.</p>
         <h5 class="lbl">Response — 200</h5>
         <span class="schema">Session   <i>the full representation, post-write</i></span>
@@ -1291,24 +1420,152 @@
       </article>
     </section>
 
-    <!-- ================= API: PRODUCTS ================= -->
-    <section class="panel" id="api-products" aria-label="/ledger/products" hidden>
-      <article class="spec" id="ep-products-get">
-        <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/products</span></div>
-        <p class="what">Lists the work-product registry with provenance.</p>
-        <p class="qual"><b>Deferred — not implemented this phase.</b> Products are registered only through <a href="#ep-events-post">POST /ledger/events</a>;
-          the registry is records-and-links only — payloads live at their homes.</p>
+    <!-- ================= API: RUNS ================= -->
+    <section class="panel" id="api-runs" aria-label="/ledger/runs" hidden>
+      <div class="rule warn" style="margin:0 0 18px"><b>Rev 21 — specified, not yet built.</b> None of
+        the calls on this panel exist in the service today.</div>
+
+      <article class="spec" id="ep-runs-post">
+        <div class="spec-head"><span class="ep"><span class="meth">POST</span>/ledger/runs</span></div>
+        <p class="what">Opens a run on exactly one deliverable — minting the deliverable in the same
+          call when it is new — and writes the opening session's liveness.</p>
+        <p class="qual">The only way a run comes into existence, and the only way a deliverable does.
+          A deliverable is born inside the run that needs it, exactly as a stream is born inside the
+          event that needs it: no separate create step, and never a deliverable with no work behind
+          it. All parts commit together or nothing commits.</p>
+        <h5 class="lbl">Request</h5>
+        <span class="schema">{
+  <b>"deliverable_id"</b>: "dl_…",               <i>an existing deliverable — or omit it and pass create_deliverable</i>
+  <b>"session_id"</b>: "b1c482f7-…",             <i>required — the session doing the work</i>
+  <b>"intent"</b>: "cutting rev 21",             <i>required — what this work IS, not how big it is</i>
+
+  <b>"create_deliverable"</b>: {                 <i>only if there is no deliverable_id above</i>
+    "name": "The Ledger Book",
+    "home": "C:\\code\\woodshed\\docs\\ledger\\ledger-reference.html",   <i>exactly one home</i>
+    "stream_id": "meta"                        <i>must already exist — 404 if not; there is no nested create_stream</i>
+  }
+}</span>
+        <div class="rule" style="margin-top:14px"><b>No create-inside-a-create-inside-a-create.</b>
+          A deliverable is born inside its run, but a <em>stream</em> is not born inside that
+          deliverable: <code>create_deliverable.stream_id</code> must name an existing stream or the
+          call is 404. <a href="#ep-streams-put">PUT /ledger/streams/{id}</a> is already the create
+          path — make the stream in one call beforehand.</div>
+        <h5 class="lbl">Effects</h5>
+        <table class="mini">
+          <thead><tr><th>Store</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td class="f">runs</td><td>opens the run — <code>started_at = now</code>, <code>ended_at = null</code>, <code>outcome = null</code></td></tr>
+            <tr><td class="f">deliverables</td><td>creates on <code>create_deliverable</code>; otherwise untouched until the close</td></tr>
+            <tr><td class="f">sessions</td><td><b>writes the opening session</b> — <code>last_event_at = now</code>, <code>status = "active"</code>, <code>archived_at = null</code>. Opening a run is a sign of life, exactly as emitting an event is (invariant 9). <code>turn_state</code> is NOT touched</td></tr>
+            <tr><td class="f">views</td><td>board recomputed — the ⚡ appears</td></tr>
+          </tbody>
+        </table>
+        <h5 class="lbl">Response — 201</h5>
+        <span class="schema">{ <b>"run"</b>: Run, <b>"deliverable"</b>: Deliverable, <b>"session"</b>: Session }</span>
+        <p class="rr"><b>errors</b> <code>404</code> unknown <code>deliverable_id</code> or unknown <code>create_deliverable.stream_id</code> · <code>422</code> missing <code>session_id</code> or <code>intent</code> · neither <code>deliverable_id</code> nor <code>create_deliverable</code> · both · <code>409</code> the session already has an open run</p>
+        <div class="rule"><b>One open run per session</b>, enforced by that 409. Several genuine
+          workstreams in one session are real, but they are sequential in attention — forcing an
+          honest close-or-abandon at the boundary is the feature, not a limitation.</div>
+        <div class="rule warn"><b>Recovering from a leaked run.</b> A session that crashed mid-run
+          keeps its open run, so on resume the <em>same session id</em> hits its own leak and gets a
+          409. The recipe, which needs no new endpoint:
+          <br><code>GET /ledger/runs?open=true&amp;session_id={yours}</code> → close it as
+          <code>abandoned</code> → open the new run. Any session may do this for any other, since the
+          closer need not be the opener.</div>
+      </article>
+
+      <article class="spec" id="ep-runs-close">
+        <div class="spec-head"><span class="ep"><span class="meth">POST</span>/ledger/runs/{id}/close</span></div>
+        <p class="what">Ends an open run — as <code>closed</code> (the deliverable advanced) or
+          <code>abandoned</code> (it did not).</p>
+        <p class="qual">The only way a run ends. <b>There is no timeout and no sweep</b>: a timer
+          ending a run would reintroduce exactly the inference rev 21 deletes.</p>
+        <h5 class="lbl">Request</h5>
+        <span class="schema">{
+  <b>"session_id"</b>: "b1c482f7-…",             <i>required — the closer, for liveness. NEED NOT be the opener</i>
+  <b>"outcome"</b>: "closed"|"abandoned",        <i>required</i>
+  <b>"state"</b>: "rev 21"                       <i>the deliverable's new state — required on closed, refused on abandoned</i>
+}</span>
+        <div class="rule" style="margin-top:14px"><b>The closer need not be the opener.</b> Any
+          session may close any open run, and this is deliberate: it is the manual cleanup path for a
+          run leaked by a crash, until the repair mechanism lands. A later session declares the stale
+          run <code>abandoned</code> and the board clears. Requiring the original opener would make
+          leaked runs uncloseable by anyone — which, combined with the one-open-run-per-session 409,
+          would wedge the session permanently.</div>
+        <div class="rule"><b>Resubmitting the current state verbatim is legitimate.</b> A run can
+          complete honestly without changing how you would describe the deliverable — &ldquo;fixed the
+          tab CSS&rdquo; does not move &ldquo;rev 21.&rdquo; <code>state</code> is required on a close
+          so that the closer is forced to <em>consider</em> it, not to force a change.</div>
+        <h5 class="lbl">Effects</h5>
+        <table class="mini">
+          <thead><tr><th>Store</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td class="f">runs</td><td><code>ended_at = now</code>, <code>outcome</code> stored</td></tr>
+            <tr><td class="f">deliverables</td><td>on <code>closed</code>: <code>state</code> replaced, <code>last_run_id</code> and <code>updated</code> set. On <code>abandoned</code>: untouched</td></tr>
+            <tr><td class="f">sessions</td><td>the same liveness write as the open</td></tr>
+            <tr><td class="f">views</td><td>board recomputed — the ⚡ goes out</td></tr>
+          </tbody>
+        </table>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">{ <b>"run"</b>: Run, <b>"deliverable"</b>: Deliverable, <b>"session"</b>: Session }</span>
+        <p class="rr"><b>errors</b> <code>404</code> unknown run · <code>409</code> the run is already ended · <code>422</code> missing <code>outcome</code> · <code>state</code> missing on closed or present on abandoned</p>
+      </article>
+
+      <article class="spec" id="ep-runs-get">
+        <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/runs</span></div>
+        <p class="what">Lists runs newest-first with elapsed time.</p>
+        <p class="qual"><code>?open=true</code> is what the board reads to light the ⚡ — a plain
+          query for <code>ended_at IS NULL</code>, with no window arithmetic anywhere.</p>
         <h5 class="lbl">Query parameters</h5>
         <table class="mini">
           <thead><tr><th>Param</th><th>Meaning</th></tr></thead>
           <tbody>
-            <tr><td class="f">stream_id</td><td>only this stream's products</td></tr>
-            <tr><td class="f">session_id</td><td>only this session's products</td></tr>
+            <tr><td class="f">open</td><td><code>true</code> → only runs with no <code>ended_at</code></td></tr>
+            <tr><td class="f">session_id · deliverable_id</td><td>filter by worker or by target</td></tr>
             <tr><td class="f">limit</td><td>page size</td></tr>
           </tbody>
         </table>
         <h5 class="lbl">Response — 200</h5>
-        <span class="schema">{ <b>"items"</b>: Product[], <b>"next"</b>: cursor | null }   <i>newest first</i></span>
+        <span class="schema">{ <b>"items"</b>: Run[], <b>"next"</b>: cursor | null }</span>
+      </article>
+    </section>
+
+    <!-- ================= API: DELIVERABLES ================= -->
+    <section class="panel" id="api-deliverables" aria-label="/ledger/deliverables" hidden>
+      <div class="rule warn" style="margin:0 0 18px"><b>Rev 21 — specified, not yet built.</b></div>
+      <article class="spec" id="ep-deliverables-get">
+        <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/deliverables</span></div>
+        <p class="what">Lists deliverables with home, current state, and the run that last advanced
+          them.</p>
+        <p class="qual">Records and links only — payloads live at their homes. Deliverables are
+          written only through <a href="#ep-runs-post">POST /ledger/runs</a> and run close; there is
+          no direct create or update endpoint, so a deliverable can never exist without work behind
+          it.</p>
+        <h5 class="lbl">Query parameters</h5>
+        <table class="mini">
+          <thead><tr><th>Param</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td class="f">stream_id</td><td>only this stream's deliverables</td></tr>
+            <tr><td class="f">status</td><td>live · retired (default live)</td></tr>
+            <tr><td class="f">limit</td><td>page size</td></tr>
+          </tbody>
+        </table>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">{ <b>"items"</b>: Deliverable[], <b>"next"</b>: cursor | null }   <i>most recently updated first</i></span>
+      </article>
+
+      <article class="spec" id="ep-deliverables-retire">
+        <div class="spec-head"><span class="ep"><span class="meth">POST</span>/ledger/deliverables/{id}/retire · /unretire</span></div>
+        <p class="what">Declares a deliverable no longer worked, or restores it.</p>
+        <p class="qual"><b>The user's call, never Claude's</b> — the same rule that governs archiving
+          a session and closing a stream. Retiring is a curation act, not a run outcome: a run ending
+          says nothing about whether the thing is finished with. Nothing is deleted; a retired
+          deliverable keeps its runs and its home.</p>
+        <h5 class="lbl">Request</h5>
+        <span class="schema">{ <b>"session_id"</b>: "b1c482f7-…" }   <i>required — the relaying session, for liveness</i></span>
+        <h5 class="lbl">Response — 200</h5>
+        <span class="schema">{ <b>"deliverable"</b>: Deliverable, <b>"session"</b>: Session }</span>
+        <p class="rr"><b>errors</b> <code>404</code> unknown deliverable · <code>409</code> retiring one that has an open run — close the run first</p>
       </article>
     </section>
 
@@ -1316,7 +1573,7 @@
     <section class="panel" id="api-search" aria-label="/ledger/search" hidden>
       <article class="spec" id="ep-search">
         <div class="spec-head"><span class="ep"><span class="meth">GET</span>/ledger/search</span></div>
-        <p class="what">Searches events, streams, and products for a query — the <code>recall</code>
+        <p class="what">Searches events, streams, and deliverables for a query — the <code>recall</code>
           verb is this endpoint plus a prose answer.</p>
         <h5 class="lbl">Query parameters</h5>
         <table class="mini">
@@ -1324,8 +1581,8 @@
           <tbody><tr><td class="f">q</td><td>the search text</td></tr></tbody>
         </table>
         <h5 class="lbl">Response — 200</h5>
-        <span class="schema">{ <b>"items"</b>: [ { "kind": "event"|"stream"|"product", "score": 0.93,
-             "record": Event | Stream | Product } ],       <i>the full representation of its kind</i>
+        <span class="schema">{ <b>"items"</b>: [ { "kind": "event"|"stream"|"deliverable", "score": 0.93,
+             "record": Event | Stream | Deliverable } ],   <i>the full representation of its kind</i>
   <b>"next"</b>: cursor | null }   <i>newest-first within rank</i></span>
       </article>
     </section>
@@ -1369,8 +1626,10 @@
   <b>"streams"</b>:  Stream[],    <i>active streams with staleness — labels the events</i>
   <b>"as_of"</b>:    ts
 }</span>
-        <p class="qual" style="margin-top:12px"><code>products</code> is absent by decision — work
-        products are deferred to a later phase.</p>
+        <p class="qual" style="margin-top:12px">Rev 21 adds <code>open_run</code> to each session in
+        <code>sessions</code> — the ⚡, its intent, its deliverable's name, and elapsed. Deliverables
+        get no column of their own on the board; they surface through their runs and through
+        <code>recall</code>.</p>
       </article>
     </section>
 
@@ -1470,7 +1729,7 @@
         <table class="grid">
           <thead><tr><th>Duty</th><th>Fires when</th><th>API call(s)</th><th>Claude synthesizes</th></tr></thead>
           <tbody>
-            <tr><td class="mono c-client">recall</td><td>a question about past work — "what happened with X", "when did we send Y"</td><td class="mono c-svc"><a href="#ep-search">GET /ledger/search</a> · /events · /products</td><td>the query; then a prose answer from results</td></tr>
+            <tr><td class="mono c-client">recall</td><td>a question about past work — "what happened with X", "when did we send Y"</td><td class="mono c-svc"><a href="#ep-search">GET /ledger/search</a> · /events · /deliverables</td><td>the query; then a prose answer from results</td></tr>
             <tr><td class="mono c-client">review</td><td>"what's going on" — the management overlay: open loops, staleness, next actions</td><td class="mono c-svc">GET /ledger/streams · /events · /sessions</td><td>the digest prose</td></tr>
             <tr><td class="mono c-client">board relay</td><td>the user asks to archive or restore sessions — the <em>only</em> session write Claude ever makes; <em>seeing</em> the board needs no Claude at all</td><td class="mono c-svc">POST /ledger/sessions/…/archive · /unarchive</td><td>which sessions, from prefixes</td></tr>
           </tbody>
@@ -1478,8 +1737,9 @@
       </div>
 
       <div class="rule client"><b>Division of labor.</b> Hooks own the sessions plane: every status on
-        the board is theirs. Claude owns the record plane: every event, stream, and product is a
-        judgment call about its own work. The record's completeness never depends on the user
+        the board is theirs. Claude owns the record plane: every event, stream, run, and deliverable
+        is a judgment call about its own work — including, now, the judgment that a piece of work is
+        substantial enough to declare a run at its front edge. The record's completeness never depends on the user
         narrating what Claude did.</div>
       <div class="rule client"><b>Boundary rule.</b> A change that would require hand-editing a data
         file means the API is missing an endpoint. The service gets extended; the skill never reaches
@@ -1507,7 +1767,7 @@
             <tr><td class="mono c-client">UserPromptSubmit</td><td>a prompt is submitted</td><td class="mono">event</td></tr>
             <tr><td class="mono c-client">Stop</td><td>the turn finishes</td><td class="mono">event</td></tr>
             <tr><td class="mono c-client">SessionEnd</td><td>clean CLI exit — the service writes status="dormant"; a crash fires nothing, so the row stays active until a repair mechanism is added (deferred)</td><td class="mono">signal</td></tr>
-            <tr><td class="mono c-client">PostToolUse</td><td>any tool completes — the hook does not classify; the mutating-tool list (run vs read) is service policy</td><td class="mono">tool.name, tool.input</td></tr>
+            <tr><td class="mono c-client">PostToolUse</td><td>any tool completes. <b>Rev 21 removed its only consumer</b> (the mutating-tool list behind the old ⚡) and <b>kept the hook as a pure heartbeat</b>: it is what holds <code>last_event_at</code> fresh through a long turn, and the deferred crash repair will need an in-turn liveness signal to tell &ldquo;crashed mid-run&rdquo; from &ldquo;ten-minute build.&rdquo; Deleting the only sensor now would mean re-adding it at rev 22. <b>The tool payload is dropped</b> — nothing consumes it</td><td class="mono">signal only</td></tr>
           </tbody>
         </table>
       </div>
@@ -1559,7 +1819,8 @@
           <tr><td>the whole transaction — event, session write, stream update — commits or none of it does</td><td class="mono">atomic; invariant 5</td></tr>
           <tr><td>events are immutable: no update, no delete, server-stamped time</td><td class="mono">no endpoint exists</td></tr>
           <tr><td>a ledger-service write never re-attributes the emitting session's stream</td><td class="mono">invariant 6</td></tr>
-          <tr><td>a <code>product</code> block is refused while products are deferred</td><td class="mono">422 not implemented</td></tr>
+          <tr><td>a run names exactly one deliverable, and is ended only by its close call</td><td class="mono">422 · 409; invariant 10</td></tr>
+          <tr><td>a deliverable is created only inside the run that needs it — no direct create endpoint</td><td class="mono">no endpoint exists</td></tr>
         </tbody>
       </table></div>
 
@@ -1580,6 +1841,14 @@
           <code>stream_update</code> rides in the same transaction — never a second call.</li>
         <li><b>Corrections are new events.</b> An event is never edited or deleted; a later event
           supersedes it. The journal is a record of what was believed when, not a tidy summary.</li>
+        <li><b>When to open a run.</b> At the front edge of work that is bounded, aimed at a known
+          deliverable, and long enough to be worth watching — <b>minutes, not seconds</b>. The open
+          costs a call, so too low a bar makes it overhead on everything. Declare the
+          <b>intent</b>, never a prediction of scope or duration; scope routinely changes mid-run and
+          that does not make the declaration wrong.</li>
+        <li><b>Every run gets closed.</b> Closed if the deliverable advanced, abandoned if it did
+          not — both declared, neither inferred. Leaving a run open is the one way this plane can
+          lie on the board.</li>
       </ol>
       <div class="rule client"><b>Why the seam is here.</b> The service cannot know that a diff was a
         deliverable, and the skill cannot be trusted to be consistent about shape. Each layer
@@ -1596,9 +1865,10 @@
           <thead><tr><th>#</th><th>Invariant</th><th>v1 failure eliminated</th></tr></thead>
           <tbody>
             <tr><td class="mono">1</td><td><b>One writer.</b> All mutations go through <code>/ledger</code>; nothing edits the store directly.</td><td>two parallel writers; three files drifting out of sync</td></tr>
-            <tr><td class="mono">2</td><td><b>Statuses are declared, never inferred.</b> The store holds facts plus two declared statuses — <code>status</code> and <code>turn_state</code> — each written only by the signal or call that causes its transition; nothing computes a lifecycle state from timestamps. Stale statuses from crashes are repaired by the sweep, a separate mechanism (deferred), never by inference. <span style="color:var(--muted)">(Rev 18 ruling — supersedes the derive-at-read model; rev 17 had made turn_state the lone stored exception.)</span></td><td>latched booleans with no single writer: stuck open, permanent false expired, noise un-archiving — fixed by one writer per transition plus explicit repair</td></tr>
+            <tr><td class="mono">2</td><td><b>Statuses are declared, never inferred.</b> The store holds facts plus two declared statuses — <code>status</code> and <code>turn_state</code> — each written only by the signal or call that causes its transition; nothing computes a lifecycle state from timestamps. Stale statuses from crashes are repaired by an explicit mechanism (deferred), never by inference. <span style="color:var(--muted)">(Rev 18 ruling — supersedes the derive-at-read model; rev 17 had made turn_state the lone stored exception. Rev 20 retired the sweep; rev 21 removed the last computed state, <code>run</code>, so this now holds without exception.)</span></td><td>latched booleans with no single writer: stuck open, permanent false expired, noise un-archiving — fixed by one writer per transition plus explicit repair</td></tr>
             <tr><td class="mono">3</td><td><b>Events are immutable.</b> Append-only, server-stamped.</td><td>rewritten history</td></tr>
-            <tr><td class="mono">4</td><td><b>Records, not payloads.</b> A product is a name plus one home; content lives at the home.</td><td>ledger becoming a content dump</td></tr>
+            <tr><td class="mono">4</td><td><b>Records, not payloads.</b> A deliverable is a name plus one home; content lives at the home.</td><td>ledger becoming a content dump</td></tr>
+            <tr><td class="mono">10</td><td><b>A run is declared at both ends.</b> <code>started_at</code> is written by the open call and <code>ended_at</code> by the close call; no timer, sweep, or heuristic may end a run. Every run names exactly one deliverable. <span style="color:var(--muted)">(Rev 21 — this is invariant 2 applied to the one object that was still violating it.)</span></td><td>the ⚡ computed from a decaying <code>last_run_at</code>: dark during a ten-minute build, lit for two minutes after it finished</td></tr>
             <tr><td class="mono">5</td><td><b>Composite writes are atomic.</b> <code>POST /ledger/events</code> commits the event, the session write, and the stream update together or not at all.</td><td>event logged, stream and index never updated</td></tr>
             <tr><td class="mono">6</td><td><b>Attribution is a server rule.</b> Writes into the ledger service never re-attribute a session's stream.</td><td>sessions rebranded <code>ledger-meta</code> by their own journal writes</td></tr>
             <tr><td class="mono">9</td><td><b>Emitting an event is a sign of life.</b> <code>POST /ledger/events</code> writes the emitting session in the same transaction — <code>last_event_at</code>, <code>status="active"</code>, un-archiving if needed. The two planes are joined here and nowhere else; <code>turn_state</code> stays the hook plane's alone.</td><td>a session working visibly in the record while its card sat stale on the board</td></tr>
@@ -1621,7 +1891,8 @@
             <tr><td class="mono c-svc">service · sessions</td><td>per-session facts (see the Session panel)</td><td>service, from hook signals, event emission, archive calls</td><td>ledger service</td></tr>
             <tr><td class="mono c-svc">service · events</td><td>the immutable journal</td><td>service, from POST /ledger/events</td><td>ledger service</td></tr>
             <tr><td class="mono c-svc">service · streams</td><td>management state per thread</td><td>service, from log · PUT · close</td><td>ledger service</td></tr>
-            <tr><td class="mono c-svc" style="opacity:0.55">service · products</td><td>work-product registry with provenance — <b>deferred, not this phase</b></td><td>service, from POST /ledger/events</td><td>ledger service</td></tr>
+            <tr><td class="mono c-svc">service · deliverables</td><td>the registry of things made — name, home, current state — <b>rev 21, not yet built</b></td><td>service, from POST /ledger/runs and run close</td><td>ledger service</td></tr>
+            <tr><td class="mono c-svc">service · runs</td><td>open and historical runs, with intent and both endpoints — <b>rev 21, not yet built</b></td><td>service, from POST /ledger/runs · /close</td><td>ledger service</td></tr>
             <tr><td class="mono c-svc">service · views</td><td>board data structure and orientation index — regenerable</td><td>service</td><td>ledger service</td></tr>
             <tr><td class="mono c-client">~/.claude/settings.json</td><td>hook wiring — five thin transmitters</td><td>setup</td><td>Claude Code config</td></tr>
             <tr><td class="mono c-client">~/.config/orchestra/botbeam.json</td><td>API base URL and token</td><td>setup</td><td>local config</td></tr>
@@ -1636,8 +1907,8 @@
 </div>
 
 <footer>
-  The Ledger Book · rev 20 · 2026-09-13 · supersedes Data Model rev 12 + System Map rev 4 ·
-  working notes: skills/ledger/design/session-state.md
+  The Ledger Book · rev 21 · 2026-09-13 · supersedes Data Model rev 12 + System Map rev 4 ·
+  live state: docs/ledger/STATUS.md
 </footer>
 
 <script>

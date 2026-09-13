@@ -1,6 +1,6 @@
 ---
 name: ledger
-description: Global cross-session work memory and session board — a live database of sessions (what's running) and events (what happened), plus the streams of work they belong to, held by the BotBeam ledger service (/ledger API). Use when significant work completes (deliverable shipped, decision made, external communication sent), when asked to log work, recall what happened, review open loops, check what's going on, or manage sessions/streams on the board. Verbs — log, recall, review, stream, sessions.
+description: Global cross-session work memory and session board — a live database of sessions (what's running), runs (what's being made right now), events (what happened), and the deliverables and streams they belong to, held by the BotBeam ledger service (/ledger API). Use when significant work completes (deliverable shipped, decision made, external communication sent), when starting or finishing a bounded piece of work on something, when asked to log work, recall what happened, review open loops, check what's going on, or manage sessions/streams on the board. Verbs — log, run, recall, review, stream, sessions.
 ---
 
 # Work ledger
@@ -38,6 +38,10 @@ deliverable or that a conversation settled a decision. You are the only feed
 that can forget, which is why logging is a standing duty rather than a feature
 someone invokes.
 
+**Runs and deliverables are your job too** (Book rev 21). Logging records what
+happened; opening a run declares what you are *doing* while you do it. Both are
+standing duties, neither waits to be asked.
+
 ## Objects
 
 | Object | Origin | What it is |
@@ -46,13 +50,15 @@ someone invokes.
 | Session | Claude Code | persistent conversation; the service annotates it (status, stream, activity) |
 | Stream | ledger | thread of work under management — state, next action, open loops |
 | Event | ledger | something that happened; append-only, immutable |
+| Deliverable | ledger | something made — a name plus exactly one home; persists and is advanced |
+| Run | ledger | a bounded stretch of work on one deliverable; declared open, declared closed |
 
 **Two planes, two nouns, never interchanged.** Hooks post **signals**
 (telemetry — mechanical, high-volume, not stored as records; they update
 columns on the session row). You post **events** (the record — judged, rare,
 stored forever, immutable).
 
-Session lifecycle: **active** (waiting ⇄ processing ⊇ run) → **dormant** ⇄
+Session lifecycle: **active** (waiting ⇄ processing) → **dormant** ⇄
 **archived**. Three states, no fourth. Statuses are **stored, declared** by the
 signal or call that causes each transition — nothing is inferred from
 timestamps. Archive is the one manual act: it is how a finished card leaves the
@@ -119,6 +125,54 @@ Your session id: the full uuid, visible in your scratchpad directory path.
 immutable). If a call is rejected, fix the call — never route around it, and
 never hand-edit a data file. A change that would require reaching around the
 API means the API is missing an endpoint; the service gets extended.
+
+### run — open one when you start making something
+
+A **deliverable** is a thing that was made — a name plus exactly one home. It
+**persists and is advanced**: the Ledger Book is one deliverable at revs 18 →
+19 → 20 → 21, not four unrelated events. A **run** is a bounded stretch of work
+against exactly one deliverable, **declared at both ends** — nothing is timed,
+sampled, or inferred. The old `run` (a bolt computed from a decaying
+`last_run_at`) is deleted.
+
+```
+POST {base}/ledger/runs            open   {deliverable_id | create_deliverable, session_id, intent}
+POST {base}/ledger/runs/{id}/close end    {session_id, outcome: closed|abandoned, state?}
+GET  {base}/ledger/runs?open=true         what the board reads for the ⚡
+GET  {base}/ledger/deliverables
+POST {base}/ledger/deliverables/{id}/retire · /unretire   — only when the user asks
+```
+
+`create_deliverable.stream_id` must name an **existing** stream (404 if not) —
+there is no nested `create_stream`. Make the stream first if you need one.
+
+- **Open a run** at the front edge of work that is bounded, aimed at a known
+  deliverable, and worth watching — **minutes, not seconds**. Declare the
+  **intent** ("cutting rev 21"), never a prediction of scope. Scope changes
+  mid-run constantly; that does not make the declaration wrong.
+- **A deliverable is born inside the run that needs it** (`create_deliverable`
+  rides in the open call), exactly as a stream is born inside its event.
+- **Always close.** `closed` carries the deliverable's new `state`;
+  `abandoned` leaves it untouched and is a perfectly good ending. An open run
+  left behind is the one way this plane can lie on the board. Resubmitting the
+  current `state` verbatim is legitimate — a run can finish honestly without
+  changing how you'd describe the thing.
+- **One open run per session** (409 on a second). If you crashed mid-run, your
+  own leaked run is what you'll collide with on resume. Recipe:
+  `GET {base}/ledger/runs?open=true&session_id={yours}` → close it as
+  `abandoned` → open the new one. Any session may close any run, so you can do
+  this for another session too.
+- **A run spans turns.** Stopping to ask the user something does not end it —
+  the board shows ring+⚡, "parked mid-run." Close it when the *work* ends, not
+  when the turn does.
+- **Retiring a deliverable is the user's call, never yours** — same rule as
+  archiving a session or closing a stream.
+- **Why two calls when an event is one:** you know in advance that you are
+  starting bounded work on a known thing, so it can be declared up front. You
+  do *not* know in advance that a decision is about to be made — those are
+  recognised only as they happen. Events stay a single call.
+- **Open question:** whether a closing run also writes an event is deliberately
+  unsettled. Do not assume one.
 
 ### Streams — how they work
 
@@ -200,7 +254,7 @@ SessionEnd / PostToolUse signal to
 `POST {base}/ledger/sessions/{id}/signals`. The service writes the
 declared statuses and serves `GET {base}/ledger/board`; the user watches the
 **Sessions view in the BotBeam app** — Active sessions as cards in a stable
-grid (solid green = processing, ⚡ = run, hollow ring = waiting; ordered by
+grid (solid green = processing, ⚡ = an open run, hollow ring = waiting; ordered by
 first_seen so cards never jump), Inactive sessions below by recency, and the
 **events feed** beneath both. Only ever-prompted, non-archived sessions appear.
 
