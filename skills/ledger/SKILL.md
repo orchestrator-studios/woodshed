@@ -88,7 +88,7 @@ One call: `POST {base}/ledger/events`
   "stream_id": "orchestra",
   "headline": "v0.2.5 cut and deployed",
   "body": ["commit 1ee891f pushed", "marketplace refreshed, plugin updated"],
-  "session_id": "<this session's full uuid>",
+  "actor": "session:<this session's full uuid>",
   "stream_update": { "state": "...", "next_action": "...", "open_loops": ["..."] },
   "create_stream": { "title": "...", "working_paths": ["C:\\code\\..."] }
 }
@@ -101,7 +101,12 @@ One call: `POST {base}/ledger/events`
 - **Logging also writes your session** (`last_event_at`, `status="active"`) in
   the same transaction. That is the only place the two planes touch.
 
-Your session id: the full uuid, visible in your scratchpad directory path.
+**`actor` is who did it** — one field, a prefixed identifier. Yours is always
+`session:<your full uuid>`, the uuid visible in your scratchpad directory path.
+The other value you will see in the record is `board`, written when the user
+acts from the BotBeam interface rather than through a session. You never send
+that one. Query filters are unaffected: `?session_id=<uuid>` still takes a bare
+uuid, because the parameter name already says the type.
 
 **Emission rules — the judgment half (the service cannot see any of this):**
 
@@ -120,7 +125,7 @@ Your session id: the full uuid, visible in your scratchpad directory path.
    supersedes an earlier one.
 
 **Shape is the service's business** (one-line headline, 1–4 bullets,
-`session_id` required, stream exists or comes with `create_stream`, atomic,
+`actor` required, stream exists or comes with `create_stream`, atomic,
 immutable). If a call is rejected, fix the call — never route around it, and
 never hand-edit a data file. A change that would require reaching around the
 API means the API is missing an endpoint; the service gets extended.
@@ -135,8 +140,8 @@ sampled, or inferred. The old `run` (a bolt computed from a decaying
 `last_run_at`) is deleted.
 
 ```
-POST {base}/ledger/runs            open   {deliverable_id | create_deliverable, session_id, intent}
-POST {base}/ledger/runs/{id}/close end    {session_id, outcome: closed|abandoned, state?}
+POST {base}/ledger/runs            open   {deliverable_id | create_deliverable, actor, intent}
+POST {base}/ledger/runs/{id}/close end    {actor, outcome: closed|abandoned, state?}
 GET  {base}/ledger/runs?open=true         what the board reads for the ⚡
 GET  {base}/ledger/deliverables
 POST {base}/ledger/deliverables/{id}/retire · /unretire   — only when the user asks
@@ -224,7 +229,7 @@ closing a stream because of it.
   `state`, `next_action`, `open_loops`, `working_paths`. Usually unnecessary:
   prefer `stream_update` inside `log`.
 - Close: `POST {base}/ledger/streams/{id}/close` with `{"reason": "...",
-  "session_id": "<yours>"}` — logs its own closure event. **Only when the user
+  "actor": "session:<yours>"}` — logs its own closure event. **Only when the user
   asks.**
 
 ### sessions [list | archive <prefix>… | archive --all --keep <prefix>… | unarchive <prefix>]

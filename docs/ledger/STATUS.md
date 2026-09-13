@@ -103,6 +103,40 @@ remains is the test round: exercise the plane for real, then decide it's done.
   a stream to filter the feed.
 - `LEDGER_ADMIN_RESET` is enabled in prod, to be removed after the test round.
 
+## Every write names its actor — invariant 11, 2026-09-13 (designed)
+
+The dashboard needs close/reopen buttons for streams and retire/unretire for
+deliverables. Closing logs an event, and an event demanded a `session_id` the
+browser does not have. The board is a REST client of the same app — the archive
+× already calls `POST /ledger/sessions/{id}/archive` same-origin with the user's
+login JWT, and there is no internal route; it works only because archiving logs
+no event. The credential cannot carry the answer either: `create_access_token`
+builds one payload for browser and agent alike.
+
+**One field, `actor`, a prefixed identifier.** `session:<uuid>` or `board`.
+The type is read by parsing the prefix — not a second column, not a nullable
+field standing in for a type, not inferred from the credential. A type with one
+instance is its own identity, which is why `board` carries no id. New kinds of
+actor are new values, not new schema.
+
+- Storage: `actor VARCHAR(64) NOT NULL`, replacing `session_id`. Migration
+  rewrites existing rows to `'session:' || session_id`. No nullable column, no
+  CHECK, no enum, no backfill gap.
+- Liveness (invariant 9) fires when the actor resolves to a session, because
+  sessions have liveness. Nothing else about the write differs.
+- Uniform across every write that records who acted: events, stream
+  close/reopen, runs, and deliverable retire/unretire.
+- Query filters keep bare values — `?session_id=<uuid>` — because the parameter
+  name has already declared the type.
+
+**No legacy path.** The API takes `actor`; running sessions holding the old
+skill copy fail on their next log until restarted. That is a restart, not debt.
+
+Superseded before it shipped: an earlier cut of this had two mutually exclusive
+fields and an `emitter_kind` enum with a CHECK constraint. BotBeam built it
+(`4fdfca9` + `e90258c`, never deployed, prod untouched) and it is replaced by
+the above.
+
 ## The board is closed under reference — invariant 10, 2026-09-13
 
 Closing a stream must take its deliverables and its feed entries out of the

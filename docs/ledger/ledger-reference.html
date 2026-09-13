@@ -1009,7 +1009,7 @@
     <section class="panel" id="o-event" aria-label="Event" hidden>
       <h2>Event <span class="og svc">ledger</span> <span class="og rec">record</span></h2>
       <p class="sub">Something that happened: a decision, a ship, a send, a state change. Events are
-        append-only — never edited, never deleted. Carrying both <code>session_id</code> and
+        append-only — never edited, never deleted. Carrying both <code>actor</code> and
         <code>stream_id</code>, events (with deliverables) are also the <b>join records</b> of the
         session↔stream many-to-many: the streams a session worked are the distinct
         <code>stream_id</code>s of its events and deliverables, and vice versa.</p>
@@ -1026,9 +1026,22 @@
           <tr><td class="mono c-data">stream_id</td><td class="mono">slug</td><td>the owning Stream's id</td></tr>
           <tr><td class="mono c-data">headline</td><td class="mono">string</td><td>what happened — one line, past tense</td></tr>
           <tr><td class="mono c-data">body</td><td class="mono">markdown[1..4]</td><td>bullets; links out to homes and commits</td></tr>
-          <tr><td class="mono c-data">session_id</td><td class="mono">uuid</td><td>the emitting Session's id — <b>required, with no exceptions</b>: every event has exactly one emitter, including a stream's closure event, and emitting writes that session's liveness (invariant 9)</td></tr>
+          <tr><td class="mono c-data">actor</td><td class="mono">type:id</td><td><b>who did it — required, with no exceptions</b>, including a stream's closure event. One field, a prefixed identifier: <code>session:&lt;uuid&gt;</code> or <code>board</code>. The type is read by parsing, never stored twice and never inferred. An actor that resolves to a session has its liveness written in the same transaction (invariant 9)</td></tr>
         </tbody>
       </table></div>
+      <div class="rule"><b>Storing the actor.</b> One column — <code>actor VARCHAR(64) NOT NULL</code>
+        — holding the prefixed identifier. Parsing is total: split on the first <code>:</code>; no
+        colon means the whole string is a type with a single instance. <code>session:&lt;uuid&gt;</code>
+        must resolve to one of this user's sessions or the call is <code>404</code>;
+        <code>board</code> resolves to the interface and has nothing to look up; an unknown type is
+        <code>400</code>. The recognised set lives in the service, so admitting a new kind of actor
+        is a line of code, never a migration.
+        <b>Why one field and not two:</b> a pair of mutually exclusive columns — or a nullable
+        <code>session_id</code> standing in for &ldquo;not a session&rdquo; — encodes the type as a
+        relationship between fields, which every reader and every query then has to reconstruct. The
+        identifier says what it is.
+        <b>Query filters are different:</b> <code>?session_id=&lt;uuid&gt;</code> keeps a bare uuid,
+        because the parameter name has already declared the type.</div>
       <h5 class="lbl">What qualifies as an event</h5>
       <p class="sub" style="margin:0">Deliverables shipped, decisions made, external communications
         sent, streams changing state, open loops created or closed. Routine lookups, intermediate
@@ -1101,7 +1114,7 @@
         <tbody>
           <tr><td class="mono c-data">id</td><td class="mono">id</td><td>identity</td></tr>
           <tr><td class="mono c-data">deliverable_id</td><td class="mono">id</td><td><b>exactly one, required</b> — a run with nothing to make is not a run</td></tr>
-          <tr><td class="mono c-data">session_id</td><td class="mono">uuid</td><td>the session doing the work — required; opening a run is a sign of life (invariant 9 extends)</td></tr>
+          <tr><td class="mono c-data">actor</td><td class="mono">type:id</td><td>who is doing the work — required. Runs are session work in practice, but the field is the same everywhere: opening one is a sign of life when the actor is a session (invariant 9 extends)</td></tr>
           <tr><td class="mono c-data">intent</td><td class="mono">string</td><td>what this stretch of work is, in words, written at open — e.g. <code>cutting rev 21</code>. This is what the card displays</td></tr>
           <tr><td class="mono c-data">started_at · ended_at</td><td class="mono">timestamp · timestamp?</td><td>server-stamped at open and at close. <code>ended_at</code> null <em>is</em> the definition of an open run</td></tr>
           <tr><td class="mono c-data">outcome</td><td class="mono">closed | abandoned</td><td>written at close. <code>abandoned</code> is a first-class ending, not a failure</td></tr>
@@ -1211,7 +1224,7 @@
       <span class="schema">{
   <b>"id"</b>: "ev_…", <b>"at"</b>: ts,
   <b>"stream_id"</b>: slug, <b>"headline"</b>: "…", <b>"body"</b>: ["…"],
-  <b>"session_id"</b>: uuid                                  <i>the emitter — writing it is part of the same transaction</i>
+  <b>"actor"</b>: "session:&lt;uuid&gt;" | "board"                   <i>who did it — a session's liveness is written in the same transaction</i>
 }</span>
 
       <h5 class="lbl">Deliverable <span>— rev 21; specified, not yet built</span></h5>
@@ -1227,7 +1240,7 @@
       <span class="schema">{
   <b>"id"</b>: "run_…",
   <b>"deliverable_id"</b>: "dl_…",                            <i>exactly one, required</i>
-  <b>"session_id"</b>: uuid,                                  <i>the worker — opening is a sign of life</i>
+  <b>"actor"</b>: "session:&lt;uuid&gt;",                           <i>who is working it — opening is a sign of life</i>
   <b>"intent"</b>: "cutting rev 21",                          <i>what the work is — not its scope</i>
   <b>"started_at"</b>: ts, <b>"ended_at"</b>: ts|null,               <i>ended_at null IS an open run</i>
   <b>"outcome"</b>: "closed"|"abandoned"|null,                <i>null while open</i>
@@ -1254,7 +1267,7 @@
   <b>"stream_id"</b>: "nuc-perf-slowdown",       <i>the slug this event belongs to — an existing one, or a new one minted here alongside create_stream</i>
   <b>"headline"</b>: "Dust cleaning fixed the clamp",
   <b>"body"</b>:     ["3000–3600 MHz under load (was ~500)", "…"],   <i>1–4 markdown strings</i>
-  <b>"session_id"</b>: "b1c482f7-…",             <i>required — the emitting Session's id</i>
+  <b>"actor"</b>: "session:b1c482f7-…",          <i>required — who did it; "board" when the user acts from the interface</i>
 
   <b>"stream_update"</b>: {                      <i>optional — new management state</i>
     "state":       "Fixed by dust clean; verifying overnight.",
@@ -1283,7 +1296,7 @@
   <b>"session"</b>: Session,           <i>the emitter, post-write — status/last_event_at current</i>
   <b>"stream"</b>:  Stream             <i>post-transaction, staleness recomputed</i>
 }</span>
-        <p class="rr"><b>errors</b> <code>404</code> unknown <code>stream_id</code> without <code>create_stream</code> · <code>422</code> missing <code>session_id</code> · body over 4 bullets · multi-line headline</p>
+        <p class="rr"><b>errors</b> <code>404</code> unknown <code>stream_id</code> without <code>create_stream</code> · <code>422</code> missing or unparseable <code>actor</code> · body over 4 bullets · multi-line headline</p>
       </article>
 
       <article class="spec" id="ep-events-get">
@@ -1398,7 +1411,7 @@
           closure event — one transaction.</p>
         <h5 class="lbl">Request body</h5>
         <span class="schema">{ <b>"reason"</b>: "work done" | "tracking moved elsewhere" | string,
-  <b>"session_id"</b>: uuid   <i>required — the closure event has an emitter like any other event</i>
+  <b>"actor"</b>: "session:&lt;uuid&gt;" | "board"   <i>required — the closure event names who did it, like any event</i>
 }</span>
         <p class="qual" style="margin-top:10px">The closure event is an event, so it carries its
         emitter and applies that session's liveness in the same transaction (invariant 9). There is
@@ -1437,7 +1450,7 @@
         <h5 class="lbl">Request</h5>
         <span class="schema">{
   <b>"deliverable_id"</b>: "dl_…",               <i>an existing deliverable — or omit it and pass create_deliverable</i>
-  <b>"session_id"</b>: "b1c482f7-…",             <i>required — the session doing the work</i>
+  <b>"actor"</b>: "session:b1c482f7-…",          <i>required — who is doing the work</i>
   <b>"intent"</b>: "cutting rev 21",             <i>required — what this work IS, not how big it is</i>
 
   <b>"create_deliverable"</b>: {                 <i>only if there is no deliverable_id above</i>
@@ -1463,7 +1476,7 @@
         </table>
         <h5 class="lbl">Response — 201</h5>
         <span class="schema">{ <b>"run"</b>: Run, <b>"deliverable"</b>: Deliverable, <b>"session"</b>: Session }</span>
-        <p class="rr"><b>errors</b> <code>404</code> unknown <code>deliverable_id</code> or unknown <code>create_deliverable.stream_id</code> · <code>422</code> missing <code>session_id</code> or <code>intent</code> · neither <code>deliverable_id</code> nor <code>create_deliverable</code> · both · <code>409</code> the session already has an open run</p>
+        <p class="rr"><b>errors</b> <code>404</code> unknown <code>deliverable_id</code> or unknown <code>create_deliverable.stream_id</code> · <code>422</code> missing or unparseable <code>actor</code>, or missing <code>intent</code> · neither <code>deliverable_id</code> nor <code>create_deliverable</code> · both · <code>409</code> the session already has an open run</p>
         <div class="rule"><b>One open run per session</b>, enforced by that 409. Several genuine
           workstreams in one session are real, but they are sequential in attention — forcing an
           honest close-or-abandon at the boundary is the feature, not a limitation.</div>
@@ -1483,7 +1496,7 @@
           ending a run would reintroduce exactly the inference rev 21 deletes.</p>
         <h5 class="lbl">Request</h5>
         <span class="schema">{
-  <b>"session_id"</b>: "b1c482f7-…",             <i>required — the closer, for liveness. NEED NOT be the opener</i>
+  <b>"actor"</b>: "session:b1c482f7-…",          <i>required — the closer, for liveness. NEED NOT be the opener</i>
   <b>"outcome"</b>: "closed"|"abandoned",        <i>required</i>
   <b>"state"</b>: "rev 21"                       <i>the deliverable's new state — required on closed, refused on abandoned</i>
 }</span>
@@ -1563,7 +1576,7 @@
           says nothing about whether the thing is finished with. Nothing is deleted; a retired
           deliverable keeps its runs and its home.</p>
         <h5 class="lbl">Request</h5>
-        <span class="schema">{ <b>"session_id"</b>: "b1c482f7-…" }   <i>required — the relaying session, for liveness</i></span>
+        <span class="schema">{ <b>"actor"</b>: "session:b1c482f7-…" }   <i>required — who relayed it, for liveness</i></span>
         <h5 class="lbl">Response — 200</h5>
         <span class="schema">{ <b>"deliverable"</b>: Deliverable, <b>"session"</b>: Session }</span>
         <p class="rr"><b>errors</b> <code>404</code> unknown deliverable · <code>409</code> retiring one that has an open run — close the run first</p>
@@ -1814,7 +1827,7 @@
         <tbody>
           <tr><td><code>headline</code> is one line, past tense, non-empty</td><td class="mono">422 on empty or multi-line</td></tr>
           <tr><td><code>body</code> is 1–4 markdown bullets</td><td class="mono">422 outside the range</td></tr>
-          <tr><td><code>session_id</code> names an existing session — every event has exactly one emitter</td><td class="mono">422 missing · 404 unknown</td></tr>
+          <tr><td><code>actor</code> parses, and a <code>session:</code> actor names an existing session — every event names exactly one actor</td><td class="mono">422 missing or unparseable · 404 unknown session</td></tr>
           <tr><td><code>stream_id</code> names an existing stream, or <code>create_stream</code> accompanies it</td><td class="mono">404 unknown without create</td></tr>
           <tr><td>the whole transaction — event, session write, stream update — commits or none of it does</td><td class="mono">atomic; invariant 5</td></tr>
           <tr><td>events are immutable: no update, no delete, server-stamped time</td><td class="mono">no endpoint exists</td></tr>
@@ -1871,7 +1884,8 @@
             <tr><td class="mono">10</td><td><b>A run is declared at both ends.</b> <code>started_at</code> is written by the open call and <code>ended_at</code> by the close call; no timer, sweep, or heuristic may end a run. Every run names exactly one deliverable. <span style="color:var(--muted)">(Rev 21 — this is invariant 2 applied to the one object that was still violating it.)</span></td><td>the ⚡ computed from a decaying <code>last_run_at</code>: dark during a ten-minute build, lit for two minutes after it finished</td></tr>
             <tr><td class="mono">5</td><td><b>Composite writes are atomic.</b> <code>POST /ledger/events</code> commits the event, the session write, and the stream update together or not at all.</td><td>event logged, stream and index never updated</td></tr>
             <tr><td class="mono">6</td><td><b>Attribution is a server rule.</b> Writes into the ledger service never re-attribute a session's stream.</td><td>sessions rebranded <code>ledger-meta</code> by their own journal writes</td></tr>
-            <tr><td class="mono">9</td><td><b>Emitting an event is a sign of life.</b> <code>POST /ledger/events</code> writes the emitting session in the same transaction — <code>last_event_at</code>, <code>status="active"</code>, un-archiving if needed. The two planes are joined here and nowhere else; <code>turn_state</code> stays the hook plane's alone.</td><td>a session working visibly in the record while its card sat stale on the board</td></tr>
+            <tr><td class="mono">9</td><td><b>Acting in the record is a sign of life — when the actor is a session.</b> <code>POST /ledger/events</code> writes the acting session in the same transaction — <code>last_event_at</code>, <code>status="active"</code>, un-archiving if needed. The two planes are joined here and nowhere else; <code>turn_state</code> stays the hook plane's alone. An actor that is not a session simply has no liveness to write; nothing else about the write differs.</td><td>a session working visibly in the record while its card sat stale on the board</td></tr>
+            <tr><td class="mono">11</td><td><b>Every write names its actor, in one field.</b> <code>actor</code> is a prefixed identifier — <code>session:&lt;uuid&gt;</code>, or <code>board</code> when the user acts from the BotBeam interface. The type is read by parsing the prefix: never a second column, never a nullable field standing in for a type, never inferred from the credential (browser and agents authenticate identically). A type with exactly one instance is its own identity, which is why <code>board</code> carries no id. New kinds of actor are new values, not new schema.</td><td>the board unable to close a stream at all, because closure logs an event and an event demanded a session id a web page cannot have</td></tr>
             <tr><td class="mono">7</td><td><b>Relevance requires a prompt.</b> Sessions never prompted do not reach the board.</td><td>picker-ghost cards requiring manual archiving</td></tr>
             <tr><td class="mono">8</td><td><b>Judgment stays above the API.</b> The service never decides what is logworthy; the skill never decides what is valid.</td><td>responsibility smeared across layers, so neither enforced</td></tr>
             <tr><td class="mono">10</td><td><b>The board is closed under reference.</b> Everything on the board names a stream that is also on the board. <code>GET /ledger/board</code> and <code>GET /ledger/index</code> filter deliverables and events by their stream's state, so a closed stream takes its deliverables and its feed entries out of the view with it — rows are untouched and stay retrievable through <code>/ledger/events</code>, <code>/ledger/deliverables</code> and <code>/ledger/search</code>. Closing changes presentation and nothing else.</td><td>pills naming a stream the board withheld — clickable, filtering by a stream with no card to select, and falling back to the raw slug once the title stopped resolving</td></tr>
