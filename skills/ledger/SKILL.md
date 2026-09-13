@@ -114,9 +114,8 @@ Your session id: the full uuid, visible in your scratchpad directory path.
 3. **Self-triggered** — because the work happened, not because the user
    narrated it.
 4. **Stream discipline** — every event names its stream; nothing fits → create
-   it in the same call. There is no catch-all and no built-in stream: work on
-   the ledger itself is a stream like any other, or it is not logged.
-   See **Streams** below.
+   it in the same call. There is no catch-all and no built-in stream; work on
+   the ledger itself is a stream like any other. See **Streams** below.
 5. **Corrections are new events** — never edited, never deleted; a later event
    supersedes an earlier one.
 

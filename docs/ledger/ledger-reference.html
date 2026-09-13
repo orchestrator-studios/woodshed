@@ -1001,10 +1001,8 @@
         deliverables may span any number of streams, so the working relationship is many-to-many.</p>
       <div class="rule"><b>There is no built-in stream.</b> Every stream is minted by the event that
         needed it, and none is exempt from anything — no auto-creation, no unclosable floor, no
-        exclusion from attribution or the index. A <code>meta</code> stream for ledger-system work
-        was tried and deleted: hiding the system's own work from the board it was recorded on made
-        the board lie, labelling deliverables with a stream that appeared nowhere. Work on the
-        ledger is a stream like any other, or it is not logged.</div>
+        exclusion from attribution or the index. Work on the ledger itself is a stream like any
+        other.</div>
     </section>
 
     <!-- ================= EVENT ================= -->
@@ -1599,11 +1597,9 @@
           SessionStart hook injects it into every new session — it is the only source of orientation,
           and the reason a brand-new session already knows what is in flight.</p>
         <p class="qual"><b>No stream is excluded.</b> Every active stream appears, and every event
-          is labelled with the stream it names. The index once left <code>meta</code> out of the
-          streams section while still feeding its events into recent activity; the split produced
-          labels pointing at a stream the board never showed. If one loud stream crowds the index,
-          the answer is ranking or a collapse the user controls — never a slug the code knows by
-          name.</p>
+          is labelled with the stream it names — the index never shows a label for a stream it
+          withholds. If one loud stream crowds it, the answer is ranking or a collapse the user
+          controls, never a slug the code knows by name.</p>
         <p class="rr"><b>returns</b> <code>200 text/markdown</code></p>
       </article>
 

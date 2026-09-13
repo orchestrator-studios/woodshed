@@ -103,39 +103,22 @@ remains is the test round: exercise the plane for real, then decide it's done.
   a stream to filter the feed.
 - `LEDGER_ADMIN_RESET` is enabled in prod, to be removed after the test round.
 
-## The meta stream is deleted — 2026-09-13, Cliff's call
+## There is no special stream
 
-`meta` was a built-in stream for ledger-system work: auto-created per user,
-unclosable, excluded from session attribution, and kept out of the working
-index. Four exemptions, one motive — stop the ledger from becoming a board
-about its own construction.
+`meta` is an ordinary stream. No stream is auto-created, unclosable, or
+excluded from attribution, the board, or the index. Work on the ledger itself
+is a stream like any other, and if one loud stream crowds the index the answer
+is ranking or a user-controlled collapse — never a slug the code knows by name.
 
-It made the board lie. Once deliverables rendered, all three carried a pill
-reading "Ledger system" — the title of a stream the Streams panel filtered out
-and the feed suppressed. The pill was clickable and filtered by a stream that
-had no card to select. Each rule was defensible alone; together they labelled
-things with a place that did not exist.
-
-**The whole thing goes** — the stream, its events, its deliverables and runs,
-every special case in the service and the board, and the documentation of it.
-Not unhidden: deleted. The work `meta` recorded (revs 18–21) is finished and
-does not need carrying forward, and a system that hides its own work from the
-board it is recorded on is worse than one that does not track itself.
-
-**The rule that replaces it:** there is no built-in stream and no catch-all.
-Work on the ledger is a stream like any other, or it is not logged. If one loud
-stream ever crowds the index, the answer is ranking or a user-controlled
-collapse — never a slug the code knows by name.
-
-Woodshed side done: `SKILL.md` (emission rules + stream discipline), the Book
-(the built-in-stream rule, the index exclusion, the Event and Session field
-tables, the create_deliverable example), and this file. The service and board
-side is BotBeam's.
+Woodshed carries this in `SKILL.md` and the Book. The service still has the
+built-in-stream machinery to remove (`META_STREAM`, `_ensure_meta`, the
+never-closes guard, the attribution and index exclusions) — BotBeam's, in
+progress. The board no longer special-cases any slug (botbeam `437ec8a`).
 
 ## Built, NOT deployed — waiting on Cliff
 
-- BotBeam v1.10.2 (`0c298b7` + `d46009b`) — the meta-pill fix, made moot by the
-  deletion above. Do not deploy it as-is.
+- BotBeam v1.10.2 (`0c298b7` + `d46009b`) — superseded by `437ec8a`; do not
+  deploy it as-is.
 
 ## Open decisions for Cliff
 
