@@ -104,6 +104,30 @@ remains is the test round: exercise the plane for real, then decide it's done.
   a stream to filter the feed.
 - `LEDGER_ADMIN_RESET` is enabled in prod, to be removed after the test round.
 
+## PICK UP HERE — browsing what's been taken off the board
+
+Next piece of work, BotBeam session screen. The board can now close a stream and
+retire a deliverable (v2.0.1), but there is no way to *find* either afterwards:
+the undo slot covers only the last act in the current page load, and once the
+page reloads a closed stream is unreachable from the interface. Same hole has
+existed quietly for sessions — `unarchiveSession` has sat in the API client with
+nothing calling it, because archived sessions have no list either.
+
+Cover all three:
+
+- `GET /ledger/streams?status=closed`, `GET /ledger/deliverables?status=retired`,
+  `GET /ledger/sessions?status=archived` — the data is already served, no
+  service work needed.
+- Render as collapsible sections matching the **Inactive sessions** pattern
+  (collapse state persisted in `localStorage`, by the rev-20 ruling).
+- Restore controls call `reopen` / `unretire` / `unarchive` with
+  `{"actor": "board"}`, the same shape the × buttons use.
+- Frontend only. `SessionsView.tsx` + `app.css` + `botbeamApi.ts`.
+
+Invariant 10 is why this matters rather than being a nicety: closing takes the
+stream's deliverables and feed entries off the board with it, so a single click
+removes a lot from view with no path back through the interface.
+
 ## Every write names its actor — invariant 11, 2026-09-13 (designed)
 
 The dashboard needs close/reopen buttons for streams and retire/unretire for
