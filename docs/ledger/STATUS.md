@@ -116,7 +116,10 @@ Skill rewritten and synced; `session_event.py` on `/signals` and verified live;
 `sweep_report.py` deleted; global CLAUDE.md updated. The `LedgerBoardSweep`
 scheduled task was recorded as deleted but was still **enabled and running**
 `~/claude-memory/scripts/board.py sweep` against the abandoned v1 store —
-actually deleted 2026-09-13 and verified gone.
+actually deleted 2026-09-13 and verified gone. **No exposure to the `/ledger`
+tables**: that sweep wrote only v1 targets (local files and the old
+`ledger:session:*` lockboxes), never sessions/events/streams/runs, and every
+write in those tables is accounted for.
 Committed as `c41af15`; Book rev 20 edits since then are uncommitted.
 
 ## The hold — LIFTED 2026-09-13
