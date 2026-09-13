@@ -38,7 +38,7 @@ deliverable or that a conversation settled a decision. You are the only feed
 that can forget, which is why logging is a standing duty rather than a feature
 someone invokes.
 
-**Runs and deliverables are your job too** (Book rev 21). Logging records what
+**Runs and deliverables are your job too** (Book rev 22). Logging records what
 happened; opening a run declares what you are *doing* while you do it. Both are
 standing duties, neither waits to be asked.
 

@@ -1,7 +1,8 @@
 # Ledger — where we are, what we're driving towards
 
-Updated 2026-09-13 (rev 21 shipped end to end). Canonical design:
-`ledger-reference.html` (the Book, **rev 21**).
+Updated 2026-09-13. Canonical design: `ledger-reference.html` (the Book,
+**rev 22**). Live at **BotBeam v2.0.1** — sessions, events, streams, runs and
+deliverables, with the board operable from the interface.
 
 ## Rev 21 — runs and deliverables (SHIPPED, live in prod at v1.9.0)
 
