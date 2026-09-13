@@ -97,8 +97,6 @@ One call: `POST {base}/ledger/events`
 - `stream_update` **rides in the same call** whenever the outcome changed the
   thread's state or next action — never a second call.
 - `create_stream` only when the slug is genuinely new. See **Streams** below.
-- `meta` is the built-in stream for ledger-system work — not a home for
-  uncategorized work.
 - The response returns the event, the emitting session, and the stream.
 - **Logging also writes your session** (`last_event_at`, `status="active"`) in
   the same transaction. That is the only place the two planes touch.
@@ -116,7 +114,9 @@ Your session id: the full uuid, visible in your scratchpad directory path.
 3. **Self-triggered** — because the work happened, not because the user
    narrated it.
 4. **Stream discipline** — every event names its stream; nothing fits → create
-   it in the same call; ledger-system work → `meta`. See **Streams** below.
+   it in the same call. There is no catch-all and no built-in stream: work on
+   the ledger itself is a stream like any other, or it is not logged.
+   See **Streams** below.
 5. **Corrections are new events** — never edited, never deleted; a later event
    supersedes an earlier one.
 

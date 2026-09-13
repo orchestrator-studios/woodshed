@@ -103,28 +103,43 @@ remains is the test round: exercise the plane for real, then decide it's done.
   a stream to filter the feed.
 - `LEDGER_ADMIN_RESET` is enabled in prod, to be removed after the test round.
 
-### Store contents as of 2026-09-13T02:48Z
+## The meta stream is deleted — 2026-09-13, Cliff's call
 
-- **Streams (2)**: `meta`, `orchestra`.
-- **Events (7)**: `ev_b115c835` (orchestra v0.2.6) and six `meta` events
-  covering revs 18–21, the board layout and visual language, and the rev-21
-  ship. The baseline was zero after two junk events were surgically deleted.
-- **Deliverables (2)**: `dl_a190b6ff` "BotBeam ledger service"
-  (`C:\code\botbeam`, state "v1.9.0 in prod"), `dl_852b8241` "Ledger STATUS doc"
-  (this file).
+`meta` was a built-in stream for ledger-system work: auto-created per user,
+unclosable, excluded from session attribution, and kept out of the working
+index. Four exemptions, one motive — stop the ledger from becoming a board
+about its own construction.
+
+It made the board lie. Once deliverables rendered, all three carried a pill
+reading "Ledger system" — the title of a stream the Streams panel filtered out
+and the feed suppressed. The pill was clickable and filtered by a stream that
+had no card to select. Each rule was defensible alone; together they labelled
+things with a place that did not exist.
+
+**The whole thing goes** — the stream, its events, its deliverables and runs,
+every special case in the service and the board, and the documentation of it.
+Not unhidden: deleted. The work `meta` recorded (revs 18–21) is finished and
+does not need carrying forward, and a system that hides its own work from the
+board it is recorded on is worse than one that does not track itself.
+
+**The rule that replaces it:** there is no built-in stream and no catch-all.
+Work on the ledger is a stream like any other, or it is not logged. If one loud
+stream ever crowds the index, the answer is ranking or a user-controlled
+collapse — never a slug the code knows by name.
+
+Woodshed side done: `SKILL.md` (emission rules + stream discipline), the Book
+(the built-in-stream rule, the index exclusion, the Event and Session field
+tables, the create_deliverable example), and this file. The service and board
+side is BotBeam's.
 
 ## Built, NOT deployed — waiting on Cliff
 
-- Nothing pending.
+- BotBeam v1.10.2 (`0c298b7` + `d46009b`) — the meta-pill fix, made moot by the
+  deletion above. Do not deploy it as-is.
 
 ## Open decisions for Cliff
 
-1. **Create the remaining two streams?** `nuc-perf-slowdown`, `orch-studio-site`,
-   with current state carried over by hand. Without them the Streams panel stays
-   thin for the test round.
-2. Two render details BotBeam flagged: the open-loop count pill carries the
-   full list in a hover tooltip; `meta` gets no stream card. Both look right.
-3. **Is the test round done?** If so, `LEDGER_ADMIN_RESET` comes out of prod.
+1. **Is the test round done?** If so, `LEDGER_ADMIN_RESET` comes out of prod.
 
 ## Known gaps (deferred, by choice)
 
@@ -165,8 +180,7 @@ code and one of the prose.
 
 ## The hold — LIFTED 2026-09-13
 
-Cliff: "There's no hold now. We are testing." The held backlog was logged as
-`ev_00f17d25` on `meta`.
+Cliff: "There's no hold now. We are testing."
 
 ## How the design settled (so it isn't relitigated)
 

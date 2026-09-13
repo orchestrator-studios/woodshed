@@ -960,7 +960,7 @@
           <tr><td class="mono c-svc">activity — waiting / processing</td><td>while <code>status="active"</code>: activity <em>is</em> the stored <code>turn_state</code>, with no further computation. A non-active session reports no activity. <span style="color:var(--muted)">(Rev 21 removed the third value, <code>run</code>, and the window it was computed from.)</span></td></tr>
           <tr><td class="mono c-svc">open_run</td><td>the session's run with <code>ended_at</code> null, if any — <code>intent</code>, <code>deliverable_id</code> + <code>deliverable_name</code>, <code>started_at</code>, <code>elapsed_s</code>. A <b>join</b>, not a computation: the underlying fact is stored and declared. <b>Orthogonal to <code>turn_state</code></b> — see the ring+⚡ ruling on the cheat sheet</td></tr>
           <tr><td class="mono c-svc">relevant</td><td><code>ever_prompted</code> and <code>status</code> is not archived; only relevant sessions appear on the board</td></tr>
-          <tr><td class="mono c-svc">stream_id</td><td>attribution rule: the stream of the session's most recent non-<code>meta</code> event or deliverable; else the most recently updated active stream whose <code>working_paths</code> contain the workspace; else none. Never stored, so nothing can rebrand it</td></tr>
+          <tr><td class="mono c-svc">stream_id</td><td>attribution rule: the stream of the session's most recent event or deliverable; else the most recently updated active stream whose <code>working_paths</code> contain the workspace; else none. Never stored, so nothing can rebrand it</td></tr>
         </tbody>
       </table></div>
     </section>
@@ -999,9 +999,12 @@
         never re-attribute (rules out the v1 failure where a session's own journal write rebranded
         it <code>ledger-meta</code>). Attribution is only the board's label — a session's events and
         deliverables may span any number of streams, so the working relationship is many-to-many.</p>
-      <div class="rule"><b>The meta stream.</b> <code>meta</code> is a permanent built-in stream for
-        ledger-system work: it satisfies &ldquo;every event has exactly one stream,&rdquo; never
-        closes, never attributes sessions, and stays out of the working index.</div>
+      <div class="rule"><b>There is no built-in stream.</b> Every stream is minted by the event that
+        needed it, and none is exempt from anything — no auto-creation, no unclosable floor, no
+        exclusion from attribution or the index. A <code>meta</code> stream for ledger-system work
+        was tried and deleted: hiding the system's own work from the board it was recorded on made
+        the board lie, labelling deliverables with a stream that appeared nowhere. Work on the
+        ledger is a stream like any other, or it is not logged.</div>
     </section>
 
     <!-- ================= EVENT ================= -->
@@ -1022,7 +1025,7 @@
         <thead><tr><th>Property</th><th>Type</th><th>Meaning</th></tr></thead>
         <tbody>
           <tr><td class="mono c-data">id · at</td><td class="mono">id · timestamp</td><td>identity; server-stamped time</td></tr>
-          <tr><td class="mono c-data">stream_id</td><td class="mono">slug</td><td>the owning Stream's id (<code>meta</code> = the built-in ledger-system stream)</td></tr>
+          <tr><td class="mono c-data">stream_id</td><td class="mono">slug</td><td>the owning Stream's id</td></tr>
           <tr><td class="mono c-data">headline</td><td class="mono">string</td><td>what happened — one line, past tense</td></tr>
           <tr><td class="mono c-data">body</td><td class="mono">markdown[1..4]</td><td>bullets; links out to homes and commits</td></tr>
           <tr><td class="mono c-data">session_id</td><td class="mono">uuid</td><td>the emitting Session's id — <b>required, with no exceptions</b>: every event has exactly one emitter, including a stream's closure event, and emitting writes that session's liveness (invariant 9)</td></tr>
@@ -1442,7 +1445,7 @@
   <b>"create_deliverable"</b>: {                 <i>only if there is no deliverable_id above</i>
     "name": "The Ledger Book",
     "home": "C:\\code\\woodshed\\docs\\ledger\\ledger-reference.html",   <i>exactly one home</i>
-    "stream_id": "meta"                        <i>must already exist — 404 if not; there is no nested create_stream</i>
+    "stream_id": "orchestra"                   <i>must already exist — 404 if not; there is no nested create_stream</i>
   }
 }</span>
         <div class="rule" style="margin-top:14px"><b>No create-inside-a-create-inside-a-create.</b>
@@ -1595,11 +1598,12 @@
         <p class="qual">Markdown, service-rendered from both planes, about one screen. The
           SessionStart hook injects it into every new session — it is the only source of orientation,
           and the reason a brand-new session already knows what is in flight.</p>
-        <p class="qual"><b>The <code>meta</code> exclusion, precisely:</b> <code>meta</code> is left
-          out of the <em>streams</em> section — it is the ledger's own plumbing, not a thread of work
-          under management. Its <em>events</em> still appear in recent activity, because ledger-system
-          work is real work worth seeing. The board's <code>streams</code> array likewise includes
-          <code>meta</code>, so the events feed can label a meta event.</p>
+        <p class="qual"><b>No stream is excluded.</b> Every active stream appears, and every event
+          is labelled with the stream it names. The index once left <code>meta</code> out of the
+          streams section while still feeding its events into recent activity; the split produced
+          labels pointing at a stream the board never showed. If one loud stream crowds the index,
+          the answer is ranking or a collapse the user controls — never a slug the code knows by
+          name.</p>
         <p class="rr"><b>returns</b> <code>200 text/markdown</code></p>
       </article>
 
@@ -1836,8 +1840,8 @@
           narrated it, and never asking permission first. The record's completeness cannot depend on
           the user remembering.</li>
         <li><b>Stream discipline.</b> Every event names its stream; a genuinely new thread of work
-          carries <code>create_stream</code> in the same call; ledger-system work goes to
-          <code>meta</code>. If the outcome changed the thread's state or next action, the
+          carries <code>create_stream</code> in the same call. There is no catch-all and no
+          built-in. If the outcome changed the thread's state or next action, the
           <code>stream_update</code> rides in the same transaction — never a second call.</li>
         <li><b>Corrections are new events.</b> An event is never edited or deleted; a later event
           supersedes it. The journal is a record of what was believed when, not a tidy summary.</li>
