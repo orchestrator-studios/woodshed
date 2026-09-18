@@ -15,10 +15,12 @@ shares) is a separate overlay process — do it before invoking this skill, or a
 its own task. Intake begins when you can name (1) the asset(s) and (2) the
 project area they belong to. If either is unknown, resolve that first.
 
-The skill is a **procedure**, not a tool: it composes the capabilities already
+The skill is mostly a **procedure**: it composes the capabilities already
 present (the `google-workspace` skill for Drive/Gmail, `zoom` for transcripts,
 WebFetch for URLs, Python/openpyxl for spreadsheets, the `artifacts` doctrine
-for dark-mode HTML). Nothing here ships code.
+for dark-mode HTML). Recurring derivations ship as scripts in `scripts/`
+(currently `xlsx_tabs_to_md.py` — prose spreadsheet tabs → faithful Markdown);
+prefer extending them over writing one-off converters inside a project.
 
 ## The five stages
 
@@ -86,11 +88,14 @@ Create the versions the project will actually read:
   the system, not the artifact.
 - **Spreadsheets** usually don't get "converted" — they get *measured* (stage
   5); derive extracts only when a slice earns it (e.g. the gold-set rows as a
-  table in the notes).
+  table in the notes). The exception: **prose tabs embedded in a workbook**
+  (column dictionaries, process workflows, usage guides) earn a Markdown
+  rendering — use `scripts/xlsx_tabs_to_md.py`.
 
 Derived files sit beside the raw file (or beside `raw/`), named after it.
 Derivations are **regenerable** — if raw and derived ever disagree, raw wins
-and the derivation is rebuilt.
+and the derivation is rebuilt. Every derived file's header records the exact
+command that regenerates it (the bundled scripts do this automatically).
 
 ### 5 · Assess & report — size it up honestly
 
