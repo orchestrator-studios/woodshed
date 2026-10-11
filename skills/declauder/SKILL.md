@@ -23,6 +23,12 @@ Not this skill: restructuring, fact-checking, shortening by cutting content, or
 rewriting for a different audience. Those change what the document says. This one
 does not.
 
+## Before you start
+
+Read `LEARNINGS.md` in this skill directory. It holds candidate tells and corrections
+from past jobs that have not yet been folded into this file. Apply them as if they
+were written here.
+
 ## Run it section by section
 
 Do **one section, tab, or page at a time**, then stop and show the user before
@@ -136,8 +142,11 @@ Re-read the section cold. Two things only:
 not a fixer — it over-reports by design and every hit needs a human or agent decision.
 
 ```
-python scripts/tells.py <file> [--category headings|quotes|aphorism|meta|all]
+python scripts/tells.py <file> [--category headings|quotes|aphorism|meta|dashes|candidate|all]
 ```
+
+The `candidate` category is the regexes listed in `LEARNINGS.md`. A new pattern noted
+there starts firing on the next job without any change to the script.
 
 Works on markdown, HTML and plain text. Run it before the pass to see the scale, and
 after to confirm what is left is deliberate.
@@ -162,6 +171,34 @@ after to confirm what is left is deliberate.
 - Report what changed as a short list of renames plus a note on what was cut. The user
   is deciding whether your calibration was right, and they cannot do that from a diff
   alone.
+
+## After the job: learn
+
+The section-by-section rhythm already produces feedback. Every revert, adjustment or
+"keep that" during the job is an answer. Collect them as you go.
+
+When the job is done, ask one question and no more:
+
+> Anything I cut that should have stayed, or missed that should have gone?
+
+Then, before ending, record what was learned in `LEARNINGS.md`:
+
+- **A voice pattern no list covers** goes under Candidate tells, as a regex with the
+  date, the document and one example line. Only patterns a regex can catch; a
+  judgement call is not a tell.
+- **Something the pass got wrong** goes under Corrections: what happened and what to
+  do instead.
+- **Calibration** (how far this user wants it taken, which terms to leave alone) is
+  the user's taste, not the skill's knowledge. It goes in memory or the project's
+  house-voice note, not here.
+
+Show the user the lines you added. If nothing was learned, write nothing and say so
+in one line.
+
+Promotion: a candidate that fires on a second job moves into the matching pass above
+and into tells.py, and comes out of LEARNINGS.md. A correction that turns out to be a
+general rule moves into "What not to touch" or the relevant pass. Do the promotion as
+part of the job where the second sighting happens.
 
 ## Related
 

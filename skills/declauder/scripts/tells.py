@@ -4,7 +4,7 @@
 A finder, not a fixer. Over-reports by design: every hit needs a human decision.
 Works on markdown, HTML and plain text.
 
-    python tells.py <file> [--category headings|quotes|aphorism|meta|dashes|all]
+    python tells.py <file> [--category headings|quotes|aphorism|meta|dashes|candidate|all]
     python tells.py <file> --counts        # just the tally
 """
 import argparse
@@ -16,7 +16,7 @@ from pathlib import Path
 # ---------------------------------------------------------------- heading text
 
 HEADING_PATTERNS = [
-    (re.compile(r"^\s*#{1,6}\s+(.*?)\s*$"), 1),              # markdown
+    (re.compile(r"^[ \t]*#{1,6}[ \t]+(.*?)[ \t]*$", re.M), 1),  # markdown
     (re.compile(r"<h[1-6][^>]*>(.*?)</h[1-6]>", re.I | re.S), 1),  # html
     (re.compile(r"<div class=\"grp\">(.*?)</div>", re.I | re.S), 1),  # nav groups
 ]
@@ -87,6 +87,34 @@ HEDGE = re.compile(
 RULE_OF_THREE = re.compile(r"(?:^|[.!?]\s)(?:\S+\s+){0,3}\S+\.\s+(?:\S+\s+){0,3}\S+\.\s+(?:\S+\s+){0,3}\S+\.")
 
 
+LEARNINGS = Path(__file__).resolve().parent.parent / "LEARNINGS.md"
+CANDIDATE_LINE = re.compile(r"^\s*-\s+`([^`]+)`")
+
+
+def load_candidates():
+    """Regexes between the candidates markers in LEARNINGS.md. Each line there is
+    '- `regex` — date, doc — "example"'. Bad regexes are reported and skipped."""
+    if not LEARNINGS.is_file():
+        return []
+    out, active = [], False
+    for line in LEARNINGS.read_text(encoding="utf-8").splitlines():
+        if "<!-- candidates start -->" in line:
+            active = True
+            continue
+        if "<!-- candidates end -->" in line:
+            break
+        if not active:
+            continue
+        m = CANDIDATE_LINE.match(line)
+        if not m:
+            continue
+        try:
+            out.append(re.compile(m.group(1), re.I))
+        except re.error as e:
+            print(f"LEARNINGS.md: skipping bad regex {m.group(1)!r}: {e}", file=sys.stderr)
+    return out
+
+
 def strip_tags(s: str) -> str:
     return html.unescape(re.sub(r"<[^>]+>", "", s)).strip()
 
@@ -109,7 +137,8 @@ def blank_blocks(raw: str) -> str:
 def collect(path: Path):
     raw = blank_blocks(path.read_text(encoding="utf-8", errors="replace"))
     lines = raw.split("\n")
-    hits = {k: [] for k in ("headings", "quotes", "aphorism", "meta", "dashes")}
+    hits = {k: [] for k in ("headings", "quotes", "aphorism", "meta", "dashes", "candidate")}
+    candidates = load_candidates()
 
     # --- headings, matched across the whole text so multi-line tags work
     for pat, grp in HEADING_PATTERNS:
@@ -148,6 +177,9 @@ def collect(path: Path):
             hits["meta"].append((i, flat[:110], "meta/restatement"))
         if em_dash_count(flat) >= 2:
             hits["dashes"].append((i, flat[:110], f"{em_dash_count(flat)} dashes"))
+        for pat in candidates:
+            if pat.search(flat):
+                hits["candidate"].append((i, flat[:110], pat.pattern))
 
     return hits
 
@@ -157,7 +189,7 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("file")
     ap.add_argument("--category", default="all",
-                    choices=["headings", "quotes", "aphorism", "meta", "dashes", "all"])
+                    choices=["headings", "quotes", "aphorism", "meta", "dashes", "candidate", "all"])
     ap.add_argument("--counts", action="store_true", help="tally only")
     args = ap.parse_args()
 
