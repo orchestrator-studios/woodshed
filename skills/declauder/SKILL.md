@@ -1,9 +1,9 @@
 ---
-name: plain
-description: Strip the AI voice out of a document — cutesy or editorializing headings, phrases promoted to proper nouns, inverted and aphoristic sentences, invented jargon, and paragraphs that restate what is directly above them. Use when asked to de-slop, de-Claude, plain up, clean up the writing, cut the fluff, remove the clever phrasing, or do an editorial pass on a doc, page, README, memo or artifact. Not a rewrite for content or structure — the facts, claims and layout survive; only the voice changes.
+name: declauder
+description: Strip the AI voice out of a document — cutesy or editorializing headings, phrases promoted to proper nouns, inverted and aphoristic sentences, invented jargon, and paragraphs that restate what is directly above them. Use when asked to declauder, de-slop, de-Claude, plain up, clean up the writing, cut the fluff, remove the clever phrasing, or do an editorial pass on a doc, page, README, memo or artifact. Not a rewrite for content or structure — the facts, claims and layout survive; only the voice changes.
 ---
 
-# Plain
+# Declauder
 
 An editing pass that removes the voice an LLM writes in, without touching what the
 document says. Every fact, claim, number and section survives. What goes is the
@@ -126,7 +126,7 @@ are cutting more than that, check you are not removing content.
 Re-read the section cold. Two things only:
 
 - Did any fact, number, caveat or attribution disappear? Put it back.
-- Is anything now *too* terse to parse? Plain is not telegraphic — restore the
+- Is anything now *too* terse to parse? Declaudering is not telegraphic — restore the
   connective words. "Abha first, then Michael T." is fine; "Abha, then Michael" is
   worse if the reader does not know who they are.
 
